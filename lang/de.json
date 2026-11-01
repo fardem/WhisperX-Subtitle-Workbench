@@ -103,7 +103,18 @@
     "finished_err": {
       "one": ", 1 Fehler",
       "other": ", {n} Fehler"
-    }
+    },
+    "version": "{app} {version} · {folder}",
+    "other_instance": [
+      "Es ist noch ein Fenster der Version {version} geöffnet.",
+      "",
+      "Dateien, die auf die BAT gezogen werden, landen dort und nicht in diesem Fenster. Bitte das andere Fenster schließen."
+    ],
+    "other_instance_old": [
+      "Es ist noch ein Fenster einer älteren Version geöffnet (Titel „Whisper Tool“).",
+      "",
+      "Dateien, die auf die BAT gezogen werden, landen dort und nicht in diesem Fenster. Bitte das alte Fenster schließen."
+    ]
   },
   "status": {
     "wait": "wartet",
@@ -241,7 +252,8 @@
       "Die Sprache wechselt nach einem Neustart des Fensters.",
       "",
       "Jetzt neu starten?"
-    ]
+    ],
+    "version": "Version"
   },
   "cmpdlg": {
     "title": "Text vergleichen",
@@ -442,7 +454,7 @@
       "other": "{n} Stellen"
     },
     "shared_title": "Fehler, die {a} und {b} gleich machen",
-    "shared_intro": "Rot = so steht es in beiden Dateien · Grün = so wäre es richtig. Diese Fehler ändert ein anderer Beam oder ein anderes Modell oft nicht – hier helfen Prompt (Namen/Begriffe) und Ersetzungen.",
+    "shared_intro": "Blau-violett = so steht es in A und in B · Grün = so wäre es richtig. Diese Fehler ändert ein anderer Beam oder ein anderes Modell oft nicht – hier helfen Prompt (Namen/Begriffe) und Ersetzungen.",
     "short_word": "Kurzes Wort – prüfen, ob es sonst nie richtig vorkommt",
     "sg_wrong": "erkannt",
     "sg_right": "richtig",
@@ -538,7 +550,8 @@
     "sum_ab": "A↔B {sim} gleich · {diffs} an {places} · {fmt} nur Schreibweise",
     "sum_ar": "A gegen Referenz: {places}",
     "sum_wer": "Fehlerquote A {wer}",
-    "sum_time": "Zeit A↔B ⌀ {typ}, {offset}"
+    "sum_time": "Zeit A↔B ⌀ {typ}, {offset}",
+    "footer": "Erstellt mit {app} {version} · {date}"
   },
   "tip": {
     "files": [

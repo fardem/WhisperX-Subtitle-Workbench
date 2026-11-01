@@ -103,7 +103,18 @@
     "finished_err": {
       "one": ", 1 hata",
       "other": ", {n} hata"
-    }
+    },
+    "version": "{app} {version} · {folder}",
+    "other_instance": [
+      "{version} sürümünün bir penceresi hâlâ açık.",
+      "",
+      "BAT üzerine sürüklenen dosyalar bu pencereye değil, oraya gider. Lütfen diğer pencereyi kapatın."
+    ],
+    "other_instance_old": [
+      "Daha eski bir sürümün penceresi hâlâ açık (başlık “Whisper Tool”).",
+      "",
+      "BAT üzerine sürüklenen dosyalar bu pencereye değil, oraya gider. Lütfen eski pencereyi kapatın."
+    ]
   },
   "status": {
     "wait": "bekliyor",
@@ -241,7 +252,8 @@
       "Dil, pencere yeniden başlatıldıktan sonra değişir.",
       "",
       "Şimdi yeniden başlatılsın mı?"
-    ]
+    ],
+    "version": "Sürüm"
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -442,7 +454,7 @@
       "other": "{n} yer"
     },
     "shared_title": "{a} ve {b} dosyalarının ortak hataları",
-    "shared_intro": "Kırmızı = iki dosyada da böyle · yeşil = doğrusu bu olurdu. Başka bir beam veya model bu hataları çoğu zaman değiştirmez – burada prompt (isimler/terimler) ve değiştirmeler yardımcı olur.",
+    "shared_intro": "Mavi-mor = A'da ve B'de böyle · yeşil = doğrusu bu olurdu. Başka bir beam veya model bu hataları çoğu zaman değiştirmez – burada prompt (isimler/terimler) ve değiştirmeler yardımcı olur.",
     "short_word": "Kısa kelime – başka yerlerde hiç doğru geçmediğini kontrol edin",
     "sg_wrong": "tanınan",
     "sg_right": "doğru",
@@ -538,7 +550,8 @@
     "sum_ab": "A↔B {sim} aynı · {diffs}, {places}de · {fmt} yalnızca yazım",
     "sum_ar": "A – referans: {places}",
     "sum_wer": "hata oranı A {wer}",
-    "sum_time": "zaman A↔B ⌀ {typ}, {offset}"
+    "sum_time": "zaman A↔B ⌀ {typ}, {offset}",
+    "footer": "{app} {version} ile oluşturuldu · {date}"
   },
   "tip": {
     "files": [

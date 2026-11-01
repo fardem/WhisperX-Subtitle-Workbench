@@ -2,6 +2,8 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
+**Sürüm 0.1.0** · [Değişiklikler](CHANGELOG.md)
+
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
 ![Ana pencere](docs/images/main-window.png)
@@ -188,12 +190,13 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ### Mevcut bir WhisperX venv'ini kullanma
 
-Çalışan bir WhisperX venv'iniz zaten varsa, örn. `C:\WhisperX\venv`, bu deponun dosyalarını `C:\WhisperX` klasörüne, `venv` klasörünün yanına kopyalayın. Hiçbir şey kurulmaz; araç yalnızca zaten var olan paketleri kullanır.
+Çalışan bir WhisperX venv'iniz zaten varsa, örn. `C:\WhisperX\venv`, bu deponun dosyalarını `C:\WhisperX` klasörüne, `venv` klasörünün yanına kopyalayın. Hiçbir şey kurulmaz; araç yalnızca zaten var olan paketleri kullanır. Kopyalamadan önce aracı kapatın ve dosyaları bir alt klasöre değil, doğrudan `C:\WhisperX` içine çıkarın.
 
 ---
 
 ## Güvenli güncelleme
 
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.1.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 
@@ -324,6 +327,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 
 | Sorun | Çözüm |
 |---|---|
+| Güncellemeden sonra hâlâ eski arayüz görünüyor (başlık “Whisper Tool”) | Eski bir pencere hâlâ açık ve başlatmayı devraldı. Kapatın – görünmüyorsa Görev Yöneticisi'nde `pythonw.exe`'yi sonlandırın – ve yeniden başlatın |
 | Araç başlamıyor | Bir mesaj kutusu nedeni gösterir. Aynı metin `whisper_tool_error.log` dosyasında da bulunur |
 | Sistem kontrolünde bir satır kırmızı | Eksik parçayı ve hangi işlevin etkilendiğini söyler. Bkz. [Kurulumu bozmanın bilinen yolları](#kurulumu-bozmanın-bilinen-yolları) |
 | “torch, CUDA'sız bir sürüm” | torch PyPI'dan kurulmuş. Kurulumun 4. adımını tekrarlayın |
@@ -342,6 +346,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | `wt_core.py` | Ses yükleme, WhisperX, şarkı sözü hizalama, altyazı kuralları, boşluk kontrolü, sistem kontrolü, INI yazıcı |
 | `wt_compare.py` | Kelime kelime karşılaştırma ve HTML raporu (tek başına da kullanılabilir) |
 | `wt_i18n.py` | Dil dosyalarını yükler |
+| `wt_version.py` | Ad ve sürüm numarası (başlık çubuğunda, günlükte ve raporda görünür) |
 | `lang/*.json` | Arayüzün, günlüğün ve raporun tüm metinleri (en, de, tr) |
 | `whisper_tool.example.ini` | Ayar şablonu; ilk başlatmada `whisper_tool.ini` olarak kopyalanır |
 | `Whisper_Tool.bat` | Başlatıcı: çift tıklayın veya dosyaları üzerine sürükleyin |

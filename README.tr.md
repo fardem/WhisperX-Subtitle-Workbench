@@ -1,0 +1,365 @@
+# WhisperX Subtitle Workbench
+
+[English](README.md) · [Deutsch](README.de.md) · **Türkçe**
+
+**Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
+
+![Ana pencere](docs/images/main-window.png)
+
+Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, duraklamalar ve azami ekranda kalma süresi. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla.
+
+> Ekran görüntüleri İngilizce arayüzü gösterir; *Ayarlar → Genel* altında Türkçeye geçebilirsiniz.
+
+---
+
+## İçindekiler
+
+- [Özellikler](#özellikler)
+- [Gereksinimler ve bağımlılıklar](#gereksinimler-ve-bağımlılıklar) ← **kurulumdan önce okuyun**
+- [Kurulum (Windows)](#kurulum-windows)
+- [Güvenli güncelleme](#güvenli-güncelleme)
+- [Kullanım](#kullanım)
+- [Transkriptleri karşılaştırma](#transkriptleri-karşılaştırma)
+- [Ayarlar](#ayarlar)
+- [Arayüz dili ve çeviriler](#arayüz-dili-ve-çeviriler)
+- [Komut satırı](#komut-satırı)
+- [Sorun giderme](#sorun-giderme)
+- [Proje yapısı](#proje-yapısı)
+- [Lisans ve teşekkür](#lisans-ve-teşekkür)
+
+---
+
+## Özellikler
+
+- **Konuşma → SRT**, WhisperX ile (faster-whisper + kelime zaman damgaları). Modeller dosyalar arasında yüklü kalır, bu yüzden ikinci dosya yükleme süresi olmadan başlar.
+- **Üç altyazı modu:**
+  - **Cümle cümle:** karakter sınırı ile yetim kelimeler, sarkan kelimeler, duraklamalar ve azami ekranda kalma süresi kurallarına göre tam cümleler.
+  - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
+  - **Ham:** WhisperX bölümleri değiştirilmeden.
+- **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).
+- **Şarkı sözü modu:** `sarki.mp3` dosyasının yanına `sarki.lyric.txt` koyarsanız şarkı metninin her satırı sese göre zamanlanır. Bu, zorlamalı hizalama (MMS_FA + uroman) ile çalışır ve her dilde işler.
+- **JSON → SRT:** WhisperX sonucunu saklayabilir ve altyazıları daha sonra saniyeler içinde farklı bir düzenle yeniden oluşturabilirsiniz.
+- **Boşluk kontrolü:** her transkripsiyondan sonra metin almamış, yüksek sesli ve insan sesine benzeyen yerleri, yani kaçırılmış konuşmayı bulur. Ayrıca her yere doğrudan atlamanızı sağlayan bir altyazı dosyası yazar.
+- **Karşılaştırma raporu** (HTML): A – B, A – referans veya A – B – referans.
+  - Her farkta kimin haklı olduğunu gösterir.
+  - Her dosyanın hata oranını (WER) ve iki dosyanın ortak hatalarını gösterir.
+  - Değiştirmeler önerir.
+  - Zaman sapmalarını gösterir.
+  - Rapordaki her zaman tıklanabilir ve sesi o noktadan çalar.
+- **Sistem kontrolü** her başlatmada: Python'u, tüm paketleri sürümleriyle, ffmpeg'i, modelleri ve ekran kartını listeler ve hangi işlevin çalışmayacağını söyler.
+- **Kolaylıklar:**
+  - BAT dosyasına veya pencereye sürükle-bırak. İkinci bir başlatma, dosyalarını zaten açık olan pencereye aktarır.
+  - Bir geri sayım işlemi otomatik olarak başlatır.
+  - Tanınan satırlar günlükte canlı görünür.
+  - İpuçları her seçeneği açıklar.
+  - Ayarlar penceresi yalnızca değişen değerleri yazar ve INI'deki açıklamaları korur.
+- **Çok dilli:** Türkçe, İngilizce ve Almanca. Tek bir JSON dosyasını kopyalayarak başka diller ekleyebilirsiniz (bkz. [Arayüz dili ve çeviriler](#arayüz-dili-ve-çeviriler)).
+
+---
+
+## Gereksinimler ve bağımlılıklar
+
+> **Bu kılavuzun en önemli kısmı.** WhisperX; PyTorch, CTranslate2, pyannote ve birkaç küçük paketin üzerine kuruludur ve bunlar birbirlerinin **tam** sürümlerine bağlıdır. Dikkatsiz bir `pip install`, CUDA'lı PyTorch'unuzu sessizce CPU sürümüyle ya da uyumsuz bir sürümle değiştirebilir. Araç o zaman anlaşılması zor şekillerde hata verir. Aşağıdaki sıraya uyarsanız çalıştığı bilinen bir kombinasyon elde edersiniz.
+
+### Neye ihtiyacınız var
+
+| Ne | Test edilen | Not |
+|---|---|---|
+| Windows | Windows 10/11, 64 bit | Arayüz Tkinter'dır; çekirdek Linux'ta da çalışır, BAT başlatıcısı Windows içindir |
+| NVIDIA ekran kartı | RTX 5080 (16 GB) | `large-v3` için ≥ 8 GB ekran kartı belleği önerilir. CPU ile de çalışır ama çok yavaştır |
+| NVIDIA sürücüsü | R570 veya daha yeni | CUDA 12.8 paketleri için gerekli. Yalnızca sürücü yeterli; CUDA araç setini kurmanız **gerekmez** |
+| Python | **3.10** (WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir |
+| ffmpeg | 6.x / 7.x | Ayrı bir program, pip paketi değil. Herhangi bir tam sürüm, örn. `winget install Gyan.FFmpeg` |
+| İnternet | yalnızca ilk başlatmada | Whisper modeli (~3 GB), dile göre hizalama modelleri, MMS_FA (şarkı sözleri için ~1,2 GB) |
+
+Hugging Face token'ı gerekmez, çünkü araç konuşmacı ayrımı (diarization) kullanmaz.
+
+### Test edilmiş paket kombinasyonu
+
+Bu sürümler gerçek kullanımda birlikte çalışıyor (Python 3.10, Windows 11, RTX 5080):
+
+| Paket | Sürüm | Neden tam olarak bu |
+|---|---|---|
+| `torch` | **2.8.0+cu128** | WhisperX 3.8 `torch~=2.8.0` ister (yalnızca 2.8.x). **Mutlaka** PyTorch CUDA dizininden gelmeli; Windows için PyPI paketi yalnızca CPU sürümüdür. RTX 50xx (Blackwell, sm_120) cu128 veya daha yeni bir derleme gerektirir |
+| `torchaudio` | **2.8.0+cu128** | torch ile **tam olarak** aynı sürüm ve aynı CUDA derlemesi olmalı. Şarkı sözleri (MMS_FA) için kullanılır |
+| `torchvision` | 0.23.0 | torch 2.8'e aittir (WhisperX gerektirir) |
+| `torchcodec` | 0.7.0 | WhisperX `<0.8`, pyannote-audio 4 `≥0.7` ister, yani yalnızca 0.7.x uyar. torch 2.8'e aittir |
+| `whisperx` | **3.8.5** | Araç 3.8.x ile test edildi; sistem kontrolü 3.8'in altında uyarır |
+| `faster-whisper` | 1.2.1 | `ctranslate2 <5` ister |
+| `ctranslate2` | 4.7.1 | **4.5'ten** itibaren CUDA 12 + **cuDNN 9** kullanılır, bunu torch 2.8 birlikte getirir. 4.4 ve öncesi cuDNN 8 bekler ve başarısız olur |
+| `pyannote-audio` | 4.0.4 | Konuşma algılama (VAD). torch ≥ 2.8 ve torchcodec ≥ 0.7 ister |
+| `numpy` | ≥ 2.1 (WhisperX kurar) | `numpy<2` isteyen paketler aynı venv'de olamaz |
+| `uroman` | 1.3.1.1 | Yalnızca şarkı sözü modu için (hizalama için Latin harflerine çevirme) |
+| `tkinterdnd2` | 0.6.3, *isteğe bağlı* | Doğrudan pencereye sürükle-bırak. Bağımlılığı yoktur; `--no-deps` ile kurun |
+
+### Bağımlılıklar nasıl birbirine bağlı
+
+```
+torch 2.8.0+cu128 ──┬── torchaudio 2.8.0+cu128   (her zaman aynı sürüm + aynı CUDA derlemesi)
+                    ├── torchvision 0.23.0
+                    ├── torchcodec 0.7.x          (WhisperX <0.8, pyannote ≥0.7)
+                    └── cuDNN 9 (dahil) ───────── ctranslate2 ≥4.5 ── faster-whisper 1.2.x
+                                                                    │
+whisperx 3.8.x ── ister: torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.23.0,
+                  torchcodec <0.8, ctranslate2 ≥4.5, faster-whisper ≥1.2, pyannote-audio ≥4, numpy ≥2.1
+```
+
+### Kurulumu bozmanın bilinen yolları
+
+| Ne olur | Tipik belirti | Önleme / çözüm |
+|---|---|---|
+| torch'tan **önce** `pip install whisperx` | torch PyPI'dan CPU sürümü olarak gelir → sistem kontrolü: “torch, CUDA'sız bir sürüm” | Her zaman önce torch'u PyTorch dizininden kurun (aşağıda 4. adım) |
+| `pip install -U whisperx` veya başka bir paket farklı bir torch çeker | torch/torchaudio değişir, şarkı sözleri veya VAD başarısız olur, CUDA gider | Önce `pip install --dry-run …` çalıştırın; `torch`, `torchaudio` veya `torchcodec` değişecekse iptal edin |
+| torch ve torchaudio farklı sürüm veya derlemeden | torchaudio'da içe aktarma hataları (`DLL load failed`, `WinError 127`), şarkı sözleri başarısız olur; sistem kontrolü uyarır | İkisini aynı sürüm ve `--index-url` ile birlikte yeniden kurun |
+| `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | ctranslate2 ≥ 4.5 kullanın (test edilen: 4.7.1) |
+| RTX 50xx'te eski bir CUDA derlemesi (cu121/cu124) | `no kernel image is available for execution on the device` | cu128 derlemesini kullanın |
+| Başka bir yapay zekâ aracı aynı venv'e kuruldu | farklı torch veya `numpy<2` → çeşitli hatalar | Diğer araçlara kendi venv'lerini verin |
+| Tkinter'sız Python | Araç “Tkinter eksik” der | Python kurulum programı → Modify → “tcl/tk and IDLE” |
+
+---
+
+## Kurulum (Windows)
+
+Tüm komutlar `cmd.exe` içindir. Örnek klasör `C:\WhisperX-Subtitle-Workbench`. Başka bir klasör de olur, yeter ki `venv` onun **içinde** olsun; çünkü `Whisper_Tool.bat` onu orada arar.
+
+**1. Python 3.10'u kurun**, [python.org](https://www.python.org/downloads/windows/) adresinden. “tcl/tk and IDLE” seçili kalsın.
+
+**2. ffmpeg'i kurun**, örneğin:
+
+```bash
+winget install Gyan.FFmpeg
+```
+
+İsterseniz bir sürümü `C:\ffmpeg` klasörüne açıp daha sonra *Ayarlar → Ses ve çıktı* altında `C:\ffmpeg\bin\ffmpeg.exe` yolunu da girebilirsiniz.
+
+**3. Workbench'i edinin**, git ile ya da ZIP'i GitHub'dan indirip açarak:
+
+```bash
+git clone https://github.com/fardem/WhisperX-Subtitle-Workbench C:\WhisperX-Subtitle-Workbench
+```
+
+**4. venv oluşturun ve PyTorch'u CUDA ile kurun.** Bu adım önce gelir ve belirleyici olandır:
+
+```bash
+cd /d C:\WhisperX-Subtitle-Workbench
+```
+
+```bash
+py -3.10 -m venv venv
+```
+
+```bash
+venv\Scripts\python.exe -m pip install --upgrade pip
+```
+
+```bash
+venv\Scripts\python.exe -m pip install torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu128
+```
+
+**5. WhisperX'i ve gerisini kurun**, `requirements.txt` içindeki test edilmiş sürümlerle:
+
+```bash
+venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+pip mevcut `torch 2.8.0+cu128` sürümünü korur, çünkü bu sürüm WhisperX'in `torch~=2.8.0` şartını zaten karşılar.
+
+**6. Kurulumu kontrol edin:**
+
+```bash
+venv\Scripts\python.exe -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+```
+
+Beklenen çıktı `2.8.0+cu128 12.8 True`. Ardından venv'i çakışmalara karşı kontrol edin:
+
+```bash
+venv\Scripts\python.exe -m pip check
+```
+
+**7. İsteğe bağlı: doğrudan pencereye sürükle-bırak.** Bunu daha sonra *Ayarlar → Genel* altında tek tıkla da yapabilirsiniz:
+
+```bash
+venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
+```
+
+**8. Başlatın:** `Whisper_Tool.bat`. İlk başlatmada araç `whisper_tool.example.ini` dosyasından `whisper_tool.ini` oluşturur ve sistem kontrolünü çalıştırır. Kontrolün her satırı yeşil olmalıdır.
+
+**Masaüstü kısayolu:** `Whisper_Tool.bat` üzerinde sağ tık → *Kısayol oluştur* → kısayolu masaüstüne taşıyın. Dosyaları ve klasörleri kısayolun üzerine sürükleyebilirsiniz.
+
+### Mevcut bir WhisperX venv'ini kullanma
+
+Çalışan bir WhisperX venv'iniz zaten varsa, örn. `C:\WhisperX\venv`, bu deponun dosyalarını `C:\WhisperX` klasörüne, `venv` klasörünün yanına kopyalayın. Hiçbir şey kurulmaz; araç yalnızca zaten var olan paketleri kullanır.
+
+---
+
+## Güvenli güncelleme
+
+- **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
+- **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
+
+1. Mevcut, çalışan durumu kaydedin:
+
+   ```bash
+   venv\Scripts\python.exe -m pip freeze > requirements-working.txt
+   ```
+
+2. Önce bir deneme çalıştırması yapın. Hiçbir şey kurmaz:
+
+   ```bash
+   venv\Scripts\python.exe -m pip install --dry-run -U whisperx
+   ```
+
+3. Deneme çıktısında “Would install” altında `torch`, `torchaudio` veya `torchcodec` görünüyorsa **iptal edin**. Bu güncelleme kombinasyonu bozardı.
+
+4. En güvenli yedek, tüm `venv` klasörünün bir kopyasıdır. Aynı yola geri kopyalandığında hemen yeniden çalışır.
+
+---
+
+## Kullanım
+
+| Sürüklediğiniz … | Aracın yaptığı … | Sonuç |
+|---|---|---|
+| bir video/ses dosyası (`.mp4 .mkv .mp3 .wav .m4a …`) | WhisperX ile transkripsiyon | `<name>.srt` |
+| yanında `<name>.lyric.txt` olan bir medya dosyası | şarkı sözü hizalama (her satıra bir şarkı satırı, UTF-8) | `<name>.lyric.srt` |
+| bir WhisperX `.json` dosyası (“JSON'u sakla” ile kaydedilmiş) | yalnızca altyazıları yeniden oluşturur | `<name>.srt` |
+| bir klasör | içindeki tüm medya dosyaları | |
+
+- **Başlat** seçili dosyaları işler. Seçim yoksa henüz bitmemiş tüm dosyaları işler. Hepsi bittiyse hepsini yeniden işler, örn. farklı bir düzenle.
+- **Dil:**
+  - *Otomatik*, dili her dosya için ilk 30 saniyeye göre algılar.
+  - Sabit bir dil daha güvenilirdir. Kayıt müzikle veya bir girişle başlıyorsa onu seçin.
+- **Prompt:** Whisper'a nadir isim ve terimleri istenen yazımla veren kısa bir ipucu. Sesin dilinde yazın. Her dilin prompt'unu *Ayarlar → Diller* altında ayarlarsınız.
+- **Boşluk kontrolü:**
+  - Şüpheli boşlukları olan dosyalar listede “⚠ boşluk” durumunu alır.
+  - Bu yerler günlükte sarı görünür.
+  - Ayrıca `<name>.bosluklar.srt` olarak kaydedilir. Dosya adı arayüz diline göre değişir: İngilizcede `.gaps.srt`, Almancada `.luecken.srt`. Her yere atlamak için VLC'de veya Subtitle Edit'te ikinci altyazı izi olarak yükleyin.
+- **Fareyi herhangi bir öğenin üzerinde tutarsanız** ayrıntılı bir açıklama görünür.
+
+---
+
+## Transkriptleri karşılaştırma
+
+Modelleri ve ayarları test etmek için dosya listesindeki **Karşılaştır …** düğmesini kullanın. Yalnızca düz metin sayılır; zaman damgaları ve satır sonları yok sayılır.
+
+![Karşılaştırma penceresi](docs/images/compare-dialog.png)
+
+| Dosyalar | Ne öğrenirsiniz |
+|---|---|
+| **A + B** | İki transkriptin nerede farklı olduğunu, örn. iki model, beam veya prompt |
+| **A + referans** | A'nın tüm hatalarını. Referans, elle düzeltilmiş bir SRT'dir; 5–10 düzeltilmiş dakika yeterlidir |
+| **A + B + referans** | Her farkta kimin haklı olduğunu, iki dosyanın hata oranını, ortak hataları ve değiştirme önerilerini |
+
+Renkler her yerde aynıdır: **A mavi, B mor, referans yeşil (doğru)**. Hiçbir şeyin üzeri çizilmez; *eksik*, bir dosyada hiçbir şey olmayan yeri işaretler.
+
+![Karşılaştırma raporu](docs/images/report-overview.png)
+
+![Kararlarla farklar](docs/images/report-differences.png)
+
+Rapor ayrıca şunları içerir:
+- **Zaman:** tipik sapma ve medyan kayma, her zaman gösterilir. Art arda birkaç kelimenin 1 sn'den fazla saptığı bölümler ayrıca listelenir.
+- **İkisinde de hata:** yalnızca bir prompt'un veya bir değiştirmenin düzeltebileceği hatalar.
+- **Değiştirme önerileri:** kopyalama düğmeli `yanlış = doğru` satırları, *Ayarlar → Diller → Değiştirmeler* için hazır.
+- **Yalnızca yazım:** noktalama veya büyük/küçük harf farkları; hata sayılmaz.
+- **Tam metin:** tüm farkları işaretlenmiş metnin tamamı.
+
+**Dinle:** video veya sesi de verirseniz araç, raporun yanına küçük bir ses izi (`.m4a`) koyar. Rapordaki her zaman o zaman tıklanabilir olur ve yeri 1,5 sn önceden çalar. Raporu ve `.m4a` dosyasını birlikte tutun.
+
+İpucu: *Konuşma uzantısı*nı `.{model}.srt` olarak ayarlayın (*Ayarlar → Ses ve çıktı*). O zaman her model kendi SRT'sini yazar ve karşılaştırması kolaylaşır.
+
+Rapor, sisteminizin açık/koyu moduna uyar:
+
+![Koyu mod](docs/images/report-dark.png)
+
+---
+
+## Ayarlar
+
+- **Ana pencere:** dil, mod, düzen, ses filtresi ve prompt. *Varsayılan olarak kaydet* bunları INI'ye yazar.
+- **Ayarlar …** altı sekmeden oluşur: Whisper, Konuşma algılama, Altyazılar, Ses ve çıktı, Diller ve Genel. *Kaydet* yalnızca değişen değerleri `whisper_tool.ini` dosyasına yazar, önce bir `.bak` yedeği oluşturur ve tüm açıklamaları korur.
+- `whisper_tool.ini` elle de düzenlenebilir. Her değerin açıklaması vardır; şablon `whisper_tool.example.ini` dosyasıdır.
+
+Değişiklikler pencereyi kapatmadan bir sonraki başlatmada geçerli olur. Modeller yalnızca bir model parametresi değiştiğinde yeniden yüklenir.
+
+---
+
+## Arayüz dili ve çeviriler
+
+Arayüz, günlük ve karşılaştırma raporu **Türkçe, İngilizce ve Almanca** olarak kullanılabilir.
+
+![Ayarlar – Genel](docs/images/settings-general.png)
+
+- *Ayarlar → Genel → Arayüz dili*. Varsayılan “Windows gibi”, bir dil dosyası varsa sistem dilini, yoksa İngilizceyi kullanır. Bir değişiklikten sonra araç pencereyi yeniden başlatmayı önerir.
+- INI'de: `[System] ui_language = auto | en | de | tr`.
+
+**Dil ekleme:**
+1. `lang/en.json` dosyasını `lang/<kod>.json` olarak kopyalayın, örn. `lang/fr.json`.
+2. Değerleri çevirin ve `"_meta" → "name"` alanını ayarlayın. `{n}` ve `{path}` gibi yer tutucuları değiştirmeyin.
+3. Aracı yeniden başlatın. Yeni dil listede otomatik olarak görünür.
+
+Eksik girdiler İngilizceye döner, bu yüzden yarım kalmış bir çeviri aracı asla bozmaz. Yeni dillerle pull request'ler memnuniyetle karşılanır.
+
+---
+
+## Komut satırı
+
+Pencere olmadan, örn. zamanlanmış bir görev için, INI'deki `[Menu]` varsayılanlarıyla:
+
+```bash
+venv\Scripts\python.exe whisper_tool.py --nogui dosya1.mp4 dosya2.mp3
+```
+
+Pencere olmadan karşılaştırma raporu oluşturmak için:
+
+```bash
+venv\Scripts\python.exe wt_compare.py A.srt B.srt referans.srt --media video.mp4
+```
+
+```bash
+venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
+```
+
+---
+
+## Sorun giderme
+
+| Sorun | Çözüm |
+|---|---|
+| Araç başlamıyor | Bir mesaj kutusu nedeni gösterir. Aynı metin `whisper_tool_error.log` dosyasında da bulunur |
+| Sistem kontrolünde bir satır kırmızı | Eksik parçayı ve hangi işlevin etkilendiğini söyler. Bkz. [Kurulumu bozmanın bilinen yolları](#kurulumu-bozmanın-bilinen-yolları) |
+| “torch, CUDA'sız bir sürüm” | torch PyPI'dan kurulmuş. Kurulumun 4. adımını tekrarlayın |
+| Kısık sesli yerlerde metin eksik | Boşluk kontrolüne bakın. Sonra *Onset*'i düşürün veya *silero*'yu deneyin (*Ayarlar → Konuşma algılama*) |
+| Tüm dosya için yanlış dil | *Otomatik* yerine dili belirleyin; baştaki müzik veya giriş algılamayı yanıltabilir |
+| Prompt kelimeleri sessizlikte veya müzikte çıkıyor | Prompt'u kısaltın veya bu dosya için *yok*'u seçin |
+| Pencereye sürükle-bırak çalışmıyor | *Ayarlar → Genel → Sürükle-bırak → Etkinleştir …*, sonra pencereyi yeniden başlatın. BAT üzerine sürüklemek her zaman çalışır |
+
+---
+
+## Proje yapısı
+
+| Dosya | Görevi |
+|---|---|
+| `whisper_tool.py` | Arayüz (Tkinter), ayarlar penceresi, karşılaştırma penceresi, konsol modu |
+| `wt_core.py` | Ses yükleme, WhisperX, şarkı sözü hizalama, altyazı kuralları, boşluk kontrolü, sistem kontrolü, INI yazıcı |
+| `wt_compare.py` | Kelime kelime karşılaştırma ve HTML raporu (tek başına da kullanılabilir) |
+| `wt_i18n.py` | Dil dosyalarını yükler |
+| `lang/*.json` | Arayüzün, günlüğün ve raporun tüm metinleri (en, de, tr) |
+| `whisper_tool.example.ini` | Ayar şablonu; ilk başlatmada `whisper_tool.ini` olarak kopyalanır |
+| `Whisper_Tool.bat` | Başlatıcı: çift tıklayın veya dosyaları üzerine sürükleyin |
+| `requirements.txt` | Test edilmiş paket sürümleri (önce torch'u kurun!) |
+
+---
+
+## Lisans ve teşekkür
+
+[MIT Lisansı](LICENSE) © 2026 fardem
+
+Bu araç başkalarının emeği üzerine kuruludur:
+- [WhisperX](https://github.com/m-bain/whisperX)
+- [faster-whisper](https://github.com/SYSTRAN/faster-whisper) ve [CTranslate2](https://github.com/OpenNMT/CTranslate2)
+- [OpenAI Whisper](https://github.com/openai/whisper)
+- [pyannote.audio](https://github.com/pyannote/pyannote-audio)
+- [PyTorch / torchaudio](https://pytorch.org/), MMS_FA zorlamalı hizalama hattı dahil
+- [uroman](https://github.com/isi-nlp/uroman)
+- [FFmpeg](https://ffmpeg.org/)
+
+Bu paketler için kendi lisansları geçerlidir. Ekran görüntüleri uydurma demo içerik gösterir.

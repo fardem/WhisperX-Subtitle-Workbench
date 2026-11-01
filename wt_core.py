@@ -1,0 +1,1168 @@
+"""
+wt_core.py
+==========
+Core logic for whisper_tool.py (no user interface).
+
+  - settings from whisper_tool.ini, incl. rules per language (de/en/ar/tr)
+  - audio via ffmpeg directly into memory (optionally filtered, no temp files)
+  - transcription + alignment with WhisperX – models are loaded only once
+  - lyrics alignment with MMS_FA when <name>.lyric.txt is next to the file
+  - subtitle rules: sentences (orphan, dangling, pauses), word by word, raw
+
+Heavy libraries (torch, whisperx, torchaudio, uroman) are only imported
+when they are really needed.
+"""
+
+import configparser
+import gc
+import json
+import logging
+import os
+import re
+import shutil
+import subprocess
+import textwrap
+import threading
+import time
+from dataclasses import dataclass, field, replace
+from pathlib import Path
+
+import numpy as np
+
+import wt_i18n as i18n
+from wt_i18n import T, Tn
+
+SAMPLE_RATE = 16000
+
+LANGS = ("de", "en", "ar", "tr")                 # languages with their own rules (names: lang/*.json → speechlang)
+MODES = ("sentence", "word", "raw")
+MEDIA_EXT = (".mp3", ".mp4", ".wav", ".flac", ".m4a", ".aac", ".ogg", ".opus",
+             ".mkv", ".avi", ".mov", ".webm", ".wma")
+
+PUNCT         = ('.', ',', '?', '!', ';', ':', '،', '؛', '؟')
+COMMA         = (',', '،')
+SENTENCE_END  = ('.', '?', '!', '؟')
+ORDINAL       = re.compile(r'\d{1,2}\.')       # "6." in "am 6. November" (German date) is not a sentence end
+ORDINAL_LANGS = {"de", "tr"}
+STRIP_CHARS   = ".,?!;:،؛؟\"'“”„«»()[]…"
+
+# No console window for ffmpeg when the tool runs without a console (pythonw)
+NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+
+class Cancelled(Exception):
+    pass
+
+
+class ToolError(RuntimeError):
+    """Expected error with an understandable message (no traceback needed)."""
+
+
+# ─── TEXT HELPERS ─────────────────────────────────────────────────────────────
+
+def norm(text: str, lang: str) -> str:
+    """Word for comparisons: punctuation removed, lower case (Turkish: I→ı, İ→i)."""
+    t = text.strip().strip(STRIP_CHARS)
+    if lang == "tr":
+        t = t.replace("I", "ı").replace("İ", "i")
+    return t.lower()
+
+
+def compile_replacements(items) -> list:
+    """Replace whole words/phrases only, case-insensitive, longest first."""
+    patterns = []
+    for wrong, right in sorted(items, key=lambda kv: -len(kv[0])):
+        wrong = wrong.strip()
+        if wrong:
+            pat = re.compile(r'(?<!\w)' + re.escape(wrong) + r'(?!\w)', re.IGNORECASE)
+            patterns.append((pat, right.strip()))
+    return patterns
+
+
+def apply_replacements(text: str, patterns) -> str:
+    for pat, right in patterns:
+        text = pat.sub(lambda _m, r=right: r, text)
+    return text
+
+
+def fmt_time(seconds: float) -> str:
+    ms = int(round(max(seconds, 0) * 1000))
+    h, ms = divmod(ms, 3_600_000)
+    m, ms = divmod(ms, 60_000)
+    s, ms = divmod(ms, 1000)
+    return f"{h:02}:{m:02}:{s:02},{ms:03}"
+
+
+# ─── CONFIGURATION ────────────────────────────────────────────────────────────
+
+@dataclass
+class LangRules:
+    lang:        str
+    prompt:      str       = ""
+    fillers:     frozenset = frozenset()
+    dangling:    frozenset = frozenset()
+    repl_word:   list      = field(default_factory=list)
+    repl_phrase: list      = field(default_factory=list)
+    ordinal:     bool      = False
+
+    @property
+    def repl_all(self) -> list:
+        return self.repl_phrase + self.repl_word
+
+
+@dataclass
+class Layout:
+    max_chars:    int   = 45
+    max_lines:    int   = 1
+    orphan_limit: int   = 4
+    orphan_fill:  int   = 80
+    split_pause:  float = 0.0
+    max_duration: float = 0.0
+
+
+def _bool(v: str) -> bool:
+    return v.strip().lower() in ("1", "true", "ja", "yes", "on")
+
+
+class Config:
+    """Reads whisper_tool.ini. Missing/broken values → default + warning."""
+
+    def __init__(self, path):
+        self.path     = Path(path)
+        self.warnings: list[str] = []
+        self._cp      = configparser.ConfigParser(delimiters=('=',), interpolation=None, strict=False)
+        try:
+            if not self._cp.read(self.path, encoding='utf-8-sig'):
+                self.warnings.append(T("core.ini_missing", path=self.path))
+        except configparser.Error as e:
+            self.warnings.append(T("core.ini_broken", err=e.__class__.__name__))
+            self._cp = configparser.ConfigParser()
+        self._rules: dict[str, LangRules] = {}
+
+        g = self._get
+        # System
+        self.ffmpeg            = self._find_ffmpeg(g("System", "ffmpeg_path", "ffmpeg"))
+        self.device            = g("System", "device", "cuda").lower()
+        # Menu / defaults
+        self.menu_timeout      = g("Menu", "timeout", 15, int)
+        self.menu_skip         = g("Menu", "skip", False, _bool)
+        self.default_filter    = g("Menu", "ffmpeg", True, _bool)
+        self.default_language  = g("Menu", "language", "auto").lower()
+        self.default_mode      = g("Menu", "mode", "sentence").lower()
+        self.prompt_mode       = g("Menu", "prompt_mode", "ini").lower()
+        self.custom_prompt     = " ".join(g("Menu", "custom_prompt", "").split())
+        self.live_lines        = g("Menu", "live_lines", True, _bool)
+        # Whisper
+        self.model             = g("Whisper", "model", "large-v3")
+        self.models            = {k[6:]: v.strip() for k, v in self._section("Whisper").items()
+                                  if k.startswith("model.") and v.strip()}
+        self.beam_size         = g("Whisper", "beam_size", 5, int)
+        self.compute_type      = g("Whisper", "compute_type", "float16")
+        self.batch_size        = g("Whisper", "batch_size", 8, int)
+        self.suppress_numerals = g("Whisper", "suppress_numerals", False, _bool)
+        # VAD
+        self.vad_method        = g("VAD", "method", "pyannote").lower()
+        self.vad_onset         = g("VAD", "onset", 0.5, float)
+        self.vad_offset        = g("VAD", "offset", 0.363, float)
+        self.chunk_size        = g("VAD", "chunk_size", 30, int)
+        # Audio
+        self.filter_string     = " ".join(g("Audio", "filter_string", "").split())
+        # Output
+        self.keep_json         = g("Output", "keep_json", False, _bool)
+        self.speech_suffix     = g("Output", "speech_suffix", ".srt")
+        self.lyrics_input      = g("Output", "lyrics_input", ".lyric.txt")
+        self.lyrics_suffix     = g("Output", "lyrics_suffix", ".lyric.srt")
+        self.encoding          = g("Output", "encoding", "utf-8")
+        # Layout
+        self.default_chars     = g("Layout", "default_chars", 45, int)
+        self.default_lines     = g("Layout", "default_lines", 1, int)
+        self.orphan_limit      = g("Layout", "orphan_limit", 4, int)
+        self.orphan_fill       = g("Layout", "orphan_min_fill", 80, int)
+        self.split_pause       = g("Layout", "split_pause", 0.0, float)
+        self.max_duration      = g("Layout", "max_duration", 0.0, float)
+        # Lyrics
+        self.line_hold         = g("Lyrics", "line_hold", 0.0, float)
+        self.line_gap          = g("Lyrics", "line_gap", 0.05, float)
+        # Gap check
+        self.gap_check         = g("Gaps", "enabled", True, _bool)
+        self.gap_min           = g("Gaps", "min_length", 1.0, float)
+        self.gap_margin        = g("Gaps", "margin_db", 8.0, float)
+        self.gap_srt           = g("Gaps", "write_srt", True, _bool)
+
+        if self.default_language != "auto" and self.default_language not in LANGS:
+            self.warnings.append(T("core.ini_unknown", entry=f"[Menu] language={self.default_language!r}", default="auto"))
+            self.default_language = "auto"
+        if self.default_mode not in MODES:
+            self.warnings.append(T("core.ini_unknown", entry=f"[Menu] mode={self.default_mode!r}", default="sentence"))
+            self.default_mode = "sentence"
+        if self.prompt_mode not in ("ini", "custom", "none"):
+            self.warnings.append(T("core.ini_unknown", entry=f"[Menu] prompt_mode={self.prompt_mode!r}", default="ini"))
+            self.prompt_mode = "ini"
+
+    def _section(self, name) -> dict:
+        return dict(self._cp[name]) if self._cp.has_section(name) else {}
+
+    def raw(self, section, key, default="") -> str:
+        """Value as written in the INI (for the settings dialog)."""
+        return self._cp.get(section, key).strip() if self._cp.has_option(section, key) else default
+
+    def _get(self, section, key, default, cast=str):
+        if not self._cp.has_option(section, key):
+            return default
+        raw = self._cp.get(section, key)
+        try:
+            return cast(raw) if cast is not str else raw.strip()
+        except ValueError:
+            self.warnings.append(T("core.ini_invalid", entry=f"[{section}] {key}={raw!r}", default=default))
+            return default
+
+    def _find_ffmpeg(self, configured: str) -> str:
+        if Path(configured).is_file() or shutil.which(configured):
+            return configured
+        fallback = shutil.which("ffmpeg")
+        self.warnings.append(T("core.ffmpeg_fallback", path=configured, found=fallback) if fallback
+                             else T("core.ffmpeg_check", path=configured))
+        return fallback or configured
+
+    def model_signature(self) -> tuple:
+        """If this changes, loaded Whisper models must be reloaded."""
+        return (self.device, self.compute_type, self.beam_size, self.suppress_numerals,
+                self.vad_method, self.vad_onset, self.vad_offset, self.chunk_size)
+
+    def layout(self, max_chars=None, max_lines=None) -> Layout:
+        return Layout(max_chars or self.default_chars, max_lines or self.default_lines,
+                      self.orphan_limit, self.orphan_fill, self.split_pause, self.max_duration)
+
+    def rules(self, lang: str) -> LangRules:
+        if lang not in self._rules:
+            def words(section):
+                raw = self._section(section).get(lang, "")
+                return frozenset(norm(w, lang) for w in raw.split(",") if w.strip())
+            repl = {**self._section("Replacements"), **self._section(f"Replacements.{lang}")}
+            self._rules[lang] = LangRules(
+                lang        = lang,
+                prompt      = " ".join(self._section("Prompt").get(lang, "").split()),
+                fillers     = words("Filler"),
+                dangling    = words("Dangling"),
+                repl_word   = compile_replacements([(k, v) for k, v in repl.items() if ' ' not in k.strip()]),
+                repl_phrase = compile_replacements([(k, v) for k, v in repl.items() if ' ' in k.strip()]),
+                ordinal     = lang in ORDINAL_LANGS,
+            )
+        return self._rules[lang]
+
+
+# ─── AUDIO ────────────────────────────────────────────────────────────────────
+
+def load_audio(path, ffmpeg: str, audio_filter: str | None = None) -> np.ndarray:
+    """Any audio/video file → 16 kHz mono float32, directly in memory."""
+    cmd = [ffmpeg, "-nostdin", "-v", "error", "-i", str(path), "-vn"]
+    if audio_filter:
+        cmd += ["-af", audio_filter]
+    cmd += ["-f", "s16le", "-acodec", "pcm_s16le", "-ac", "1", "-ar", str(SAMPLE_RATE), "-"]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, creationflags=NO_WINDOW)
+    except FileNotFoundError:
+        raise ToolError(T("core.ffmpeg_missing", path=ffmpeg)) from None
+    if proc.returncode != 0:
+        err = proc.stderr.decode("utf-8", "replace").strip().splitlines()
+        raise ToolError("ffmpeg: " + (err[-1] if err else T("core.exit_code", code=proc.returncode)))
+    audio = np.frombuffer(proc.stdout, np.int16).astype(np.float32) / 32768.0
+    if audio.size == 0:
+        raise ToolError(T("core.no_audio"))
+    return audio
+
+
+# ─── SUBTITLE RULES ───────────────────────────────────────────────────────────
+# Cue = (start, end, [line1, line2, ...])
+
+def fill_missing_times(words: list[dict], seg_start: float, seg_end: float) -> list[dict]:
+    """
+    WhisperX returns no timestamps for some words (especially numbers like "6."
+    or "2024"). Instead of dropping them, derive the time from the neighbouring
+    words in the same segment.
+    """
+    words = [dict(w) for w in words]
+    for i, w in enumerate(words):
+        if 'start' in w and 'end' in w:
+            continue
+        prev_end   = next((words[j]['end']   for j in range(i - 1, -1, -1)  if 'end'   in words[j]), seg_start)
+        next_start = next((words[j]['start'] for j in range(i + 1, len(words)) if 'start' in words[j]), seg_end)
+        w['start'] = prev_end
+        w['end']   = max(prev_end, next_start)
+    return words
+
+
+def collect_words(result: dict) -> list[dict]:
+    words = []
+    for seg in result.get('segments', []):
+        words.extend(fill_missing_times(seg.get('words', []), seg.get('start', 0.0), seg.get('end', 0.0)))
+    return words
+
+
+def cues_raw(result: dict, rules: LangRules) -> list:
+    """WhisperX segments unchanged (1 segment = 1 cue)."""
+    cues = []
+    for seg in result.get('segments', []):
+        text = seg.get('text', '').strip()
+        if text:
+            cues.append((seg.get('start', 0), seg.get('end', 0), [apply_replacements(text, rules.repl_all)]))
+    return cues
+
+
+def cues_word(words: list[dict], rules: LangRules) -> list:
+    """Word by word, fillers removed, replacements applied."""
+    cues = []
+    for w in words:
+        text = apply_replacements(w['word'].strip(), rules.repl_word)
+        if norm(text, rules.lang) not in rules.fillers:
+            cues.append((w['start'], w['end'], [text]))
+    return cues
+
+
+def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
+    """
+    Smart split with:
+    - filler filter
+    - replacements (single words per word, phrases on the finished line)
+    - orphan rule (short words after a comma move to the next segment)
+    - dangling word rule (article/preposition at the segment end → next segment)
+    - pause rule (optional)
+    """
+    lang = rules.lang
+
+    def is_sentence_end(t):
+        return t.endswith(SENTENCE_END) and not (rules.ordinal and ORDINAL.fullmatch(t))
+
+    # Build a clean word list
+    clean = []
+    for w in words:
+        t = apply_replacements(w['word'].strip(), rules.repl_word)
+        if not t:
+            continue
+        if norm(t, lang) in rules.fillers:
+            # pass the sentence end of a filler ("uh.") on to the previous word
+            if t.endswith(SENTENCE_END) and clean and not clean[-1]['word'].endswith(PUNCT):
+                clean[-1]['word'] += t[-1]
+            continue
+        clean.append({'word': t, 'start': w['start'], 'end': w['end']})
+
+    if not clean:
+        return []
+
+    # ── Build segments ─────────────────────────────────────────────────────────
+    segments: list[list[list[dict]]] = []
+    block:    list[list[dict]] = []
+    line:     list[dict]       = []
+    line_len  = 0                       # characters incl. one space per word
+    last_text = ""
+    last_end  = 0.0
+
+    def flush_line():
+        nonlocal line, line_len
+        if line:
+            block.append(line)
+        line, line_len = [], 0
+
+    def flush_block():
+        nonlocal block
+        flush_line()
+        if block:
+            segments.append(block)
+        block = []
+
+    for w in clean:
+        t = w['word']
+
+        # pause rule: long speech pause or too long on screen → close the block
+        if block or line:
+            block_start = (block[0][0] if block else line[0])['start']
+            if layout.split_pause > 0 and w['start'] - last_end >= layout.split_pause:
+                flush_block()
+            elif layout.max_duration > 0 and w['end'] - block_start > layout.max_duration:
+                flush_block()
+
+        # orphan rule: short word after a comma → close the block
+        if line and len(t) <= layout.orphan_limit and last_text.endswith(COMMA):
+            if line_len > layout.max_chars * (layout.orphan_fill / 100.0):
+                flush_block()
+
+        # line break at the character limit
+        if line and (line_len + len(t)) > layout.max_chars:
+            flush_line()
+            if len(block) >= layout.max_lines:
+                flush_block()
+
+        line.append(w)
+        line_len += len(t) + 1
+        last_text = t
+        last_end  = w['end']
+
+        if is_sentence_end(t):
+            flush_block()
+
+    flush_block()
+
+    # ── Dangling word rule ─────────────────────────────────────────────────────
+    i = 0
+    while i < len(segments) - 1:
+        seg, next_seg = segments[i], segments[i + 1]
+        last_line = seg[-1]
+        last_word = last_line[-1]
+        lw_text   = last_word['word']
+
+        # do not move: word with punctuation ("to.") or a long pause after it
+        pause_after = next_seg[0][0]['start'] - last_word['end']
+        movable = (not lw_text.endswith(PUNCT)
+                   and not (layout.split_pause > 0 and pause_after >= layout.split_pause))
+
+        if movable and norm(lw_text, lang) in rules.dangling:
+            last_line.pop()
+            if not last_line:
+                seg.pop()
+            next_seg[0].insert(0, last_word)
+            if not seg:
+                segments.pop(i)
+            # check the same segment again ("in the" → move both)
+            continue
+        i += 1
+
+    # ── Cues ───────────────────────────────────────────────────────────────────
+    cues = []
+    for seg in segments:
+        seg_words = [w for ln in seg for w in ln]
+        lines = [apply_replacements(" ".join(w['word'] for w in ln), rules.repl_phrase) for ln in seg]
+        cues.append((seg_words[0]['start'], seg_words[-1]['end'], lines))
+    return cues
+
+
+def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout) -> tuple[list, str]:
+    """Returns (cues, actual_mode) – without word timestamps it falls back to raw."""
+    if mode == "raw":
+        return cues_raw(result, rules), "raw"
+    words = collect_words(result)
+    if not words:
+        return cues_raw(result, rules), "raw"
+    if mode == "word":
+        return cues_word(words, rules), "word"
+    return cues_sentence(words, rules, layout), "sentence"
+
+
+def write_srt(path, cues, encoding="utf-8"):
+    text = "".join(f"{n}\n{fmt_time(start)} --> {fmt_time(end)}\n" + "\n".join(lines) + "\n\n"
+                   for n, (start, end, lines) in enumerate(cues, start=1))
+    Path(path).write_text(text, encoding=encoding)
+
+
+# ─── GAP CHECK ────────────────────────────────────────────────────────────────
+# Finds passages that are loud and voice-like but got no text –
+# e.g. because the VAD swallowed quiet speech or Whisper skipped a sentence.
+
+GAP_FRAME     = 0.05     # analysis window in seconds (800 samples, 20 Hz per FFT bin)
+GAP_TONAL     = 0.35     # spectral flatness below this = fundamental/overtones (voice, music)
+GAP_TONAL_MIN = 0.30     # share of "tonal" windows from which a loud passage counts as voice-like
+
+
+def _frame_features(audio: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Level (dBFS) and spectral flatness (100–4000 Hz) per 50 ms window."""
+    n = int(SAMPLE_RATE * GAP_FRAME)
+    count = len(audio) // n
+    if count == 0:
+        return np.zeros(0), np.zeros(0)
+    x = audio[:count * n].reshape(count, n)
+    db = 20 * np.log10(np.sqrt(np.mean(x.astype(np.float64) ** 2, axis=1)) + 1e-9)
+    win = np.hanning(n).astype(np.float32)
+    lo, hi = int(100 * GAP_FRAME), int(4000 * GAP_FRAME)      # bin = frequency * window length
+    flat = np.empty(count, np.float32)
+    for i in range(0, count, 4096):                           # in blocks – saves memory with long files
+        p = np.abs(np.fft.rfft(x[i:i + 4096] * win, axis=1))[:, lo:hi] ** 2 + 1e-12
+        flat[i:i + 4096] = np.exp(np.mean(np.log(p), axis=1)) / np.mean(p, axis=1)
+    return db, flat
+
+
+def find_gaps(audio: np.ndarray, result: dict, min_len: float = 1.0, margin_db: float = 8.0) -> list[tuple]:
+    """→ [(start, end, level_relative_to_speech_db)] for loud, voice-like passages without text."""
+    db, flat = _frame_features(audio)
+    if db.size == 0:
+        return []
+    covered = np.zeros(db.size, bool)
+    spans = [(w["start"], w["end"]) for w in collect_words(result)] \
+        or [(s.get("start", 0), s.get("end", 0)) for s in result.get("segments", [])]
+    for s, e in spans:                                        # 0.25 s margin around every word
+        covered[max(int((s - 0.25) / GAP_FRAME), 0):min(int((e + 0.25) / GAP_FRAME) + 1, db.size)] = True
+
+    audible = db > -80                                        # ignore digital silence
+    if not audible.any():
+        return []
+    speech = covered & audible
+    speech_ref = float(np.median(db[speech])) if speech.sum() > 20 else float(np.percentile(db[audible], 90))
+    floor = max(float(np.percentile(db[audible], 10)), speech_ref - 40)
+    loud = (db > floor + margin_db) & ~covered
+
+    # connected loud areas, bridge short dropouts (< 0.3 s)
+    runs, i, bridge = [], 0, int(0.3 / GAP_FRAME)
+    idx = np.flatnonzero(loud)
+    for k in idx:
+        if runs and k - runs[-1][1] <= bridge and not covered[runs[-1][1]:k].any():
+            runs[-1][1] = k + 1
+        else:
+            runs.append([k, k + 1])
+
+    gaps = []
+    for a, b in runs:
+        if (b - a) * GAP_FRAME < min_len:
+            continue
+        lf = loud[a:b]
+        tonal = ((flat[a:b] < GAP_TONAL) & lf).sum() / max(lf.sum(), 1)
+        if tonal >= GAP_TONAL_MIN:
+            gaps.append((a * GAP_FRAME, b * GAP_FRAME, float(np.median(db[a:b][lf])) - speech_ref))
+    return gaps
+
+
+def fill_suffix(suffix: str, model: str | None, lang: str | None) -> str:
+    """Placeholders in the file suffix: {model} → model name (last part for folders/repos), {lang} → language."""
+    tag = re.split(r"[\\/]", (model or "").rstrip("\\/"))[-1] or "modell"
+    tag = re.sub(r'[<>:"/\\|?*\s]+', "_", tag)
+    return suffix.replace("{model}", tag).replace("{lang}", lang or "xx")
+
+
+def fmt_pos(sec: float) -> str:
+    """Time position for messages: m:ss.d or h:mm:ss.d"""
+    m, s = divmod(sec, 60)
+    h, m = divmod(int(m), 60)
+    return f"{h}:{m:02}:{s:04.1f}" if h else f"{m}:{s:04.1f}"
+
+
+def write_gap_srt(path, gaps, encoding="utf-8"):
+    write_srt(path, [(s, e, [T("core.gap_cue", len=i18n.secs(e - s), db=f"{rel:+.0f}")])
+                     for s, e, rel in gaps], encoding)
+
+
+# ─── LYRICS ───────────────────────────────────────────────────────────────────
+
+def load_lyrics(path) -> list[str]:
+    try:
+        lines = Path(path).read_text(encoding="utf-8-sig").splitlines()
+    except UnicodeDecodeError:
+        raise ToolError(T("core.lyrics_not_utf8")) from None
+    return [l.strip() for l in lines if l.strip()]
+
+
+def clean_lyric_word(word: str, uroman) -> str:
+    """Remove punctuation → lowercase → uroman romanization for MMS_FA."""
+    word = re.sub(r"[^\w]", "", word).lower()
+    word = uroman.romanize_string(word)
+    return re.sub(r"[^a-z']", "", word).strip()
+
+
+def extend_line_ends(cues: list[list], duration: float, hold: float, gap: float):
+    """Extend cue ends by up to `hold` s without running into the next line."""
+    if hold <= 0 or not cues:
+        return
+    for cur, nxt in zip(cues, cues[1:]):
+        cur[1] = max(cur[1], min(cur[1] + hold, nxt[0] - gap))
+    cues[-1][1] = max(cues[-1][1], min(cues[-1][1] + hold, duration))
+
+
+# ─── JOB / INPUT ──────────────────────────────────────────────────────────────
+
+@dataclass
+class JobOptions:
+    language:      str   = "auto"      # auto, de, en, ar, tr
+    mode:          str   = "sentence"  # sentence, word, raw
+    use_filter:    bool  = True
+    prompt_mode:   str   = "ini"       # ini, custom, none
+    custom_prompt: str   = ""
+    max_chars:     int   = 45
+    max_lines:     int   = 1
+    keep_json:     bool  = False
+    line_hold:     float = 0.0
+    live_lines:    bool  = True        # print recognized lines during transcription
+
+    @classmethod
+    def from_config(cls, cfg: Config) -> "JobOptions":
+        return cls(language=cfg.default_language, mode=cfg.default_mode, use_filter=cfg.default_filter,
+                   prompt_mode=cfg.prompt_mode, custom_prompt=cfg.custom_prompt,
+                   max_chars=cfg.default_chars, max_lines=cfg.default_lines, keep_json=cfg.keep_json,
+                   line_hold=cfg.line_hold, live_lines=cfg.live_lines)
+
+
+def resolve_input(path, cfg: Config) -> tuple[str, Path, Path]:
+    """
+    What should happen with the file?  → (kind, input, output)
+      lyrics : <name>.lyric.txt is next to it (or the .lyric.txt itself was chosen)
+      json   : WhisperX JSON → only rebuild the SRT
+      speech : everything else → transcribe
+    """
+    p = Path(path)
+    name_l = p.name.lower()
+    if name_l.endswith(cfg.lyrics_input.lower()):
+        base = p.name[:-len(cfg.lyrics_input)]
+        media = sorted(c for c in p.parent.glob(f"{glob_escape(base)}.*") if c.suffix.lower() in MEDIA_EXT)
+        if not media:
+            raise ToolError(T("core.no_media", name=p.name))
+        p = media[0]
+    lyrics = p.with_name(p.stem + cfg.lyrics_input)
+    if lyrics.is_file():
+        return "lyrics", p, p.with_name(p.stem + cfg.lyrics_suffix)
+    if p.suffix.lower() == ".json":
+        return "json", p, p.with_name(p.stem + cfg.speech_suffix)
+    return "speech", p, p.with_name(p.stem + cfg.speech_suffix)
+
+
+def glob_escape(s: str) -> str:
+    return re.sub(r'([\[\]*?])', r'[\1]', s)
+
+
+# ─── ENGINE ───────────────────────────────────────────────────────────────────
+
+class Engine:
+    """Keeps the models in memory and processes files one after another."""
+
+    def __init__(self, cfg: Config, log=print, progress=None):
+        self.cfg       = cfg
+        self.log       = log
+        self.progress  = progress or (lambda stage, pct: None)
+        self.cancel    = threading.Event()
+        self._whisper  = None
+        self._wname    = None
+        self._align: dict = {}
+        self._mms      = None
+        self._uroman   = None
+        self._device   = None
+
+    # ── Management ─────────────────────────────────────────────────────────────
+
+    def set_config(self, cfg: Config):
+        """Take over a new INI; reload models only if model parameters change."""
+        if cfg.model_signature() != self.cfg.model_signature():
+            self.unload()
+        self.cfg = cfg
+
+    def unload(self, keep=()):
+        if "whisper" not in keep:
+            self._whisper, self._wname = None, None
+        if "align" not in keep:
+            self._align.clear()
+        if "mms" not in keep:
+            self._mms = None
+        gc.collect()
+        try:
+            import torch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+    @property
+    def device(self) -> str:
+        if self._device is None:
+            import torch
+            self._device = self.cfg.device
+            if self._device == "cuda" and not torch.cuda.is_available():
+                self.log(i18n.line("warn", "core.no_cuda"))
+                self._device = "cpu"
+            if self._device == "cuda":
+                self.log(i18n.tag("device") + torch.cuda.get_device_name(0))
+        return self._device
+
+    def _check_cancel(self):
+        if self.cancel.is_set():
+            raise Cancelled()
+
+    def _oom_retry(self, fn, keep):
+        """On 'CUDA out of memory', unload all other models once and try again."""
+        try:
+            return fn()
+        except Exception as e:
+            if "out of memory" not in str(e).lower():
+                raise
+            self.log(i18n.line("warn", "core.oom"))
+            self.unload(keep=keep)
+            return fn()
+
+    # ── Models ─────────────────────────────────────────────────────────────────
+
+    def whisper(self, name: str):
+        if self._whisper is not None and self._wname == name:
+            return self._whisper
+        import whisperx
+        import whisperx.asr     # loads pyannote/lightning – quiet their loggers afterwards
+        quiet_library_logs()
+        if self._whisper is not None:
+            self.log(i18n.line("model", "core.model_switch", name=name))
+            self.unload(keep=("align", "mms"))
+        cfg     = self.cfg
+        compute = cfg.compute_type
+        if self.device == "cpu" and compute == "float16":
+            compute = "float32"
+        problem, hint = check_model(name)
+        if problem:
+            raise ToolError(problem)
+        if hint:
+            self.log(i18n.tag("warn") + hint)
+        self.log(i18n.line("model", "core.model_load", name=name, compute=compute, beam=cfg.beam_size))
+        t = time.perf_counter()
+        try:
+            self._whisper = whisperx.load_model(
+                name, self.device, compute_type=compute,
+                asr_options={"beam_size": cfg.beam_size, "suppress_numerals": cfg.suppress_numerals},
+                vad_method=cfg.vad_method,
+                vad_options={"chunk_size": cfg.chunk_size, "vad_onset": cfg.vad_onset, "vad_offset": cfg.vad_offset},
+            )
+        except Exception as e:
+            if "/" in name and not Path(name).exists():        # Hugging Face repo
+                raise ToolError(T("core.model_hf_failed", name=name, err=f"{e.__class__.__name__}: {e}")) from e
+            raise
+        self._wname = name
+        self.log(i18n.line("model", "core.model_ready", time=i18n.secs(time.perf_counter() - t)))
+        return self._whisper
+
+    def align_model(self, lang: str):
+        if lang not in self._align:
+            import whisperx
+            self.log(i18n.line("align", "core.align_load", lang=lang))
+            try:
+                self._align[lang] = whisperx.load_align_model(language_code=lang, device=self.device)
+            except ValueError as e:
+                self.log(i18n.tag("warn") + str(e))
+                self._align[lang] = None
+        return self._align[lang]
+
+    def mms(self):
+        if self._mms is None:
+            import torchaudio
+            bundle = torchaudio.pipelines.MMS_FA
+            self.log(i18n.line("model", "core.mms_load"))
+            self._mms = (bundle.get_model(with_star=False).to(self.device),
+                         bundle.get_tokenizer(), bundle.get_aligner())
+        return self._mms
+
+    def uroman(self):
+        if self._uroman is None:
+            import uroman
+            self._uroman = uroman.Uroman()
+        return self._uroman
+
+    # ── Steps ──────────────────────────────────────────────────────────────────
+
+    def transcribe(self, audio: np.ndarray, opts: JobOptions) -> tuple[dict, LangRules]:
+        import whisperx
+        cfg = self.cfg
+
+        # determine the language per file – otherwise WhisperX would use the language
+        # of the first file for all following ones
+        if opts.language == "auto":
+            detector = self._whisper if self._whisper is not None else self.whisper(cfg.model)
+            lang = detector.detect_language(audio)
+            self.log(i18n.line("lang", "core.lang_detected", lang=lang,
+                               name=T(f"speechlang.{lang}") if lang in LANGS else T("core.no_rules")))
+        else:
+            lang = opts.language
+        model = self.whisper(cfg.models.get(lang, cfg.model))
+
+        rules  = cfg.rules(lang)
+        prompt = {"ini": rules.prompt, "custom": opts.custom_prompt.strip(), "none": ""}.get(opts.prompt_mode, "")
+        model.options = replace(model.options, initial_prompt=prompt or None)
+        self.log(i18n.tag("prompt") + (T("core.prompt_off") if not prompt else
+                                       "INI/" + lang if opts.prompt_mode == "ini" else T("core.prompt_custom"))
+                 + (f" – {prompt[:70]}{'…' if len(prompt) > 70 else ''}" if prompt else ""))
+
+        self.log(i18n.line("asr", "core.asr_running"))
+        t = time.perf_counter()
+        result = model.transcribe(audio, batch_size=cfg.batch_size, language=lang, chunk_size=cfg.chunk_size,
+                                  verbose=opts.live_lines,
+                                  progress_callback=lambda p: self.progress("asr", p))
+        self.log(i18n.tag("asr") + Tn("core.asr_done", len(result.get("segments", [])),
+                                       time=i18n.secs(time.perf_counter() - t)))
+        self._check_cancel()
+
+        am = self.align_model(lang)
+        if am is None:     # without word timestamps → build_cues falls back to raw
+            return {"segments": result.get("segments", []), "language": lang}, rules
+        self.log(i18n.line("align", "core.align_words"))
+        aligned = whisperx.align(result["segments"], am[0], am[1], audio, self.device,
+                                 return_char_alignments=False,
+                                 progress_callback=lambda p: self.progress("align", p))
+        aligned["language"] = lang
+        return aligned, rules
+
+    def align_lyrics(self, audio: np.ndarray, lines: list[str], hold: float) -> tuple[list, list[int]]:
+        import torch
+        ur = self.uroman()
+        entries = [(cw, i) for i, line in enumerate(lines) for word in line.split()
+                   if (cw := clean_lyric_word(word, ur))]
+        if not entries:
+            raise ToolError(T("core.lyrics_no_words"))
+
+        model, tokenizer, aligner = self.mms()
+        wav = torch.from_numpy(audio).unsqueeze(0).to(self.device)
+        self.log(i18n.line("align", "core.emissions"))
+        with torch.inference_mode():
+            emission, _ = model(wav)
+        num_frames = emission.shape[1]
+        duration   = audio.shape[0] / SAMPLE_RATE
+
+        self.log(i18n.tag("align") + "CTC Forced Alignment …")
+        token_spans = aligner(emission[0], tokenizer([e[0] for e in entries]))
+
+        # word spans → line spans (min start, max end)
+        line_spans: dict[int, list[int]] = {}
+        for (_, li), spans in zip(entries, token_spans):
+            s, e = spans[0].start, spans[-1].end
+            if li in line_spans:
+                line_spans[li][0] = min(line_spans[li][0], s)
+                line_spans[li][1] = max(line_spans[li][1], e)
+            else:
+                line_spans[li] = [s, e]
+
+        cues, missing = [], []
+        for i, line in enumerate(lines):
+            if i not in line_spans:
+                missing.append(i + 1)
+                continue
+            s, e = line_spans[i]
+            cues.append([s / num_frames * duration, e / num_frames * duration, line])
+        extend_line_ends(cues, duration, hold, self.cfg.line_gap)
+        return [(s, e, [t]) for s, e, t in cues], missing
+
+    # ── One file ───────────────────────────────────────────────────────────────
+
+    def process(self, path, opts: JobOptions) -> dict:
+        cfg = self.cfg
+        kind, src, out = resolve_input(path, cfg)
+        info = {"kind": kind, "input": src, "output": out}
+
+        if kind == "json":
+            self.log(i18n.line("json", "core.json_rebuild", name=src.name))
+            result = json.loads(src.read_text(encoding="utf-8"))
+            lang = result.get("language") or (opts.language if opts.language != "auto" else "de")
+            cues, mode = build_cues(result, opts.mode, cfg.rules(lang), cfg.layout(opts.max_chars, opts.max_lines))
+            if "{" in cfg.speech_suffix:
+                out = src.with_name(src.stem + fill_suffix(cfg.speech_suffix, result.get("model", "json"), lang))
+
+        elif kind == "lyrics":
+            lyrics_file = src.with_name(src.stem + cfg.lyrics_input)
+            lines = load_lyrics(lyrics_file)
+            self.log(i18n.tag("lyrics") + Tn("core.lyrics_lines", len(lines), name=lyrics_file.name))
+            audio = load_audio(src, cfg.ffmpeg)
+            self.log(i18n.tag("audio") + i18n.secs(audio.shape[0] / SAMPLE_RATE))
+            self._check_cancel()
+            cues, missing = self._oom_retry(lambda: self.align_lyrics(audio, lines, opts.line_hold), keep=("mms",))
+            for n in missing:
+                self.log(i18n.line("warn", "core.line_not_aligned", n=n, text=repr(lines[n - 1])))
+            lang, mode = "-", "lyrics"
+
+        else:
+            self.log(i18n.line("audio", "core.audio_filtered" if opts.use_filter and cfg.filter_string else "core.audio_original"))
+            audio = load_audio(src, cfg.ffmpeg, cfg.filter_string if opts.use_filter else None)
+            self.log(i18n.tag("audio") + i18n.secs(audio.shape[0] / SAMPLE_RATE))
+            self._check_cancel()
+            result, rules = self._oom_retry(lambda: self.transcribe(audio, opts), keep=("whisper", "align"))
+            lang = rules.lang
+            result["model"] = self._wname
+            if "{" in cfg.speech_suffix:          # e.g. ".{model}.srt" – one SRT per model
+                out = src.with_name(src.stem + fill_suffix(cfg.speech_suffix, self._wname, lang))
+            if opts.keep_json:
+                json_out = src.with_name(src.stem + ".json")
+                json_out.write_text(json.dumps(result, ensure_ascii=False, default=_json_default), encoding="utf-8")
+                self.log(i18n.line("json", "core.json_saved", name=json_out.name))
+            cues, mode = build_cues(result, opts.mode, rules, cfg.layout(opts.max_chars, opts.max_lines))
+            if mode != opts.mode:
+                self.log(i18n.line("warn", "core.no_word_times", mode=T(f"mode.{mode}")))
+            if cfg.gap_check:
+                info["gaps"] = self._report_gaps(audio, result, src)
+
+        write_srt(out, cues, cfg.encoding)
+        self.log(i18n.tag("done") + Tn("core.written", len(cues), name=out.name))
+        info.update(language=lang, mode=mode, cues=len(cues), output=out)
+        return info
+
+    def _report_gaps(self, audio, result, src: Path) -> int:
+        cfg = self.cfg
+        gaps = find_gaps(audio, result, cfg.gap_min, cfg.gap_margin)
+        gap_file = src.with_name(src.stem + T("core.gap_suffix"))
+        if not gaps:
+            self.log(i18n.tag("gap") + "✓ " + T("core.gap_none"))
+            gap_file.unlink(missing_ok=True)          # remove the list of an earlier run
+            return 0
+        total = sum(e - s for s, e, _ in gaps)
+        tag = i18n.tag("gap")
+        self.log(tag + Tn("core.gap_found", len(gaps), total=i18n.secs(total, 0)))
+        for s, e, rel in gaps[:15]:
+            self.log(f"{tag}  {fmt_pos(s)} – {fmt_pos(e)}   ("
+                     + T("core.gap_item", len=i18n.secs(e - s), db=f"{rel:+.0f}") + ")")
+        if len(gaps) > 15:
+            self.log(f"{tag}  … " + T("core.gap_more", n=len(gaps) - 15))
+        if cfg.gap_srt:
+            write_gap_srt(gap_file, gaps, cfg.encoding)
+            self.log(tag + T("core.gap_file", name=gap_file.name))
+        self.log(tag + T("core.gap_tip"))
+        return len(gaps)
+
+
+def _json_default(o):
+    return o.item() if hasattr(o, "item") else str(o)
+
+
+# ─── SYSTEM CHECK ─────────────────────────────────────────────────────────────
+
+# (module, package name, purpose → check.purpose_<module>, required)
+REQUIRED = [
+    ("whisperx",    "whisperx",    True),
+    ("torch",       "torch",       True),
+    ("torchaudio",  "torchaudio",  True),
+    ("uroman",      "uroman",      True),
+    ("numpy",       "numpy",       True),
+    ("tkinterdnd2", "tkinterdnd2", False),
+]
+TESTED_WHISPERX = (3, 8)
+
+
+def is_installed(mod: str) -> bool:
+    """Is the package installed? (without loading it)"""
+    import importlib.util
+    import sys
+    if mod in sys.modules:
+        return True
+    try:
+        return importlib.util.find_spec(mod) is not None
+    except (ImportError, ValueError):
+        return False
+
+
+STANDARD_MODELS = {"tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "large-v3",
+                   "large-v3-turbo", "turbo", "distil-large-v2", "distil-large-v3", "distil-large-v3.5"}
+
+
+def _standard_models() -> set:
+    try:                                   # official list from faster-whisper, if installed
+        from faster_whisper import available_models
+        return STANDARD_MODELS | set(available_models())
+    except Exception:
+        return STANDARD_MODELS
+
+
+def check_model(name: str) -> tuple[str | None, str | None]:
+    """
+    Is the model entry usable for WhisperX? → (problem, hint)
+    standard name · Hugging Face repo ("owner/name") · local CTranslate2 folder
+    """
+    if name in _standard_models():
+        return None, None
+    p = Path(name)
+    if p.is_dir():
+        if not (p / "model.bin").is_file():
+            return T("check.no_model_bin", path=p), None
+        missing = []
+        if not (p / "preprocessor_config.json").is_file():
+            missing.append(T("check.no_preprocessor"))
+        if not (p / "tokenizer.json").is_file():
+            missing.append(T("check.no_tokenizer"))
+        return None, (f"{p.name}: " + " · ".join(missing)) if missing else None
+    if re.fullmatch(r"[\w.-]+/[\w.-]+", name):
+        return None, None                 # Hugging Face repo – downloaded on first use
+    if re.search(r"[\\/:]", name):           # looks like a path but does not exist
+        return T("check.model_dir_missing", name=name), None
+    return None, T("check.model_unknown", name=name)
+
+
+def _version(dist: str) -> str | None:
+    from importlib import metadata
+    for name in (dist, dist.replace("-", "_"), dist.replace("_", "-")):
+        try:
+            return metadata.version(name)
+        except metadata.PackageNotFoundError:
+            continue
+    return None
+
+
+def _vtuple(v: str) -> tuple:
+    return tuple(int(x) for x in re.findall(r"\d+", v.split("+")[0])[:3])
+
+
+def check_environment(cfg: Config) -> list[tuple[str, str]]:
+    """
+    Checks Python, packages, ffmpeg and graphics card.
+    → [(level, text)] with level: ok / info / warn / error
+    """
+    import sys
+    res = []
+    v = sys.version_info
+    res.append(("ok" if v >= (3, 10) else "error",
+                f"Python {v.major}.{v.minor}.{v.micro}" + ("" if v >= (3, 10) else " – " + T("check.python_old"))))
+
+    found = {}
+    for mod, dist, required in REQUIRED:
+        purpose = T(f"check.purpose_{mod}")
+        if not is_installed(mod):
+            found[mod] = None
+            res.append(("error", T("check.pkg_missing", mod=mod, purpose=purpose)) if required else
+                       ("info", T("check.pkg_optional", mod=mod, purpose=purpose)))
+        else:
+            found[mod] = _version(dist) or "?"
+            res.append(("ok", f"{mod} {found[mod]} – {purpose}"))
+
+    wx = found.get("whisperx")
+    if wx and wx != "?" and _vtuple(wx)[:2] < TESTED_WHISPERX:
+        res.append(("warn", T("check.whisperx_old", version=wx)))
+    t, ta = found.get("torch"), found.get("torchaudio")
+    if t and ta and "?" not in (t, ta) and _vtuple(t)[:2] != _vtuple(ta)[:2]:
+        res.append(("warn", T("check.torch_mismatch", torch=t, torchaudio=ta)))
+
+    try:
+        out = subprocess.run([cfg.ffmpeg, "-version"], capture_output=True, timeout=15, creationflags=NO_WINDOW)
+        first = out.stdout.decode("utf-8", "replace").splitlines()[0] if out.stdout else ""
+        m = re.search(r"ffmpeg version (\S+)", first)
+        res.append(("ok", f"ffmpeg {m.group(1) if m else ''} – {cfg.ffmpeg}"))
+    except (OSError, subprocess.TimeoutExpired, IndexError):
+        res.append(("error", T("check.ffmpeg_missing", path=cfg.ffmpeg)))
+
+    for lang, name in [("", cfg.model)] + sorted(cfg.models.items()):
+        label = T("set.model") + (f" {lang}" if lang else "")
+        problem, hint = check_model(name)
+        if problem:
+            res.append(("error", f"{label}: {problem}"))
+        elif hint:
+            res.append(("warn", f"{label}: {hint}"))
+        elif name in _standard_models():
+            res.append(("ok", f"{label}: {name}"))
+        elif Path(name).is_dir():
+            res.append(("ok", f"{label}: {name} ({T('check.ct2_folder')})"))
+        else:
+            res.append(("info", f"{label}: {name} ({T('check.hf_download')})"))
+
+    if found.get("torch"):       # loading torch takes a few seconds – therefore last
+        try:
+            import torch
+            if torch.cuda.is_available():
+                cap = torch.cuda.get_device_capability(0)
+                res.append(("ok", f"{T('check.gpu')}: {torch.cuda.get_device_name(0)} · CUDA {torch.version.cuda} · "
+                                  f"sm_{cap[0]}{cap[1]}"))
+            else:
+                cpu_build = "+cpu" in torch.__version__ or torch.version.cuda is None
+                reason = (T("check.torch_cpu", version=torch.__version__) if cpu_build else T("check.no_driver"))
+                res.append(("error" if cfg.device == "cuda" else "info", T("check.no_gpu", reason=reason)))
+        except Exception as e:
+            res.append(("error", T("check.torch_broken", err=e)))
+    return res
+
+
+def quiet_library_logs():
+    """Hide technical INFO messages (WhisperX, Lightning, pyannote) – warnings stay."""
+    for name in ("whisperx", "lightning", "lightning.pytorch", "lightning_fabric",
+                 "pytorch_lightning", "pyannote", "speechbrain"):
+        logging.getLogger(name).setLevel(logging.WARNING)
+
+
+# ─── WRITING THE INI (comments are kept) ──────────────────────────────────────
+
+_HEADER_RE    = re.compile(r'^\s*\[([^\]]+)\]\s*$')
+WRAP_SECTIONS = {"prompt", "filler", "dangling"}     # wrap long values onto continuation lines here
+
+
+def read_section_raw(path, section: str) -> list[tuple[str, str]]:
+    """Entries of a section with the original case of the keys."""
+    cp = configparser.ConfigParser(delimiters=('=',), interpolation=None, strict=False)
+    cp.optionxform = str
+    try:
+        cp.read(path, encoding='utf-8-sig')
+    except configparser.Error:
+        return []
+    return [(k, v.strip()) for k, v in cp[section].items()] if cp.has_section(section) else []
+
+
+def _scan(lines):
+    """→ ({section: (header_line, end)}, {(section, key): (start, end)}) – all lower case, end exclusive."""
+    sections, keys, cur = {}, {}, None
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        m = _HEADER_RE.match(line)
+        if m:
+            if cur is not None:
+                sections[cur] = (sections[cur][0], i)
+            cur = m.group(1).strip().lower()
+            sections[cur] = (i, len(lines))
+            i += 1
+            continue
+        s = line.strip()
+        if cur is not None and s and not line[0].isspace() and s[0] not in ";#" and "=" in line:
+            key = line.split("=", 1)[0].strip().lower()
+            j = i + 1
+            while j < len(lines) and lines[j][:1].isspace() and lines[j].strip() \
+                    and lines[j].strip()[0] not in ";#":
+                j += 1
+            keys[(cur, key)] = (i, j)
+            i = j
+            continue
+        i += 1
+    if cur is not None:
+        sections[cur] = (sections[cur][0], len(lines))
+    return sections, keys
+
+
+def _entry_lines(prefix: str, value: str, wrap: bool) -> list[str]:
+    value = str(value).strip()
+    if wrap and len(prefix) + len(value) > 100:
+        parts = textwrap.wrap(value, width=max(40, 100 - len(prefix)), break_long_words=False, break_on_hyphens=False)
+        return [prefix + parts[0]] + [" " * len(prefix) + p for p in parts[1:]]
+    return [(prefix + value).rstrip()]
+
+
+def _content_end(lines, start, end) -> int:
+    """Insertion point: after the last non-empty line of the section."""
+    while end > start + 1 and not lines[end - 1].strip():
+        end -= 1
+    return end
+
+
+def save_ini(path, values: dict | None = None, sections: dict | None = None):
+    """
+    Write values into the INI – comments, order and alignment are kept.
+      values:   {(section, key): value}                set/add single values
+      sections: {section: [(key, value), ...]}         refill a whole section
+    A backup <name>.bak is created first.
+    """
+    path = Path(path)
+    raw = path.read_bytes().decode("utf-8-sig") if path.exists() else ""
+    newline = "\r\n" if "\r\n" in raw or not raw else "\n"
+    lines = raw.splitlines()
+
+    for sec, entries in (sections or {}).items():
+        secs, keys = _scan(lines)
+        s_low = sec.lower()
+        if s_low not in secs:
+            lines += ["", f"[{sec}]"]
+            secs, keys = _scan(lines)
+        # remove existing entries (from the back, so the indices stay valid)
+        for (k_sec, _), (a, b) in sorted(keys.items(), key=lambda kv: -kv[1][0]):
+            if k_sec == s_low:
+                del lines[a:b]
+        secs, _ = _scan(lines)
+        start, end = secs[s_low]
+        at = _content_end(lines, start, end)
+        new = [line for k, v in entries for line in _entry_lines(f"{k} = ", v, False)]
+        lines[at:at] = new + ([""] if at == end and at < len(lines) else [])
+
+    for (sec, key), value in (values or {}).items():
+        secs, keys = _scan(lines)
+        s_low, k_low = sec.lower(), key.lower()
+        wrap = s_low in WRAP_SECTIONS
+        if (s_low, k_low) in keys:
+            a, b = keys[(s_low, k_low)]
+            first = lines[a]
+            eq = first.index("=")
+            prefix = first[:eq + 1] + (first[eq + 1:len(first) - len(first[eq + 1:].lstrip())] or " ")
+            lines[a:b] = _entry_lines(prefix, value, wrap)
+        elif s_low in secs:
+            start, end = secs[s_low]
+            at = _content_end(lines, start, end)
+            lines[at:at] = _entry_lines(f"{key} = ", value, wrap)
+        else:
+            lines += ["", f"[{sec}]"] + _entry_lines(f"{key} = ", value, wrap)
+
+    if path.exists():
+        shutil.copy2(path, path.with_name(path.name + ".bak"))
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(newline.join(lines) + newline, encoding="utf-8", newline="")
+    os.replace(tmp, path)

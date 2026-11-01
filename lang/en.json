@@ -1,0 +1,862 @@
+{
+  "_meta": {
+    "name": "English",
+    "decimal": ".",
+    "percent": "{v}%",
+    "seconds": "{v} s",
+    "html_lang": "en"
+  },
+  "app": {
+    "err_core_missing": "The file wt_core.py is missing in {dir} – please copy it as well.",
+    "err_package_missing": [
+      "The package “{name}” is missing.",
+      "",
+      "Probably not the Python from the WhisperX venv was started (use Whisper_Tool.bat), or the venv is incomplete.",
+      "",
+      "Started with: {python}"
+    ],
+    "err_start": [
+      "WhisperX Subtitle Workbench cannot start.",
+      "",
+      "{why}",
+      "",
+      "Details: {log}"
+    ],
+    "err_tkinter": [
+      "Tkinter is missing – the window cannot open.",
+      "",
+      "Fix: Python installer → “Modify” → tick “tcl/tk and IDLE”. The venv stays unchanged.",
+      "",
+      "Without a window it still works with:  python whisper_tool.py --nogui <files>"
+    ]
+  },
+  "main": {
+    "minutes": "{t} min",
+    "settings_file": "Settings: {path}",
+    "files": "Files",
+    "col_file": "File",
+    "col_kind": "Type",
+    "col_status": "Status",
+    "add": "Add …",
+    "remove": "Remove",
+    "clear": "Clear list",
+    "open_folder": "Open folder",
+    "compare": "Compare …",
+    "hint_drop": "Drag files or folders here",
+    "hint_bat": "Drag files onto Whisper_Tool.bat (directly into the window: Settings → General)",
+    "hint_dblclick": "double-click shows the result",
+    "options": "Options",
+    "language": "Language",
+    "mode": "Mode",
+    "chars": "Chars/line",
+    "lines": "Lines/cue",
+    "filter": "Audio filter (FFmpeg)",
+    "keep_json": "Keep JSON",
+    "hold": "Lyrics: hold line (s)",
+    "save_defaults": "Save as default",
+    "prompt": "Prompt",
+    "pmode_ini": "from INI (per language)",
+    "pmode_custom": "custom",
+    "pmode_none": "none",
+    "start": "▶  Start",
+    "cancel": "Cancel",
+    "ready": "Ready",
+    "settings": "⚙  Settings …",
+    "log": "Log",
+    "prompt_auto": "depends on the detected language",
+    "prompt_empty": "(no prompt in the INI)",
+    "not_found": "Not found: {path}",
+    "appended": {
+      "one": "1 file added to the running job",
+      "other": "{n} files added to the running job"
+    },
+    "add_title": "Add files",
+    "add_types": "Media, JSON, lyrics",
+    "all_files": "All files",
+    "err_number": "{name}: '{value}' is not a number",
+    "err_range": "{name}: allowed are {lo} to {hi}",
+    "save_failed": [
+      "Saving failed:",
+      "{err}"
+    ],
+    "defaults_saved": "Selection saved as default",
+    "defaults_saved_log": "Defaults saved in {file}",
+    "no_files": "No files in the list.",
+    "cancelling": "Cancelling after the current step …",
+    "file_n": "File {n} of {total}",
+    "step_asr": "Transcription",
+    "step_align": "Word timestamps",
+    "finished": "Done: {ok} ok",
+    "total": "total {time}",
+    "countdown": "Automatic start in {n} s – click into the window to stop",
+    "countdown_stopped": "Countdown stopped – check the options and press Start",
+    "open_failed": [
+      "Cannot open:",
+      "{path}",
+      "",
+      "{err}"
+    ],
+    "quit_running": [
+      "Processing is still running.",
+      "Quit anyway?"
+    ],
+    "finished_err": {
+      "one": ", 1 error",
+      "other": ", {n} errors"
+    }
+  },
+  "status": {
+    "wait": "waiting",
+    "cancelled": "cancelled",
+    "gaps": {
+      "one": "1 gap",
+      "other": "{n} gaps"
+    },
+    "error": "error – see log",
+    "running": "running …",
+    "done": {
+      "one": "done · {time} · 1 cue",
+      "other": "done · {time} · {n} cues"
+    }
+  },
+  "kind": {
+    "speech": "Speech",
+    "lyrics": "Lyrics",
+    "json": "JSON → SRT"
+  },
+  "mode": {
+    "sentence": "Sentences",
+    "word": "Word by word",
+    "raw": "Raw",
+    "raw_segments": "Raw (WhisperX segments)"
+  },
+  "speechlang": {
+    "auto": "Automatic",
+    "de": "German",
+    "en": "English",
+    "ar": "Arabic",
+    "tr": "Turkish",
+    "all": "All languages (replacements only)"
+  },
+  "set": {
+    "title": "Settings",
+    "tab_whisper": "Whisper",
+    "tab_vad": "Speech detection",
+    "tab_subs": "Subtitles",
+    "tab_audio": "Audio & output",
+    "tab_langs": "Languages",
+    "open_ini": "Open INI in editor",
+    "backup_note": "Saving creates a backup (.bak) first",
+    "save": "Save",
+    "programs": "Programs",
+    "folder": "Folder …",
+    "model": "Model",
+    "beam": "Beam",
+    "beam_hint": "default 5 · above ~10 hardly any gain, higher = much slower",
+    "compute": "Precision",
+    "compute_hint": "float16 = much faster with practically the same accuracy",
+    "batch": "Batch",
+    "batch_hint": "speed only, no effect on the result · 8–16 is reasonable",
+    "device": "Device",
+    "device_hint": "cuda = graphics card · cpu only as a fallback",
+    "numerals": "Write numbers as words (exact timestamps, but no digits)",
+    "note_whisper": "Changes on this tab reload the model on the next start. A separate model for one language is set under “Languages”.",
+    "vad_method": "Method",
+    "vad_method_hint": "pyannote = WhisperX default",
+    "onset": "Onset",
+    "onset_hint": "start of speech · lower = more sensitive",
+    "offset": "Offset",
+    "offset_hint": "end of speech · lower = speech is held longer",
+    "chunk": "Chunk length (s)",
+    "chunk_hint": "maximum length of a chunk · matters mostly in raw mode",
+    "vad_defaults": "WhisperX default",
+    "note_vad": "For speeches with background noise, slightly lower values than the default often work better (e.g. 0.4 / 0.323). Too low: noise is detected as speech.",
+    "gap_enabled": "Gap check: report loud passages without text after each transcription",
+    "gap_srt": "Also save the findings as <name>{suffix}",
+    "gap_min": "Gaps: minimum length (s)",
+    "gap_min_hint": "ignore shorter passages · default 1.0",
+    "gap_margin": "Gaps: above noise floor (dB)",
+    "gap_margin_hint": "smaller = more sensitive · default 8",
+    "orphan_limit": "Orphans: words up to … chars",
+    "orphan_limit_hint": "short words after a comma start the next subtitle …",
+    "orphan_fill": "Orphans: from fill level (%)",
+    "orphan_fill_hint": "… but only if the line is already this full",
+    "split_pause": "New subtitle after pause (s)",
+    "split_pause_hint": "0 = off · recommended 1.5",
+    "max_duration": "Max. display time (s)",
+    "max_duration_hint": "0 = off · recommended 7",
+    "line_gap": "Lyrics: gap to the next line (s)",
+    "note_subs": "Chars/line, lines/cue and “hold line” are set in the main window and saved there with “Save as default”.",
+    "ffmpeg": "ffmpeg",
+    "orig_filter": "Original filter",
+    "filter_string": "Audio filter",
+    "speech_suffix": "Speech suffix",
+    "lyrics_input": "Lyrics text file",
+    "lyrics_input_hint": "next to the media file → lyrics mode",
+    "lyrics_suffix": "Lyrics suffix",
+    "encoding": "Encoding",
+    "encoding_hint": "utf-8-sig if a player shows special characters wrongly",
+    "filler": "Filler words",
+    "dangling": "Dangling words",
+    "replacements": [
+      "Replacements",
+      "Wrong = Right",
+      "(one per line)"
+    ],
+    "lang_model": "Own model",
+    "empty_default": "empty = default",
+    "timeout": "Countdown (s)",
+    "timeout_hint": "auto start after dropping files on the BAT · 0 = no auto start",
+    "skip": "Start immediately, without countdown",
+    "live": "Show recognized lines live in the log",
+    "ui_language": "Interface language",
+    "ui_language_hint": "restart needed · “like Windows” = system language, otherwise English",
+    "ui_auto": "like Windows",
+    "check": "System check",
+    "check_now": "Check now",
+    "check_hint": "packages, versions, ffmpeg, graphics card",
+    "dnd": "Drag & drop into the window",
+    "dnd_active": "active ✓",
+    "dnd_restart": "installed – active after restarting the window",
+    "dnd_enable": "Enable …",
+    "dnd_hint": "installs the small package tkinterdnd2",
+    "note_start": "Language, mode, audio filter, layout and prompt preselection are saved in the main window with “Save as default”.",
+    "repl_all": "These replacements apply to all languages.",
+    "prompt_long": "long! WhisperX only uses the end of a prompt that is too long",
+    "prompt_chars": "Prompt: {n} characters",
+    "repl_error": [
+      "Replacements {lang}, line {line}: “Wrong = Right” expected",
+      "",
+      "{text}"
+    ],
+    "model_empty": "Model must not be empty",
+    "no_changes": "Settings: no changes",
+    "saved_log": {
+      "one": "1 setting saved – applies from the next start",
+      "other": "{n} settings saved – apply from the next start"
+    },
+    "saved": "Settings saved",
+    "tab_general": "General",
+    "restart_ask": [
+      "The language changes after restarting the window.",
+      "",
+      "Restart now?"
+    ]
+  },
+  "cmpdlg": {
+    "title": "Compare text",
+    "a": "A",
+    "b": "B",
+    "ref": "Reference",
+    "media": "Listen",
+    "b_hint": "optional if a reference is given",
+    "ref_hint": "optional – corrected SRT",
+    "media_hint": "optional – video/audio, then the times become clickable",
+    "info": "Possible: A + B (where do they differ) · A + reference (errors of A) · A + B + reference (who is right, error rates). Only the text counts – timestamps and line breaks do not matter.",
+    "run": "Compare",
+    "type_media": "Video/audio",
+    "type_srt": "Subtitles",
+    "need_two": "Please give B or a reference – at least two files.",
+    "not_found": [
+      "{label}: file not found",
+      "{path}"
+    ],
+    "busy": "Comparing …",
+    "busy_audio": "Comparing … and preparing the audio track",
+    "failed": [
+      "Comparison failed:",
+      "{err}"
+    ],
+    "report": "Report: {path}",
+    "status": "Comparison: {text}"
+  },
+  "check": {
+    "failed": "System check failed: {err}",
+    "title": "System check",
+    "status_problems": {
+      "one": "System check: 1 problem – see log",
+      "other": "System check: {n} problems – see log"
+    },
+    "status_ok": "System check: all set",
+    "status_hints": "System check: all set (with notes)",
+    "head_errors": "Something is missing – the affected functions will not work:",
+    "head_ok": "All set.",
+    "purpose_whisperx": "speech transcription",
+    "purpose_torch": "models on the graphics card",
+    "purpose_torchaudio": "lyrics alignment (MMS_FA)",
+    "purpose_uroman": "lyrics alignment (romanization)",
+    "purpose_numpy": "audio processing",
+    "purpose_tkinterdnd2": "drag & drop into the window (optional)",
+    "no_model_bin": "model.bin is missing in the model folder – this is not a CTranslate2 model: {path}. Transformers models must be converted with ct2-transformers-converter first.",
+    "no_preprocessor": "preprocessor_config.json is missing – large-v3 models then recognize badly (80 instead of 128 mel bands). Copy the file from the original repo.",
+    "no_tokenizer": "tokenizer.json is missing – faster-whisper then uses the whisper-tiny tokenizer, which is wrong for large-v3 models. Copy tokenizer.json from openai/whisper-large-v3.",
+    "model_dir_missing": "Model folder not found: {name}",
+    "model_unknown": "Unknown model name “{name}” – faster-whisper will try to load it anyway.",
+    "python_old": "at least 3.10 required",
+    "pkg_missing": "{mod} is missing → {purpose} not possible. Please check the WhisperX installation in the venv.",
+    "pkg_optional": "{mod} not installed → {purpose}: Settings → General",
+    "whisperx_old": "whisperx {version} is older than 3.8 – the tool is tested with 3.8.x",
+    "torch_mismatch": "torch {torch} and torchaudio {torchaudio} do not match – lyrics may fail",
+    "ffmpeg_missing": "ffmpeg not found: {path} → no audio files can be read. Enter the path under Settings → Audio & output.",
+    "ct2_folder": "CTranslate2 folder",
+    "hf_download": "Hugging Face – downloaded on first use",
+    "gpu": "Graphics card",
+    "torch_cpu": "torch is a build without CUDA ({version})",
+    "no_driver": "driver or graphics card not reachable",
+    "no_gpu": "No CUDA graphics card: {reason} → it would run on the CPU (very slow)",
+    "torch_broken": "torch cannot be loaded: {err}"
+  },
+  "dnd": {
+    "title": "Enable drag & drop",
+    "confirm": [
+      "Installs the package {pkg} into:",
+      "{prefix}",
+      "",
+      "With --no-deps: only this one package is installed, nothing else in the venv is changed.",
+      "",
+      "Continue?"
+    ],
+    "done": "Installed. Please close and restart the window – then files can be dragged directly into the list.",
+    "failed": "Installation failed:",
+    "pip_failed": [
+      "pip could not be started:",
+      "{err}"
+    ],
+    "short": "Drag & drop"
+  },
+  "cli": {
+    "description": "subtitles for speeches and lyrics",
+    "files": "media, JSON or .lyric.txt files, or folders",
+    "nogui": "without window, defaults from the INI",
+    "ini": "use another INI file",
+    "cmp_description": "Text comparison of SRT files (plain text only).",
+    "cmp_files": "A.srt [B.srt] [reference.srt]",
+    "cmp_ref": "corrected reference SRT",
+    "cmp_media": "video/audio – times in the report become clickable",
+    "cmp_ffmpeg": "ffmpeg for the listening track (default: from whisper_tool.ini)",
+    "cmp_lang": "report language: de, en, tr … (default: like the interface)",
+    "cmp_too_many": "at most A, B and one reference",
+    "cmp_too_few": "at least two files: A and B, or A and --ref",
+    "not_found": "File not found: {path}",
+    "error": "Error: {err}"
+  },
+  "tag": {
+    "info": "info",
+    "warn": "warn",
+    "error": "error",
+    "done": "done",
+    "check": "check",
+    "gap": "gap",
+    "dnd": "dnd",
+    "compare": "compare",
+    "device": "device",
+    "model": "model",
+    "align": "align",
+    "lang": "lang",
+    "prompt": "prompt",
+    "asr": "asr",
+    "json": "json",
+    "lyrics": "lyrics",
+    "audio": "audio"
+  },
+  "core": {
+    "ini_missing": "INI not found: {path} – using defaults",
+    "ini_broken": "INI is broken ({err}) – using defaults",
+    "ini_unknown": "{entry} unknown – using {default}",
+    "ini_invalid": "{entry} invalid – using {default}",
+    "ffmpeg_fallback": "ffmpeg not found: {path} – using {found}",
+    "ffmpeg_check": "ffmpeg not found: {path} – please check [System] ffmpeg_path",
+    "ffmpeg_missing": "ffmpeg not found: {path}",
+    "exit_code": "exit code {code}",
+    "no_audio": "No audio track found",
+    "gap_cue": "[Gap] {len} without text · level {db} dB relative to speech",
+    "lyrics_not_utf8": "Lyrics file is not UTF-8 – save it in the editor with encoding UTF-8",
+    "no_media": "No media file found for {name}",
+    "no_cuda": "CUDA not available – using CPU (very slow)",
+    "oom": "Graphics memory full – unloading other models and trying again …",
+    "model_switch": "Switching model → {name}",
+    "model_load": "Loading {name} ({compute}, beam {beam}) …",
+    "model_hf_failed": "Model “{name}” could not be loaded ({err}). Possible causes: no internet for the first download, wrong repo name, or the CTranslate2 files are in a subfolder of the repo – then download it and choose the folder under Settings → Languages.",
+    "model_ready": "ready after {time}",
+    "align_load": "Loading align model for '{lang}' …",
+    "mms_load": "Loading MMS_FA (first start: ~1.18 GB download, cached afterwards) …",
+    "lang_detected": "detected: {lang} ({name})",
+    "no_rules": "no own rules",
+    "prompt_off": "off",
+    "prompt_custom": "custom",
+    "asr_running": "Transcribing …",
+    "align_words": "Word timestamps …",
+    "lyrics_no_words": "No words found in the lyrics file",
+    "emissions": "Computing emissions …",
+    "json_rebuild": "Rebuilding SRT from {name}",
+    "line_not_aligned": "Line {n} not aligned: {text}",
+    "audio_filtered": "Loading with filter …",
+    "audio_original": "Loading original …",
+    "json_saved": "saved: {name}",
+    "no_word_times": "No word timestamps – output as {mode}",
+    "written": {
+      "one": "1 subtitle → {name}",
+      "other": "{n} subtitles → {name}"
+    },
+    "gap_suffix": ".gaps.srt",
+    "gap_none": "no suspicious gaps",
+    "gap_found": {
+      "one": "1 passage loud but without text – {total} in total:",
+      "other": "{n} passages loud but without text – {total} in total:"
+    },
+    "gap_item": "{len}, level {db} dB relative to speech",
+    "gap_more": "and {n} more",
+    "gap_file": "Findings to jump to: {name}",
+    "gap_tip": "Tip: if it is speech, lower the onset or try silero (Settings → Speech detection). Music, singing or applause can be ignored.",
+    "asr_done": {
+      "one": "1 segment in {time}",
+      "other": "{n} segments in {time}"
+    },
+    "lyrics_lines": {
+      "one": "1 line from {name}",
+      "other": "{n} lines from {name}"
+    }
+  },
+  "rep": {
+    "no_cues": [
+      "{label}: no subtitles found – is this an SRT file?",
+      "{path}"
+    ],
+    "missing": "missing",
+    "missing_title": "Nothing at this point in this file",
+    "play_title": "Listen (from 1.5 s before)",
+    "verdict_a": "A correct",
+    "verdict_b": "B correct",
+    "verdict_none": "both wrong",
+    "verdict_out": "no reference",
+    "filter_all": "All",
+    "diff_title_ab": "Differences between {a} and {b}",
+    "diff_intro_ab": "Colored = only in this file · “missing” = nothing at this point there.",
+    "diff_intro_ref": "The green Ref line shows what is correct.",
+    "diff_intro_noref": "Without a reference this does not show who is right – click the time and listen.",
+    "diff_title_ar": "Errors of {a} compared to the {r}",
+    "diff_intro_ar": "Blue = as in A · green = as in the reference · “missing” = nothing there.",
+    "no_diffs": "No word differences.",
+    "places": {
+      "one": "1 place",
+      "other": "{n} places"
+    },
+    "shared_title": "Errors that {a} and {b} share",
+    "shared_intro": "Red = as in both files · green = what would be correct. A different beam or model often does not change these errors – the prompt (names/terms) and replacements help here.",
+    "short_word": "Short word – check that it is never correct elsewhere",
+    "sg_wrong": "recognized",
+    "sg_right": "correct",
+    "sg_count": "count",
+    "sg_in": "in",
+    "sg_title": "Suggested replacements",
+    "sg_intro": "Derived from the reference: what was recognized → what is correct. Only take over if the wrong word is never correct elsewhere (typically names and terms). Target: Settings → Languages → Replacements.",
+    "sg_multi": "Misrecognized several times – {n}",
+    "copy_all": "Copy all lines",
+    "copied": "Copied ✓",
+    "sg_none_multi": "No error occurred more than once.",
+    "sg_once": "Misrecognized once – {n} (often chance, but useful for names)",
+    "none": "none",
+    "fmt_title": "Spelling only – {places} (punctuation, upper/lower case – not counted as errors)",
+    "legend_word": "word",
+    "full_legend": "{wx} only in {x} · {wy} only in {y} · {wf} different spelling (hover shows {x})",
+    "full_title": "Full text with all deviations",
+    "offset": "offset {val}",
+    "offset_ab_later": "offset {val} (B later than A)",
+    "offset_ab_earlier": "offset {val} (B earlier than A)",
+    "offset_late": "offset {val} ({who} too late)",
+    "offset_early": "offset {val} ({who} too early)",
+    "card_timing": "timing deviation {a}↔ {b}",
+    "share_off": "{pct} of words > {s}",
+    "vs_ref": "{who} vs. {r}",
+    "timing_line": "typically {typ} off · {offset} · {pct} of words more than {s}",
+    "stretch_ab_later": "B {val} later than A",
+    "stretch_ab_earlier": "B {val} earlier than A",
+    "stretch_late": "{who} {val} too late",
+    "stretch_early": "{who} {val} too early",
+    "words": {
+      "one": "1 word",
+      "other": "{n} words"
+    },
+    "timing_none": "No passage with too large a deviation.",
+    "timing_note_ref": "Note: the reference times only count if they were checked – if the reference was corrected from A, A automatically looks good.",
+    "timing_title": "Timing deviation – {places} over {s}",
+    "timing_explain": "The times of identical words are compared. SRTs only have times per cue, the time of each word is estimated within it – that is why only deviations over {s} count, and only if at least {n} words in a row are affected.",
+    "col_file": "File",
+    "col_words": "Words",
+    "col_wer": "Error rate",
+    "col_wer_title": "Share of wrong words within the reference range",
+    "col_sub": "replaced",
+    "col_sub_title": "wrong word instead of the correct one",
+    "col_del": "missing",
+    "col_del_title": "word of the reference is missing",
+    "col_ins": "extra",
+    "col_ins_title": "word that does not occur in the reference",
+    "col_typ": "Time ⌀",
+    "col_typ_title": "Typical timing deviation of identical words from the reference (median of the differences)",
+    "col_offset": "Offset",
+    "col_offset_title": "Offset: signed median – plus = later than the reference, minus = earlier",
+    "col_off": "> {s}",
+    "col_off_title": "Share of words that are more than {s} away from the reference",
+    "col_punct": "Punctuation",
+    "col_punct_title": "Words with punctuation at the end",
+    "better": "more accurate",
+    "benchmark": "benchmark",
+    "banner_best": "<b>is more accurate:</b> {wer_w} instead of {wer_l} errors – {n_w} instead of {n_l} wrong words ({less} fewer).",
+    "banner_equal": "<b>Both equally accurate:</b> {wer} errors each.",
+    "banner_shared": "A and B share {n} of these errors (see “Errors in both”) – the difference between A and B does not change them.",
+    "banner_a": "<b>{wer} errors</b> compared to the reference – {n} of {words} words.",
+    "banner_noref": "Without a reference the report only shows <b>where</b> A and B differ – not who is right. For that, add a corrected SRT as reference (5–10 minutes are enough).",
+    "ref_span": "Error rate only within the reference range: {t0} – {t1} ({n} words).",
+    "card_similarity": "word agreement {a}↔ {b}",
+    "card_diffs": {
+      "one": "word difference in {places}",
+      "other": "word differences in {places}"
+    },
+    "card_format": "spelling only (punctuation, upper/lower case)",
+    "nav_diff": "Differences",
+    "nav_errors_a": "Errors of A",
+    "nav_shared": "Errors in both",
+    "nav_suggest": "Suggested replacements",
+    "nav_timing": "Timing",
+    "nav_format": "Spelling",
+    "nav_full": "Full text",
+    "listen": "Listen",
+    "listen_hint": "click a time – plays from 1.5 s before",
+    "play_error": "The file cannot be played here (moved or format not supported).",
+    "h1": "Text comparison",
+    "intro": "Only the plain text counts – timestamps, numbers and line breaks do not matter.",
+    "colors": "Same colors everywhere: {a} blue · {b} purple · {r} green (correct).",
+    "file_suffix": ".compare",
+    "n_diffs": {
+      "one": "1 word difference",
+      "other": "{n} word differences"
+    },
+    "n_error_places": {
+      "one": "1 error",
+      "other": "{n} errors"
+    },
+    "sum_ab": "A↔B {sim} identical · {diffs} in {places} · {fmt} spelling only",
+    "sum_ar": "A vs. reference: {places}",
+    "sum_wer": "error rate A {wer}",
+    "sum_time": "timing A↔B ⌀ {typ}, {offset}"
+  },
+  "tip": {
+    "files": [
+      "File list",
+      "",
+      "Type:",
+      "• Speech – is transcribed",
+      "• Lyrics – <name>.lyric.txt is next to it, the song text is only aligned in time",
+      "• JSON → SRT – a saved WhisperX result is only converted into subtitles again",
+      "",
+      "Status “⚠ gaps”: loud passages without text were found – details in the log",
+      "",
+      "Double-click: show the finished SRT in Explorer",
+      "Del key: remove selected files",
+      "Start processes the selected files, otherwise all open ones."
+    ],
+    "add": [
+      "Select media, JSON or .lyric.txt files.",
+      "",
+      "Whole folders: drag them onto the BAT or – with drag & drop enabled – directly into the list."
+    ],
+    "compare": [
+      "Compares two SRT files word by word – timestamps, numbers and line breaks do not matter.",
+      "",
+      "Result: an HTML report in the browser with all word differences and their time positions (to listen to), differences in punctuation/case only and – with a corrected reference – the error rate of both files.",
+      "",
+      "If a file is selected, its SRTs are suggested."
+    ],
+    "cmp_a": "First version, e.g. created with the standard model. Always blue in the report.",
+    "cmp_b": [
+      "Second version, e.g. created with a fine-tuned model or a different beam. Always purple in the report.",
+      "",
+      "Optional if a reference is given – the report then shows the errors of A alone."
+    ],
+    "cmp_media": [
+      "Optional: the video or audio of the speech. Then all times in the report are clickable and play the passage (from 1.5 s before) – so you immediately hear who is right.",
+      "",
+      "The tool puts a small audio track (.m4a) next to the report that every browser can play – whatever the video format of the source."
+    ],
+    "cmp_ref": [
+      "Optional: a manually corrected SRT of the same recording (e.g. improved in Subtitle Edit).",
+      "",
+      "Then the report shows at every point who is right, calculates the error rate (WER) for A and B, lists errors that both make and suggests replacements – the most objective comparison. Always green in the report. Even 5–10 corrected minutes are enough for a good assessment."
+    ],
+    "remove": "Remove selected files from the list (the files themselves stay unchanged). Also with the Del key.",
+    "clear": "Clear the list (the files themselves stay unchanged).",
+    "folder": "Opens the folder of the selected (or first) file in Explorer.",
+    "lang": [
+      "Language of the audio",
+      "",
+      "Automatic: Whisper listens to the first 30 seconds and decides for the whole file – anew for each file. Risky if the start contains music, applause, an intro or a quote in another language: then the whole file is transcribed in the wrong language.",
+      "",
+      "Fixed: more reliable. Applies to all files of this run – so split mixed batches by language.",
+      "",
+      "The language also determines prompt, filler words, dangling words and replacements (Settings → Languages)."
+    ],
+    "mode": [
+      "Sentences: subtitles by sentence, with character limit and the orphan, dangling and pause rules – for normal subtitles.",
+      "",
+      "Word by word: every word is its own subtitle – for karaoke or highlight effects in the video editor.",
+      "",
+      "Raw: the WhisperX segments unchanged (often long, up to 30 s) – as raw text or when there are no word timestamps."
+    ],
+    "chars": [
+      "Maximum characters per line (sentences mode only). The line is filled up to exactly this value.",
+      "",
+      "Guidelines:",
+      "• Netflix guideline: 42",
+      "• TV/cinema: 35–42",
+      "• Vertical video/shorts with large font: 20–30"
+    ],
+    "lines": "Maximum lines per subtitle (sentences mode only). 1–2 is usual; more than 2 cover a lot of the picture.",
+    "filter": [
+      "FFmpeg audio filter before transcription (speech only, lyrics stay unfiltered).",
+      "",
+      "On: helps with reverb, street noise, hum and quiet speakers.",
+      "Off: for clean recordings often just as good or better – Whisper itself is fairly robust against noise.",
+      "",
+      "Which filters run and what they do: Settings → Audio & output."
+    ],
+    "json": [
+      "Also saves the WhisperX result as <name>.json.",
+      "",
+      "Later drag the .json into the tool → new SRT with a different layout, other replacements or rules in seconds, without a new transcription."
+    ],
+    "hold": [
+      "Lyrics only: extend the end of a line by up to this many seconds – but never beyond the start of the next line.",
+      "",
+      "The alignment often ends before the note fades; then the line disappears too early.",
+      "0 = off · recommended 1–1.5"
+    ],
+    "save_defaults": [
+      "Saves the current selection of this area as default in the INI: language, mode, chars/lines, audio filter, JSON, hold line and prompt choice (incl. custom text).",
+      "",
+      "The next time the window opens, this is preselected."
+    ],
+    "pmode_ini": [
+      "Takes the prompt of the language from Settings → Languages.",
+      "With “Automatic” the prompt of the detected language."
+    ],
+    "pmode_custom": [
+      "Custom prompt for this run (permanently with “Save as default”).",
+      "",
+      "Tips: write in the language of the audio, keep it short, write names and terms exactly as they should appear in the subtitle. The prompt also influences style and punctuation."
+    ],
+    "pmode_none": "Without prompt – for comparison, or when the prompt causes errors (e.g. prompt words appear as text in silence or music).",
+    "prompt_field": [
+      "The prompt is a hint to Whisper: it makes rare names and terms more likely and sets style and spelling.",
+      "",
+      "WhisperX puts it in front of every chunk. If it is too long, only the last ~220 tokens count – the beginning is dropped."
+    ],
+    "start": [
+      "Starts processing: selected files – otherwise all still open – otherwise all again (e.g. with a different layout).",
+      "",
+      "The models stay loaded as long as the window is open; the second run starts without loading time."
+    ],
+    "cancel": "Cancels after the current step. A running transcription cannot be stopped in the middle.",
+    "settings": "Less frequently changed settings: model, precision, speech detection (VAD), subtitle rules, audio filter, prompts and replacements per language, interface language, system check, drag & drop.",
+    "log": [
+      "Log",
+      "",
+      "gray time + white text = lines recognized live",
+      "yellow = warning · red = error · green = done · blue = new file",
+      "",
+      "Text can be selected and copied with Ctrl+C."
+    ],
+    "model": [
+      "large-v3: most accurate version, default.",
+      "large-v2: predecessor – sometimes invents less text in silence or music.",
+      "large-v3-turbo: much faster (heavily reduced decoder), somewhat less accurate.",
+      "",
+      "“Folder …”: own model in CTranslate2 format, e.g. a fine-tune. The folder must contain model.bin and preprocessor_config.json, among others.",
+      "",
+      "Graphics memory for large: about 3–5 GB in float16, about 6–8 GB in float32."
+    ],
+    "beam": [
+      "Beam search: Whisper follows this many candidate sentences at the same time and takes the most likely one.",
+      "",
+      "1 = fastest",
+      "5 = WhisperX default",
+      "above ~10 hardly any gain",
+      "40 costs many times the time and graphics memory"
+    ],
+    "compute": [
+      "Computing precision on the graphics card:",
+      "",
+      "float16 – half precision, much faster on RTX cards, practically identical result",
+      "float32 – full precision, slower, twice the graphics memory",
+      "int8_float16 – less graphics memory, minimally less accurate",
+      "int8 – for running on the CPU"
+    ],
+    "batch": [
+      "How many chunks (up to 30 s) are decoded at the same time on the graphics card.",
+      "",
+      "Only affects speed, not the result – WhisperX processes every chunk independently.",
+      "Higher = faster, needs more graphics memory. With 12–16 GB of graphics memory, 8–16 is reasonable."
+    ],
+    "device": [
+      "cuda = NVIDIA graphics card.",
+      "cpu = processor – always works, but is many times slower."
+    ],
+    "numerals": [
+      "Suppresses digits and symbols: Whisper writes “sixth of November” instead of “6 November”, “fifty percent” instead of “50%”.",
+      "",
+      "Advantage: every number gets an exact word timestamp (the alignment model does not know digits).",
+      "Disadvantage: no digits in the subtitle."
+    ],
+    "vad_method": [
+      "VAD = voice activity detection: finds the passages with speech – only these are transcribed. Silence, music and noise in between are skipped. This prevents invented text and saves time.",
+      "",
+      "pyannote – WhisperX default. Neural segmentation model, sets speech boundaries precisely, robust against background noise.",
+      "",
+      "silero – small, very fast model with its own detection. Try it if pyannote swallows quiet speech or detects applause/music as speech."
+    ],
+    "onset": [
+      "Threshold (0–1) from which a chunk begins as speech.",
+      "",
+      "Lower (e.g. 0.35–0.45): quiet or distant speakers are captured – but also more noise.",
+      "Higher (0.5–0.7): only clear speech, fewer false starts.",
+      "",
+      "WhisperX default: 0.500"
+    ],
+    "offset": [
+      "Threshold (0–1) below which the speech probability must fall for a chunk to end.",
+      "",
+      "Lower: chunks are held longer – word endings and short pauses are not cut off.",
+      "Higher: chunks end earlier.",
+      "",
+      "WhisperX default: 0.363 · should be below the onset"
+    ],
+    "vad_defaults": "Sets the WhisperX defaults: pyannote, onset 0.500, offset 0.363, chunk length 30 s.",
+    "chunk": [
+      "Detected speech pieces are merged into chunks up to this length. Whisper works in 30-second windows, so at most 30.",
+      "",
+      "Smaller (10–20): shorter raw segments, sometimes more precise times; too small can cut sentences.",
+      "Usually irrelevant for sentences and word-by-word modes."
+    ],
+    "gap_enabled": [
+      "Gap check after each transcription: looks for passages that are loud and voice-like but got no text – typical when speech detection (VAD) swallows quiet speech or Whisper skips a sentence.",
+      "",
+      "How it works: level clearly above the noise floor AND a sound with fundamental and overtones (voice) instead of broadband noise (applause, wind, traffic).",
+      "",
+      "Findings appear in yellow in the log, the file gets “⚠ gaps” as status. It is a hint to check: music, singing or chanting can also be reported. Takes about 5 s per 2 h of audio."
+    ],
+    "gap_srt": [
+      "Also saves the findings as <name>{suffix}. Load it as a second subtitle track in VLC or Subtitle Edit – then you jump directly to the suspicious passages.",
+      "",
+      "If there are no gaps any more, an old {suffix} is removed automatically."
+    ],
+    "gap_min": [
+      "Only report gaps of at least this length. Shorter passages are mostly breaths, laughs or heckling.",
+      "Default 1.0 s."
+    ],
+    "gap_margin": [
+      "How clearly a passage must be above the noise floor of the recording to count as “loud”.",
+      "",
+      "Smaller (5–6): also finds very quiet speakers, but more false alarms.",
+      "Larger (10–12): only clear cases.",
+      "Default 8 dB."
+    ],
+    "orphan_limit": [
+      "Orphan rule, part 1: short words (up to this length) directly after a comma start a new subtitle instead of hanging at the end of a full line.",
+      "",
+      "Example: “… in Berlin, and” | “we see …”  →  “… in Berlin,” | “and we see …”",
+      "0 = rule off"
+    ],
+    "orphan_fill": "Orphan rule, part 2: only trigger if the line is already at least this full (in % of chars/line). Prevents very short subtitles.",
+    "split_pause": [
+      "After a speech pause of this length a new subtitle begins – even in the middle of a sentence. Otherwise a subtitle stays on screen during a long pause.",
+      "",
+      "0 = off · recommended 1.5 s"
+    ],
+    "max_duration": [
+      "No subtitle stays longer than this time, then a new one begins.",
+      "0 = off · recommended 7 s (common upper limit)"
+    ],
+    "line_gap": "Lyrics: minimum gap between two lines when “hold line” extends the end – so that two lines do not merge seamlessly.",
+    "ffmpeg": "Path to ffmpeg.exe. ffmpeg reads any audio and video file, converts it to 16 kHz mono and applies the audio filter – directly into memory, without temp files.",
+    "filter_string": [
+      "FFmpeg filter chain, parts separated by commas. The original filter:",
+      "",
+      "highpass=f=100",
+      "Cuts everything below 100 Hz: footfall, hum, wind rumble. The voice lies above.",
+      "",
+      "lowpass=f=8200",
+      "Cuts above 8.2 kHz. Whisper works with 16 kHz (usable up to 8 kHz) – so this part has practically no effect.",
+      "",
+      "afftdn",
+      "FFT noise reduction: lowers steady background noise (fans, hiss). With strong settings “bubbly” artifacts appear that rather disturb Whisper – if in doubt, compare with and without.",
+      "",
+      "dynaudnorm=f=150:g=15:p=1.0:m=10.0",
+      "Dynamic loudness normalization: raises quiet passages without overdriving loud ones. f = window length in ms · g = smoothing (number of windows, odd) · p = target peak level · m = maximum gain.",
+      "",
+      "Other useful filters: loudnorm (loudness per EBU R128), anlmdn (stronger noise reduction, slow).",
+      "Do not use: silenceremove, atempo – they shift the timestamps."
+    ],
+    "speech_suffix": [
+      "Suffix of the subtitle file for speech: <name> + suffix. An existing file with the same name is overwritten.",
+      "",
+      "Placeholders: {model} = model used, {lang} = language.",
+      "Example .{model}.srt → speech.large-v3.srt or speech.whisper-large-v3-turkish-general.srt – so every model gets its own SRT, ideal for comparing (“Compare …” in the file list)."
+    ],
+    "lyrics_input": "If <name> + this suffix is next to the media file, the song text is aligned instead of transcribed (lyrics mode). One song line per line, UTF-8.",
+    "lyrics_suffix": "Suffix of the lyrics subtitles: <name> + suffix.",
+    "encoding": [
+      "utf-8 – default, works with all current programs.",
+      "utf-8-sig – with a marker (BOM) at the start of the file. Needed if an older player or program shows umlauts, Turkish or Arabic characters wrongly."
+    ],
+    "lang_select": "Which language is edited. “All languages” only contains replacements that apply in every language.",
+    "lang_prompt": [
+      "Prompt for this language – always write it in this language. A German prompt with Turkish audio can tempt Whisper to translate.",
+      "",
+      "Good: a short sentence about the content plus a list of rare names and terms in the desired spelling.",
+      "Too long: only the last ~220 tokens count.",
+      "Risk: in silence or music, prompt words sometimes appear as text – then shorten it."
+    ],
+    "lang_filler": [
+      "Filler words that are removed in sentences and word-by-word modes – comma-separated, case does not matter.",
+      "If a filler word ends with a period (“uh.”), the end of the sentence is kept."
+    ],
+    "lang_dangling": [
+      "Words that should never stand alone at the end of a subtitle (articles, prepositions) – they move to the start of the next one.",
+      "",
+      "Exception: with punctuation (“I agree to.”) or before a long pause they stay."
+    ],
+    "lang_repl": [
+      "Corrections for recurring misrecognitions, one per line:",
+      "    Wrong = Right",
+      "",
+      "Only whole words and phrases are replaced: “Maier” becomes “Meier”, “Maierhofer” stays untouched.",
+      "Case does not matter when searching; exactly the right-hand side is inserted.",
+      "Several words too: Open AI = OpenAI",
+      "Lines starting with ; or # are ignored."
+    ],
+    "lang_model": [
+      "Optionally a separate model just for this language, e.g. a Turkish fine-tune in CTranslate2 format.",
+      "Empty = default model.",
+      "",
+      "Enter it as a folder (“Folder …”) or directly as a Hugging Face name owner/model – then it is downloaded on first use (internet needed). The folder must contain model.bin and preprocessor_config.json; the system check shows whether it fits.",
+      "",
+      "If the language changes between two files, the model is reloaded – sorting batches by language saves time."
+    ],
+    "timeout": "Seconds until the automatic start when files were dropped onto the BAT. A click into the window stops it. 0 = never start automatically.",
+    "skip": "Starts immediately without countdown – handy if the defaults always fit.",
+    "live": "Shows every recognized line in the log already during transcription – like in a console window.",
+    "check": "Checks Python, all required packages with versions, ffmpeg and the graphics card (CUDA). Also runs automatically every time the window starts.",
+    "dnd": [
+      "Dragging files directly into the list needs the small package tkinterdnd2 (no further dependencies).",
+      "",
+      "It is installed with --no-deps: only this one package, nothing else in the venv is changed. Then restart the window."
+    ],
+    "ini_open": "Opens whisper_tool.ini in the default editor – with all comments.",
+    "ui_language": [
+      "Language of the interface, the log and the comparison report.",
+      "",
+      "“like Windows”: uses the system language if there is a language file for it, otherwise English.",
+      "",
+      "More languages: copy lang/en.json, translate it and save it as lang/<code>.json – it then appears in this list automatically."
+    ]
+  }
+}

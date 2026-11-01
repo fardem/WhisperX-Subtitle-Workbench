@@ -986,7 +986,8 @@ def check_environment(cfg: Config) -> list[tuple[str, str]]:
     → [(level, text)] with level: ok / info / warn / error
     """
     import sys
-    res = []
+    from wt_version import APP_NAME, VERSION
+    res = [("ok", f"{APP_NAME} {VERSION} – {Path(__file__).resolve().parent}")]
     v = sys.version_info
     res.append(("ok" if v >= (3, 10) else "error",
                 f"Python {v.major}.{v.minor}.{v.micro}" + ("" if v >= (3, 10) else " – " + T("check.python_old"))))

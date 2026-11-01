@@ -103,7 +103,18 @@
     "finished_err": {
       "one": ", 1 error",
       "other": ", {n} errors"
-    }
+    },
+    "version": "{app} {version} · {folder}",
+    "other_instance": [
+      "A window of version {version} is still open.",
+      "",
+      "Files dropped onto the BAT go there, not into this window. Please close the other window."
+    ],
+    "other_instance_old": [
+      "A window of an older version is still open (title “Whisper Tool”).",
+      "",
+      "Files dropped onto the BAT go there, not into this window. Please close the old window."
+    ]
   },
   "status": {
     "wait": "waiting",
@@ -241,7 +252,8 @@
       "The language changes after restarting the window.",
       "",
       "Restart now?"
-    ]
+    ],
+    "version": "Version"
   },
   "cmpdlg": {
     "title": "Compare text",
@@ -442,7 +454,7 @@
       "other": "{n} places"
     },
     "shared_title": "Errors that {a} and {b} share",
-    "shared_intro": "Red = as in both files · green = what would be correct. A different beam or model often does not change these errors – the prompt (names/terms) and replacements help here.",
+    "shared_intro": "Blue-purple = as in A and in B · green = what would be correct. A different beam or model often does not change these errors – the prompt (names/terms) and replacements help here.",
     "short_word": "Short word – check that it is never correct elsewhere",
     "sg_wrong": "recognized",
     "sg_right": "correct",
@@ -538,7 +550,8 @@
     "sum_ab": "A↔B {sim} identical · {diffs} in {places} · {fmt} spelling only",
     "sum_ar": "A vs. reference: {places}",
     "sum_wer": "error rate A {wer}",
-    "sum_time": "timing A↔B ⌀ {typ}, {offset}"
+    "sum_time": "timing A↔B ⌀ {typ}, {offset}",
+    "footer": "Created with {app} {version} · {date}"
   },
   "tip": {
     "files": [

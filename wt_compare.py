@@ -22,6 +22,7 @@ import re
 import statistics
 import subprocess
 import sys
+import time
 import urllib.parse
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -29,6 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wt_i18n as i18n                     # noqa: E402
 from wt_i18n import T, Tn                  # noqa: E402
+from wt_version import APP_NAME, VERSION   # noqa: E402
 
 TIME_RE    = re.compile(r"(\d+):(\d{2}):(\d{2})[,.](\d{1,3})\s*-->\s*(\d+):(\d{2}):(\d{2})[,.](\d{1,3})")
 TAG_RE     = re.compile(r"<[^>]+>|\{\\[^}]*\}")              # <i>, <font …>, {\an8}
@@ -538,22 +540,25 @@ table.k td.f { text-align:left; white-space:normal; width:100%; }
 table.k td.f .dir { font-size:12px; color:var(--muted); overflow-wrap:anywhere; }
 table.k tr.a td.f b { color:var(--a); } table.k tr.b td.f b { color:var(--b); } table.k tr.r td.f b { color:var(--r); }
 .wer { font-weight:650; font-size:16px; } tr.a .wer { color:var(--a); } tr.b .wer { color:var(--b); }
-.best { font-size:12px; font-weight:600; color:var(--r); margin-left:4px; }
+.best { font-size:12px; font-weight:600; margin-left:4px; } tr.a .best { color:var(--a); } tr.b .best { color:var(--b); }
 .banner { border:1px solid var(--line); border-left:5px solid var(--muted); background:var(--card);
   border-radius:8px; padding:10px 14px; margin:12px 0; }
 .banner.a { border-left-color:var(--a); } .banner.b { border-left-color:var(--b); }
 .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin:12px 0; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; }
 .card .v { font-size:22px; font-weight:650; } .card .k { color:var(--muted); font-size:13px; }
-.wa, .wb, .wr, .wx { border-radius:4px; padding:0 3px; font-weight:600; }
+.wa, .wb, .wr, .wab { border-radius:4px; padding:0 3px; font-weight:600; }
 .wa { background:var(--a-bg); color:var(--a); box-shadow:inset 0 -2px 0 var(--a); }
 .wb { background:var(--b-bg); color:var(--b); box-shadow:inset 0 -2px 0 var(--b); }
 .wr { background:var(--r-bg); color:var(--r); box-shadow:inset 0 -2px 0 var(--r); }
-.wx { background:var(--bad-bg); color:var(--bad); box-shadow:inset 0 -2px 0 var(--bad); }
+/* in A AND B: both file colors, nothing else */
+.wab { color:var(--fg); background-image:linear-gradient(90deg,var(--a),var(--b)), linear-gradient(90deg,var(--a-bg),var(--b-bg));
+  background-size:100% 2px, 100% 100%; background-position:left bottom, center; background-repeat:no-repeat; }
 .miss { border:1.5px dashed; border-radius:4px; padding:0 5px; font-size:12px; font-weight:600; }
 .miss.a { border-color:var(--a); color:var(--a); } .miss.b { border-color:var(--b); color:var(--b); }
-.miss.r { border-color:var(--r); color:var(--r); } .miss.x { border-color:var(--bad); color:var(--bad); }
-mark { background:var(--fmt); color:inherit; border-radius:3px; padding:0 2px; }
+.miss.r { border-color:var(--r); color:var(--r); } .miss.ab { border-color:var(--a) var(--b) var(--b) var(--a); color:var(--fg); }
+/* spelling only (punctuation, case): no color – dotted underline */
+mark { background:none; color:inherit; border-bottom:2px dotted var(--muted); }
 .filters { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
 .filters button { font:inherit; font-size:13px; border:1px solid var(--line); background:var(--card); color:var(--fg);
   border-radius:16px; padding:2px 12px; cursor:pointer; }
@@ -567,9 +572,10 @@ button.t { cursor:pointer; color:var(--fg); } button.t:hover { background:var(--
 .row .s { padding:6px 10px; min-width:0; } .row .s div { padding:1px 0; }
 .vd { align-self:center; justify-self:center; font-size:12px; font-weight:650; border-radius:12px; padding:2px 10px; white-space:nowrap; }
 .vd.a { color:#fff; background:var(--a); } .vd.b { color:#fff; background:var(--b); }
-.vd.none { color:#fff; background:var(--bad); } .vd.out { color:var(--muted); border:1px solid var(--line); }
+.vd.none { color:var(--fg); border:1.5px solid var(--fg); } .vd.out { color:var(--muted); border:1px solid var(--line); }
 .row.noverdict { grid-template-columns:78px 1fr; }
 details { margin-top:14px; } summary { cursor:pointer; font-weight:600; }
+footer { margin-top:40px; padding-top:10px; border-top:1px solid var(--line); }
 .full p { margin:0 0 12px; } .full .pt { font-size:12px; margin-right:6px; }
 .fmtlist { columns:2 340px; font-size:14px; } .fmtlist div { break-inside:avoid; padding:2px 0; }
 table.sg { border-collapse:collapse; width:100%; font-size:14px; }
@@ -696,7 +702,7 @@ def _shared_section(rep: Report) -> str:
     rows = []
     for r1, r2, hyp in rep.shared[:2000]:
         t = r[r1].time if r1 < len(r) else (hyp[0].time if hyp else 0)
-        inner_x = _mark(hyp, "wx") or _miss("x")
+        inner_x = _mark(hyp, "wab") or _miss("ab")
         rows.append(f'<div class="row noverdict">{_time_cell(rep, t)}<div class="s">'
                     f'<div>{_chip("ab")}{"… " if r1 else ""}{_esc(r[max(r1 - CONTEXT, 0):r1])} '
                     f'{inner_x} {_esc(r[r2:r2 + CONTEXT])} …</div>'
@@ -714,7 +720,7 @@ def _suggest_section(rep: Report) -> str:
         for wrong, right, count, who in items:
             warn = (f' <span class="muted" title="{T("rep.short_word")}">⚠</span>' if len(wrong) <= 3 else "")
             chips = "".join(_chip(k.lower()) for k in sorted(who))
-            rows.append(f'<tr><td><span class="wx">{html.escape(wrong)}</span>{warn}</td>'
+            rows.append(f'<tr><td><b>{html.escape(wrong)}</b>{warn}</td>'
                         f'<td><span class="wr">{html.escape(right)}</span></td><td>{count}×</td><td>{chips}</td></tr>')
         return (f'<table class="sg"><tr><th>{T("rep.sg_wrong")}</th><th>{T("rep.sg_right")}</th>'
                 f'<th>{T("rep.sg_count")}</th><th>{T("rep.sg_in")}</th></tr>{"".join(rows)}</table>')
@@ -738,7 +744,7 @@ def _suggest_section(rep: Report) -> str:
 def _format_section(rep: Report) -> str:
     x, y = rep.x, rep.y
     rows = [f'<div><span class="muted">{fmt_time(p.time)}</span> {_chip(x.key)}'
-            f'{html.escape(p.raw)} {_chip(y.key)}<mark>{html.escape(q.raw)}</mark></div>'
+            f'<span class="w{x.key}">{html.escape(p.raw)}</span> {_chip(y.key)}<span class="w{y.key}">{html.escape(q.raw)}</span></div>'
             for p, q in rep.format_diffs[:3000]]
     none = f'<span class="muted">{T("rep.none")}</span>'
     return (f'<section id="fmt"><details><summary>{T("rep.fmt_title", places=Tn("rep.places", len(rep.format_diffs)))}'
@@ -925,6 +931,7 @@ def write_report(rep: Report, *args) -> Path:
 {_overview(rep)}
 <nav>{" · ".join(f'<a href="{h}">{t}</a>' for h, t in nav)}</nav>
 {_diff_section(rep)}{_shared_section(rep)}{_suggest_section(rep)}{_timing_section(rep)}{_format_section(rep)}{_full_section(rep)}
+<footer class="muted small">{T("rep.footer", app=APP_NAME, version=VERSION, date=time.strftime("%Y-%m-%d %H:%M"))}</footer>
 </main>{player}<script>{js}</script></body></html>"""
     out.write_text(doc, encoding="utf-8")
     return out
@@ -964,6 +971,7 @@ def main():
     ap.add_argument("--media", help=T("cli.cmp_media"))
     ap.add_argument("--ffmpeg", help=T("cli.cmp_ffmpeg"))
     ap.add_argument("--lang", help=T("cli.cmp_lang"))
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} {VERSION}")
     args = ap.parse_args()
     if len(args.files) > 3 or (len(args.files) == 3 and args.ref):
         ap.error(T("cli.cmp_too_many"))

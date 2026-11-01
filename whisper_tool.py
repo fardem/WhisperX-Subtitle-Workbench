@@ -47,7 +47,11 @@ HERE        = Path(__file__).resolve().parent
 DEFAULT_INI = HERE / "whisper_tool.ini"
 EXAMPLE_INI = HERE / "whisper_tool.example.ini"
 ERROR_LOG   = HERE / "whisper_tool_error.log"
-APP_NAME    = "WhisperX Subtitle Workbench"
+sys.path.insert(0, str(HERE))      # wt_core/wt_i18n/wt_compare/wt_version live next to this script
+try:
+    from wt_version import APP_NAME, VERSION
+except Exception:
+    APP_NAME, VERSION = "WhisperX Subtitle Workbench", "?"
 
 
 def _fatal(msg: str):
@@ -76,7 +80,6 @@ try:
 except Exception:
     TkinterDnD = DND_FILES = None
 
-sys.path.insert(0, str(HERE))      # wt_core/wt_i18n/wt_compare live next to this script
 
 
 def _ini_arg() -> Path:
@@ -139,10 +142,13 @@ def ensure_ini(path: Path):
             pass
 
 # Only one window: further starts (files dropped onto the BAT) hand their
-# files to the window that is already open – local only (127.0.0.1)
+# files to the window that is already open – local only (127.0.0.1).
+# Only to a window of the SAME version – a different (e.g. older) version that is
+# still open would otherwise silently take over, and the new start would be invisible.
 IPC_ADDR  = ("127.0.0.1", 47653)
-IPC_HELLO = b"WHISPERTOOL/1\n"
+IPC_HELLO = f"WHISPERTOOL/2 {VERSION}\n".encode()
 IPC_OK    = b"WHISPERTOOL-OK"
+IPC_OTHER = b"WHISPERTOOL-OTHER "
 
 
 def fmt_dur(sec: float) -> str:
@@ -254,15 +260,24 @@ class QueueWriter:
         return False
 
 
-def send_to_running(files) -> bool:
-    """Is a window already open? Then send the files there and return True."""
+def send_to_running(files) -> tuple[str, str]:
+    """
+    Is a window already open? → ("ok", "") files were handed over to it,
+    ("other", version) a window of another version is open ("" = older than 0.1.0), ("none", "").
+    """
     try:
         with socket.create_connection(IPC_ADDR, timeout=1.0) as s:
             s.sendall(IPC_HELLO + "\n".join(str(Path(f).resolve()) for f in files).encode("utf-8"))
             s.shutdown(socket.SHUT_WR)
-            return s.recv(64) == IPC_OK
+            s.settimeout(3.0)
+            reply = s.recv(128)
     except OSError:
-        return False
+        return "none", ""
+    if reply == IPC_OK:
+        return "ok", ""
+    if reply.startswith(IPC_OTHER):
+        return "other", reply[len(IPC_OTHER):].decode("utf-8", "replace").strip()
+    return "other", ""
 
 
 # ─── USER INTERFACE ───────────────────────────────────────────────────────────
@@ -289,12 +304,13 @@ class App(BaseTk):
         self.countdown = None
         self.current   = None
 
-        self.title(APP_NAME)
+        self.title(f"{APP_NAME} {VERSION}")
         self.scale = max(1.0, self.winfo_fpixels("1i") / 96)
         self.geometry(f"{int(1000 * self.scale)}x{int(760 * self.scale)}")
         self.minsize(int(860 * self.scale), int(620 * self.scale))
         self._build_ui()
 
+        self._append_log(i18n.line("info", "main.version", app=APP_NAME, version=VERSION, folder=HERE) + "\n")
         for w in self.cfg.warnings + [f"lang/{e}" for e in i18n.errors]:
             self._append_log(f"{i18n.tag('warn')}{w}\n")
         self._append_log(i18n.line("info", "main.settings_file", path=self.ini_path) + "\n")
@@ -916,7 +932,10 @@ class App(BaseTk):
                         if not chunk:
                             break
                         data += chunk
-                    if not data.startswith(IPC_HELLO):
+                    if not data.startswith(b"WHISPERTOOL/"):
+                        continue
+                    if not data.startswith(IPC_HELLO):          # another version: do not take its files
+                        conn.sendall(IPC_OTHER + VERSION.encode())
                         continue
                     conn.sendall(IPC_OK)
                 except OSError:
@@ -1107,7 +1126,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.app  = app
         self.cfg  = core.Config(app.ini_path)
         self.vars: dict = {}
-        self.title(T("set.title"))
+        self.title(f"{T('set.title')} – {APP_NAME} {VERSION}")
         self.transient(app)
         s = app.scale
         self.geometry(f"{int(900 * s)}x{int(580 * s)}+{app.winfo_rootx() + 50}+{app.winfo_rooty() + 30}")
@@ -1339,7 +1358,8 @@ class SettingsDialog(tk.Toplevel if tk else object):
         else:
             dnd = ttk.Button(f, text=T("set.dnd_enable"), command=lambda: self.app.install_dnd(self))
         self._row(f, 7, "dnd", dnd, "" if DND_FILES else None)
-        self._note(f, 8, T("set.note_start"))
+        self._row(f, 8, "version", ttk.Label(f, text=f"{APP_NAME} {VERSION}"), str(HERE))
+        self._note(f, 9, T("set.note_start"))
 
     # ── Languages tab ──────────────────────────────────────────────────────────
 
@@ -1569,6 +1589,7 @@ class CompareDialog(tk.Toplevel if tk else object):
 
 def run_console(ini: Path, files: list[str]) -> int:
     ensure_ini(ini)
+    print(i18n.line("info", "main.version", app=APP_NAME, version=VERSION, folder=HERE))
     cfg = core.Config(ini)
     for w in cfg.warnings:
         print(f"{i18n.tag('warn')}{w}")
@@ -1606,6 +1627,7 @@ def main():
     ap.add_argument("--nogui", action="store_true", help=T("cli.nogui"))
     ap.add_argument("--ini", default=str(DEFAULT_INI), help=T("cli.ini"))
     ap.add_argument("--fresh", action="store_true", help=argparse.SUPPRESS)     # restart: do not hand over
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} {VERSION}")
     args = ap.parse_args()
     ensure_ini(Path(args.ini))
 
@@ -1615,10 +1637,17 @@ def main():
         _fatal(T("app.err_tkinter"))
         sys.exit(1)
 
-    if not args.fresh and send_to_running(args.files):
-        return          # window is already open – the files were handed over to it
+    state, other = ("none", "") if args.fresh else send_to_running(args.files)
+    if state == "ok":
+        return          # window of this version is already open – the files were handed over to it
     _dpi_aware()
-    App(Path(args.ini), args.files).mainloop()
+    app = App(Path(args.ini), args.files)
+    if state == "other":
+        # an older/other version is still open: say so clearly instead of silently showing the old window
+        msg = T("main.other_instance", version=other) if other else T("main.other_instance_old")
+        app._append_log(f"{i18n.tag('warn')}{msg.splitlines()[0]}\n")
+        app.after(800, lambda: messagebox.showwarning(APP_NAME, msg, parent=app))
+    app.mainloop()
 
 
 if __name__ == "__main__":

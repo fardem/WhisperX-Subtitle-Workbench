@@ -2,6 +2,8 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
+**Version 0.1.0** · [Changelog](CHANGELOG.md)
+
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word**, with a user interface in English, German and Turkish.
 
 ![Main window](docs/images/main-window.png)
@@ -186,12 +188,13 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ### Using an existing WhisperX venv
 
-If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy the files of this repository into `C:\WhisperX`, next to the `venv` folder. Nothing gets installed; the tool only uses the packages that are already there.
+If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy the files of this repository into `C:\WhisperX`, next to the `venv` folder. Nothing gets installed; the tool only uses the packages that are already there. Close the tool before copying, and extract the files directly into `C:\WhisperX`, not into a subfolder.
 
 ---
 
 ## Updating safely
 
+- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.1.0*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
 - **The workbench itself:** `git pull`, or copy the new files over the old ones. Your settings are in `whisper_tool.ini`. That file is not part of the repository, so an update never overwrites it. New options get default values automatically.
 - **Python packages:** only update when you need something new. This is the safe way:
 
@@ -322,6 +325,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 
 | Problem | Solution |
 |---|---|
+| After an update you still see the old interface (title “Whisper Tool”) | An old window is still open and took over the start. Close it – if it is not visible, end `pythonw.exe` in Task Manager – and start again |
 | The tool does not start | A message box shows the reason. The same text is in `whisper_tool_error.log` |
 | A line of the system check is red | It names the missing part and which feature is affected. See [Known ways to break the setup](#known-ways-to-break-the-setup) |
 | “torch is a build without CUDA” | torch was installed from PyPI. Repeat step 4 of the installation |
@@ -340,6 +344,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | `wt_core.py` | Audio loading, WhisperX, lyrics alignment, subtitle rules, gap check, system check, INI writer |
 | `wt_compare.py` | Word-by-word comparison and the HTML report (also usable on its own) |
 | `wt_i18n.py` | Loads the language files |
+| `wt_version.py` | Name and version number (shown in the title bar, log and report) |
 | `lang/*.json` | All texts of the interface, log and report (en, de, tr) |
 | `whisper_tool.example.ini` | Settings template; copied to `whisper_tool.ini` on the first start |
 | `Whisper_Tool.bat` | Starter: double-click it or drop files onto it |

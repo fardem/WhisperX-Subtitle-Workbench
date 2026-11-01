@@ -1,0 +1,26 @@
+# Python environment and caches
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Your own settings - created from whisper_tool.example.ini on the first start
+whisper_tool.ini
+whisper_tool.ini.bak
+whisper_tool_error.log
+
+# Media and results
+*.mp3
+*.mp4
+*.m4a
+*.wav
+*.mkv
+*.srt
+*.json
+!lang/*.json
+*.vergleich.html
+*.compare.html
+*.karsilastirma.html
+
+# Models downloaded into the folder
+models/

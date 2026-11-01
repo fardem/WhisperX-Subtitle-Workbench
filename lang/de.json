@@ -1,0 +1,862 @@
+{
+  "_meta": {
+    "name": "Deutsch",
+    "decimal": ",",
+    "percent": "{v} %",
+    "seconds": "{v} s",
+    "html_lang": "de"
+  },
+  "app": {
+    "err_core_missing": "Die Datei wt_core.py fehlt in {dir} – bitte mitkopieren.",
+    "err_package_missing": [
+      "Das Paket „{name}“ fehlt.",
+      "",
+      "Wahrscheinlich wurde nicht das Python aus dem WhisperX-venv gestartet (Whisper_Tool.bat benutzen) oder das venv ist unvollständig.",
+      "",
+      "Gestartet mit: {python}"
+    ],
+    "err_start": [
+      "WhisperX Subtitle Workbench kann nicht starten.",
+      "",
+      "{why}",
+      "",
+      "Details: {log}"
+    ],
+    "err_tkinter": [
+      "Tkinter fehlt – die Oberfläche kann nicht starten.",
+      "",
+      "Abhilfe: Python-Installer → „Modify“ → Häkchen bei „tcl/tk and IDLE“ setzen. Das venv bleibt dabei unverändert.",
+      "",
+      "Ohne Oberfläche geht es weiterhin mit:  python whisper_tool.py --nogui <dateien>"
+    ]
+  },
+  "main": {
+    "minutes": "{t} min",
+    "settings_file": "Einstellungen: {path}",
+    "files": "Dateien",
+    "col_file": "Datei",
+    "col_kind": "Art",
+    "col_status": "Status",
+    "add": "Hinzufügen …",
+    "remove": "Entfernen",
+    "clear": "Liste leeren",
+    "open_folder": "Ordner öffnen",
+    "compare": "Vergleichen …",
+    "hint_drop": "Dateien oder Ordner hierher ziehen",
+    "hint_bat": "Dateien auf Whisper_Tool.bat ziehen (direkt ins Fenster: Einstellungen → Allgemein)",
+    "hint_dblclick": "Doppelklick zeigt das Ergebnis",
+    "options": "Einstellungen",
+    "language": "Sprache",
+    "mode": "Modus",
+    "chars": "Zeichen/Zeile",
+    "lines": "Zeilen/Block",
+    "filter": "Audiofilter (FFmpeg)",
+    "keep_json": "JSON behalten",
+    "hold": "Lyrics: Zeile halten (s)",
+    "save_defaults": "Als Standard speichern",
+    "prompt": "Prompt",
+    "pmode_ini": "aus INI (je Sprache)",
+    "pmode_custom": "eigener",
+    "pmode_none": "keiner",
+    "start": "▶  Start",
+    "cancel": "Abbrechen",
+    "ready": "Bereit",
+    "settings": "⚙  Einstellungen …",
+    "log": "Protokoll",
+    "prompt_auto": "je nach erkannter Sprache",
+    "prompt_empty": "(kein Prompt in der INI)",
+    "not_found": "Nicht gefunden: {path}",
+    "appended": {
+      "one": "1 Datei an die laufende Verarbeitung angehängt",
+      "other": "{n} Dateien an die laufende Verarbeitung angehängt"
+    },
+    "add_title": "Dateien hinzufügen",
+    "add_types": "Medien, JSON, Lyrics",
+    "all_files": "Alle Dateien",
+    "err_number": "{name}: '{value}' ist keine Zahl",
+    "err_range": "{name}: erlaubt sind {lo} bis {hi}",
+    "save_failed": [
+      "Speichern fehlgeschlagen:",
+      "{err}"
+    ],
+    "defaults_saved": "Auswahl als Standard gespeichert",
+    "defaults_saved_log": "Standard gespeichert in {file}",
+    "no_files": "Keine Dateien in der Liste.",
+    "cancelling": "Wird nach dem aktuellen Schritt abgebrochen …",
+    "file_n": "Datei {n} von {total}",
+    "step_asr": "Transkription",
+    "step_align": "Wort-Zeitstempel",
+    "finished": "Fertig: {ok} ok",
+    "total": "Gesamt {time}",
+    "countdown": "Automatischer Start in {n} s – Klick ins Fenster hält an",
+    "countdown_stopped": "Countdown angehalten – Einstellungen prüfen und Start drücken",
+    "open_failed": [
+      "Kann nicht öffnen:",
+      "{path}",
+      "",
+      "{err}"
+    ],
+    "quit_running": [
+      "Die Verarbeitung läuft noch.",
+      "Trotzdem beenden?"
+    ],
+    "finished_err": {
+      "one": ", 1 Fehler",
+      "other": ", {n} Fehler"
+    }
+  },
+  "status": {
+    "wait": "wartet",
+    "cancelled": "abgebrochen",
+    "gaps": {
+      "one": "1 Lücke",
+      "other": "{n} Lücken"
+    },
+    "error": "Fehler – siehe Protokoll",
+    "running": "läuft …",
+    "done": {
+      "one": "fertig · {time} · 1 UT",
+      "other": "fertig · {time} · {n} UT"
+    }
+  },
+  "kind": {
+    "speech": "Rede",
+    "lyrics": "Lyrics",
+    "json": "JSON → SRT"
+  },
+  "mode": {
+    "sentence": "Satzweise",
+    "word": "Wort-für-Wort",
+    "raw": "Raw",
+    "raw_segments": "Raw (WhisperX-Segmente)"
+  },
+  "speechlang": {
+    "auto": "Automatisch",
+    "de": "Deutsch",
+    "en": "Englisch",
+    "ar": "Arabisch",
+    "tr": "Türkisch",
+    "all": "Alle Sprachen (nur Ersetzungen)"
+  },
+  "set": {
+    "title": "Einstellungen",
+    "tab_whisper": "Whisper",
+    "tab_vad": "Spracherkennung",
+    "tab_subs": "Untertitel",
+    "tab_audio": "Audio & Ausgabe",
+    "tab_langs": "Sprachen",
+    "open_ini": "INI im Editor öffnen",
+    "backup_note": "Speichern legt vorher eine Sicherung (.bak) an",
+    "save": "Speichern",
+    "programs": "Programme",
+    "folder": "Ordner …",
+    "model": "Modell",
+    "beam": "Beam",
+    "beam_hint": "Standard 5 · ab ca. 10 kaum Gewinn, höher = deutlich langsamer",
+    "compute": "Genauigkeit",
+    "compute_hint": "float16 = viel schneller bei praktisch gleicher Genauigkeit",
+    "batch": "Batch",
+    "batch_hint": "nur Geschwindigkeit, kein Einfluss aufs Ergebnis · 8–16 sinnvoll",
+    "device": "Gerät",
+    "device_hint": "cuda = Grafikkarte · cpu nur als Notlösung",
+    "numerals": "Zahlen als Wörter ausschreiben (exakte Zeitstempel, aber keine Ziffern)",
+    "note_whisper": "Änderungen auf diesem Reiter laden das Modell beim nächsten Start neu. Ein eigenes Modell nur für eine Sprache stellst du unter „Sprachen“ ein.",
+    "vad_method": "Methode",
+    "vad_method_hint": "pyannote = WhisperX-Standard",
+    "onset": "Onset",
+    "onset_hint": "Beginn von Sprache · niedriger = empfindlicher",
+    "offset": "Offset",
+    "offset_hint": "Ende von Sprache · niedriger = Sprache wird länger gehalten",
+    "chunk": "Abschnittslänge (s)",
+    "chunk_hint": "maximale Länge eines Abschnitts · wirkt vor allem im Raw-Modus",
+    "vad_defaults": "WhisperX-Standard",
+    "note_vad": "Für Reden mit Hintergrundgeräusch sind etwas niedrigere Werte als der Standard oft besser (z.B. 0.4 / 0.323). Zu niedrig: Geräusche werden als Sprache erkannt.",
+    "gap_enabled": "Lücken-Check: laute Stellen ohne Text nach jeder Transkription melden",
+    "gap_srt": "Fundstellen zusätzlich als <name>{suffix} speichern",
+    "gap_min": "Lücken: Mindestlänge (s)",
+    "gap_min_hint": "kürzere Stellen ignorieren · Standard 1.0",
+    "gap_margin": "Lücken: über Grundrauschen (dB)",
+    "gap_margin_hint": "kleiner = empfindlicher · Standard 8",
+    "orphan_limit": "Orphan: Wörter bis … Zeichen",
+    "orphan_limit_hint": "kurze Wörter nach einem Komma beginnen den nächsten Untertitel …",
+    "orphan_fill": "Orphan: ab Füllgrad (%)",
+    "orphan_fill_hint": "… aber nur, wenn die Zeile schon so voll ist",
+    "split_pause": "Neuer Untertitel nach Pause (s)",
+    "split_pause_hint": "0 = aus · Empfehlung 1.5",
+    "max_duration": "Max. Standzeit (s)",
+    "max_duration_hint": "0 = aus · Empfehlung 7",
+    "line_gap": "Lyrics: Abstand zur nächsten Zeile (s)",
+    "note_subs": "Zeichen/Zeile, Zeilen/Block und „Zeile halten“ stellst du im Hauptfenster ein und speicherst sie dort mit „Als Standard speichern“.",
+    "ffmpeg": "ffmpeg",
+    "orig_filter": "Ursprünglicher Filter",
+    "filter_string": "Audiofilter",
+    "speech_suffix": "Endung Rede",
+    "lyrics_input": "Lyrics-Textdatei",
+    "lyrics_input_hint": "liegt neben der Mediendatei → Lyrics-Modus",
+    "lyrics_suffix": "Endung Lyrics",
+    "encoding": "Kodierung",
+    "encoding_hint": "utf-8-sig, falls ein Player Umlaute falsch anzeigt",
+    "filler": "Füllwörter",
+    "dangling": "Dangling-Wörter",
+    "replacements": [
+      "Ersetzungen",
+      "Falsch = Richtig",
+      "(eine pro Zeile)"
+    ],
+    "lang_model": "Eigenes Modell",
+    "empty_default": "leer = Standard",
+    "timeout": "Countdown (s)",
+    "timeout_hint": "Auto-Start nach dem Ziehen auf die BAT · 0 = kein Auto-Start",
+    "skip": "Sofort starten, ohne Countdown",
+    "live": "Erkannte Zeilen live im Protokoll anzeigen",
+    "ui_language": "Sprache der Oberfläche",
+    "ui_language_hint": "Neustart nötig · „wie Windows“ = Systemsprache, sonst Englisch",
+    "ui_auto": "wie Windows",
+    "check": "Systemprüfung",
+    "check_now": "Jetzt prüfen",
+    "check_hint": "Pakete, Versionen, ffmpeg, Grafikkarte",
+    "dnd": "Drag & Drop ins Fenster",
+    "dnd_active": "aktiv ✓",
+    "dnd_restart": "installiert – nach Neustart des Fensters aktiv",
+    "dnd_enable": "Aktivieren …",
+    "dnd_hint": "installiert das kleine Paket tkinterdnd2",
+    "note_start": "Sprache, Modus, Audiofilter, Layout und Prompt-Vorauswahl speicherst du im Hauptfenster mit „Als Standard speichern“.",
+    "repl_all": "Diese Ersetzungen gelten für alle Sprachen.",
+    "prompt_long": "lang! WhisperX nutzt nur das Ende eines zu langen Prompts",
+    "prompt_chars": "Prompt: {n} Zeichen",
+    "repl_error": [
+      "Ersetzungen {lang}, Zeile {line}: „Falsch = Richtig“ erwartet",
+      "",
+      "{text}"
+    ],
+    "model_empty": "Modell darf nicht leer sein",
+    "no_changes": "Einstellungen: keine Änderungen",
+    "saved_log": {
+      "one": "1 Einstellung gespeichert – gilt ab dem nächsten Start",
+      "other": "{n} Einstellungen gespeichert – gelten ab dem nächsten Start"
+    },
+    "saved": "Einstellungen gespeichert",
+    "tab_general": "Allgemein",
+    "restart_ask": [
+      "Die Sprache wechselt nach einem Neustart des Fensters.",
+      "",
+      "Jetzt neu starten?"
+    ]
+  },
+  "cmpdlg": {
+    "title": "Text vergleichen",
+    "a": "A",
+    "b": "B",
+    "ref": "Referenz",
+    "media": "Anhören",
+    "b_hint": "optional, wenn eine Referenz angegeben ist",
+    "ref_hint": "optional – korrigierte SRT",
+    "media_hint": "optional – Video/Audio, dann sind die Zeiten anklickbar",
+    "info": "Möglich: A + B (wo unterscheiden sie sich) · A + Referenz (Fehler von A) · A + B + Referenz (wer hat recht, Fehlerquoten). Nur der Text zählt – Zeitstempel und Zeilenumbrüche sind egal.",
+    "run": "Vergleichen",
+    "type_media": "Video/Audio",
+    "type_srt": "Untertitel",
+    "need_two": "Bitte B oder eine Referenz angeben – mindestens zwei Dateien.",
+    "not_found": [
+      "{label}: Datei nicht gefunden",
+      "{path}"
+    ],
+    "busy": "Vergleiche …",
+    "busy_audio": "Vergleiche … und bereite die Tonspur vor",
+    "failed": [
+      "Vergleich fehlgeschlagen:",
+      "{err}"
+    ],
+    "report": "Bericht: {path}",
+    "status": "Vergleich: {text}"
+  },
+  "check": {
+    "failed": "Systemprüfung fehlgeschlagen: {err}",
+    "title": "Systemprüfung",
+    "status_problems": {
+      "one": "Systemprüfung: 1 Problem – siehe Protokoll",
+      "other": "Systemprüfung: {n} Probleme – siehe Protokoll"
+    },
+    "status_ok": "Systemprüfung: alles bereit",
+    "status_hints": "Systemprüfung: alles bereit (mit Hinweisen)",
+    "head_errors": "Es fehlt etwas – betroffene Funktionen gehen nicht:",
+    "head_ok": "Alles bereit.",
+    "purpose_whisperx": "Transkription von Reden",
+    "purpose_torch": "Modelle auf der Grafikkarte",
+    "purpose_torchaudio": "Lyrics-Alignment (MMS_FA)",
+    "purpose_uroman": "Lyrics-Alignment (Umschrift)",
+    "purpose_numpy": "Audioverarbeitung",
+    "purpose_tkinterdnd2": "Drag & Drop ins Fenster (optional)",
+    "no_model_bin": "Im Modellordner fehlt model.bin – das ist kein CTranslate2-Modell: {path}. Transformers-Modelle müssen erst mit ct2-transformers-converter umgewandelt werden.",
+    "no_preprocessor": "preprocessor_config.json fehlt – bei large-v3-Modellen erkennt Whisper dann falsch (80 statt 128 Mel-Bänder). Datei aus dem Original-Repo dazulegen.",
+    "no_tokenizer": "tokenizer.json fehlt – faster-whisper nimmt dann den Tokenizer von whisper-tiny, der für large-v3-Modelle falsch ist. tokenizer.json aus openai/whisper-large-v3 dazulegen.",
+    "model_dir_missing": "Modellordner nicht gefunden: {name}",
+    "model_unknown": "Unbekannter Modellname „{name}“ – faster-whisper versucht ihn trotzdem zu laden.",
+    "python_old": "mindestens 3.10 nötig",
+    "pkg_missing": "{mod} fehlt → {purpose} nicht möglich. Bitte die WhisperX-Installation im venv prüfen.",
+    "pkg_optional": "{mod} nicht installiert → {purpose}: Einstellungen → Allgemein",
+    "whisperx_old": "whisperx {version} ist älter als 3.8 – das Tool ist mit 3.8.x getestet",
+    "torch_mismatch": "torch {torch} und torchaudio {torchaudio} passen nicht zusammen – Lyrics können fehlschlagen",
+    "ffmpeg_missing": "ffmpeg nicht gefunden: {path} → keine Audiodateien lesbar. Pfad unter Einstellungen → Audio & Ausgabe eintragen.",
+    "ct2_folder": "CTranslate2-Ordner",
+    "hf_download": "Hugging Face – wird beim ersten Einsatz heruntergeladen",
+    "gpu": "Grafikkarte",
+    "torch_cpu": "torch ist eine Version ohne CUDA ({version})",
+    "no_driver": "Treiber oder Grafikkarte nicht erreichbar",
+    "no_gpu": "Keine CUDA-Grafikkarte: {reason} → es würde auf der CPU gerechnet (sehr langsam)",
+    "torch_broken": "torch lässt sich nicht laden: {err}"
+  },
+  "dnd": {
+    "title": "Drag & Drop aktivieren",
+    "confirm": [
+      "Installiert das Paket {pkg} in:",
+      "{prefix}",
+      "",
+      "Mit --no-deps: es wird garantiert nur dieses eine Paket installiert, sonst wird nichts im venv verändert.",
+      "",
+      "Fortfahren?"
+    ],
+    "done": "Installiert. Bitte das Fenster schließen und neu starten – danach lassen sich Dateien direkt in die Liste ziehen.",
+    "failed": "Installation fehlgeschlagen:",
+    "pip_failed": [
+      "pip konnte nicht gestartet werden:",
+      "{err}"
+    ],
+    "short": "Drag & Drop"
+  },
+  "cli": {
+    "description": "Untertitel für Reden und Lyrics",
+    "files": "Medien-, JSON- oder .lyric.txt-Dateien bzw. Ordner",
+    "nogui": "ohne Fenster, Standardwerte aus der INI",
+    "ini": "andere INI-Datei verwenden",
+    "cmp_description": "Textvergleich von SRT-Dateien (nur der reine Text).",
+    "cmp_files": "A.srt [B.srt] [Referenz.srt]",
+    "cmp_ref": "korrigierte Referenz-SRT",
+    "cmp_media": "Video/Audio – Zeiten im Bericht werden anklickbar",
+    "cmp_ffmpeg": "ffmpeg für die Tonspur zum Anhören (Standard: aus whisper_tool.ini)",
+    "cmp_lang": "Sprache des Berichts: de, en, tr … (Standard: wie die Oberfläche)",
+    "cmp_too_many": "höchstens A, B und eine Referenz",
+    "cmp_too_few": "mindestens zwei Dateien: A und B oder A und --ref",
+    "not_found": "Datei nicht gefunden: {path}",
+    "error": "Fehler: {err}"
+  },
+  "tag": {
+    "info": "info",
+    "warn": "warn",
+    "error": "fehler",
+    "done": "fertig",
+    "check": "check",
+    "gap": "lücke",
+    "dnd": "dnd",
+    "compare": "vergleich",
+    "device": "device",
+    "model": "model",
+    "align": "align",
+    "lang": "sprache",
+    "prompt": "prompt",
+    "asr": "asr",
+    "json": "json",
+    "lyrics": "lyrics",
+    "audio": "audio"
+  },
+  "core": {
+    "ini_missing": "INI nicht gefunden: {path} – nutze Standardwerte",
+    "ini_broken": "INI fehlerhaft ({err}) – nutze Standardwerte",
+    "ini_unknown": "{entry} unbekannt – nutze {default}",
+    "ini_invalid": "{entry} ungültig – nutze {default}",
+    "ffmpeg_fallback": "ffmpeg nicht gefunden: {path} – nutze {found}",
+    "ffmpeg_check": "ffmpeg nicht gefunden: {path} – bitte [System] ffmpeg_path prüfen",
+    "ffmpeg_missing": "ffmpeg nicht gefunden: {path}",
+    "exit_code": "Fehlercode {code}",
+    "no_audio": "Keine Audiospur gefunden",
+    "gap_cue": "[Lücke] {len} ohne Text · Pegel {db} dB zur Sprache",
+    "lyrics_not_utf8": "Lyrics-Datei ist nicht UTF-8 – im Editor mit Codierung UTF-8 speichern",
+    "no_media": "Keine Mediendatei zu {name} gefunden",
+    "no_cuda": "CUDA nicht verfügbar – nutze CPU (sehr langsam)",
+    "oom": "Grafikspeicher voll – entlade andere Modelle und versuche erneut …",
+    "model_switch": "Wechsle Modell → {name}",
+    "model_load": "Lade {name} ({compute}, Beam {beam}) …",
+    "model_hf_failed": "Modell „{name}“ ließ sich nicht laden ({err}). Mögliche Ursachen: kein Internet beim ersten Download, Repo-Name falsch, oder die CTranslate2-Dateien liegen im Repo in einem Unterordner – dann herunterladen und den Ordner unter Einstellungen → Sprachen wählen.",
+    "model_ready": "bereit nach {time}",
+    "align_load": "Lade Align-Modell für '{lang}' …",
+    "mms_load": "Lade MMS_FA (erster Start: ~1.18 GB Download, danach gecacht) …",
+    "lang_detected": "erkannt: {lang} ({name})",
+    "no_rules": "ohne eigene Regeln",
+    "prompt_off": "aus",
+    "prompt_custom": "eigener",
+    "asr_running": "Transkription läuft …",
+    "align_words": "Wort-Zeitstempel …",
+    "lyrics_no_words": "Keine Wörter in der Lyrics-Datei gefunden",
+    "emissions": "Berechne Emissions …",
+    "json_rebuild": "Baue SRT neu aus {name}",
+    "line_not_aligned": "Zeile {n} nicht aligned: {text}",
+    "audio_filtered": "Lade mit Filter …",
+    "audio_original": "Lade Original …",
+    "json_saved": "gespeichert: {name}",
+    "no_word_times": "Keine Wort-Zeitstempel – Ausgabe als {mode}",
+    "written": {
+      "one": "1 Untertitel → {name}",
+      "other": "{n} Untertitel → {name}"
+    },
+    "gap_suffix": ".luecken.srt",
+    "gap_none": "keine verdächtigen Lücken",
+    "gap_found": {
+      "one": "1 Stelle laut, aber ohne Text – zusammen {total}:",
+      "other": "{n} Stellen laut, aber ohne Text – zusammen {total}:"
+    },
+    "gap_item": "{len}, Pegel {db} dB zur Sprache",
+    "gap_more": "und {n} weitere",
+    "gap_file": "Fundstellen zum Anspringen: {name}",
+    "gap_tip": "Tipp: Ist es Sprache, Onset senken oder silero testen (Einstellungen → Spracherkennung). Musik, Gesang oder Applaus kann man ignorieren.",
+    "asr_done": {
+      "one": "1 Segment in {time}",
+      "other": "{n} Segmente in {time}"
+    },
+    "lyrics_lines": {
+      "one": "1 Zeile aus {name}",
+      "other": "{n} Zeilen aus {name}"
+    }
+  },
+  "rep": {
+    "no_cues": [
+      "{label}: keine Untertitel gefunden – ist das eine SRT-Datei?",
+      "{path}"
+    ],
+    "missing": "fehlt",
+    "missing_title": "Hier steht in dieser Datei nichts",
+    "play_title": "Anhören (ab 1,5 s davor)",
+    "verdict_a": "A richtig",
+    "verdict_b": "B richtig",
+    "verdict_none": "beide falsch",
+    "verdict_out": "ohne Referenz",
+    "filter_all": "Alle",
+    "diff_title_ab": "Unterschiede zwischen {a} und {b}",
+    "diff_intro_ab": "Farbig = steht nur in dieser Datei · „fehlt“ = an dieser Stelle steht dort nichts.",
+    "diff_intro_ref": "Die grüne Ref-Zeile zeigt, was richtig ist.",
+    "diff_intro_noref": "Ohne Referenz zeigt das nicht, wer recht hat – Zeit anklicken und nachhören.",
+    "diff_title_ar": "Fehler von {a} gegenüber der {r}",
+    "diff_intro_ar": "Blau = so steht es in A · Grün = so steht es in der Referenz · „fehlt“ = dort steht nichts.",
+    "no_diffs": "Keine Wortunterschiede.",
+    "places": {
+      "one": "1 Stelle",
+      "other": "{n} Stellen"
+    },
+    "shared_title": "Fehler, die {a} und {b} gleich machen",
+    "shared_intro": "Rot = so steht es in beiden Dateien · Grün = so wäre es richtig. Diese Fehler ändert ein anderer Beam oder ein anderes Modell oft nicht – hier helfen Prompt (Namen/Begriffe) und Ersetzungen.",
+    "short_word": "Kurzes Wort – prüfen, ob es sonst nie richtig vorkommt",
+    "sg_wrong": "erkannt",
+    "sg_right": "richtig",
+    "sg_count": "Anzahl",
+    "sg_in": "in",
+    "sg_title": "Vorschläge für Ersetzungen",
+    "sg_intro": "Aus der Referenz abgeleitet: was erkannt wurde → was richtig ist. Nur übernehmen, wenn das falsche Wort sonst nie richtig vorkommt (typisch: Namen, Begriffe). Ziel: Einstellungen → Sprachen → Ersetzungen.",
+    "sg_multi": "Mehrfach falsch erkannt – {n}",
+    "copy_all": "Alle Zeilen kopieren",
+    "copied": "Kopiert ✓",
+    "sg_none_multi": "Kein Fehler kam mehrfach vor.",
+    "sg_once": "Einmalig falsch erkannt – {n} (oft Zufall, bei Namen trotzdem nützlich)",
+    "none": "keine",
+    "fmt_title": "Nur Schreibweise – {places} (Satzzeichen, Groß/klein – zählt nicht als Fehler)",
+    "legend_word": "so",
+    "full_legend": "{wx} nur in {x} · {wy} nur in {y} · {wf} andere Schreibweise (Maus drauf zeigt {x})",
+    "full_title": "Volltext mit allen Abweichungen",
+    "offset": "Versatz {val}",
+    "offset_ab_later": "Versatz {val} (B später als A)",
+    "offset_ab_earlier": "Versatz {val} (B früher als A)",
+    "offset_late": "Versatz {val} ({who} zu spät)",
+    "offset_early": "Versatz {val} ({who} zu früh)",
+    "card_timing": "zeitliche Abweichung {a}↔ {b}",
+    "share_off": "{pct} der Wörter > {s}",
+    "vs_ref": "{who} gegenüber {r}",
+    "timing_line": "typisch {typ} daneben · {offset} · {pct} der Wörter mehr als {s}",
+    "stretch_ab_later": "B {val} später als A",
+    "stretch_ab_earlier": "B {val} früher als A",
+    "stretch_late": "{who} {val} zu spät",
+    "stretch_early": "{who} {val} zu früh",
+    "words": {
+      "one": "1 Wort",
+      "other": "{n} Wörter"
+    },
+    "timing_none": "Keine Stelle mit zu starker Abweichung.",
+    "timing_note_ref": "Hinweis: Die Referenz-Zeiten zählen nur, wenn sie geprüft wurden – wurde sie aus A korrigiert, liegt A automatisch gut.",
+    "timing_title": "Zeitliche Abweichung – {places} über {s}",
+    "timing_explain": "Verglichen werden die Zeiten gleicher Wörter. SRTs haben nur Zeiten pro Block, die Zeit jedes Worts wird darin geschätzt – deshalb zählen erst Abweichungen über {s}, und nur wenn mindestens {n} Wörter am Stück betroffen sind.",
+    "col_file": "Datei",
+    "col_words": "Wörter",
+    "col_wer": "Fehlerquote",
+    "col_wer_title": "Anteil falscher Wörter im Bereich der Referenz",
+    "col_sub": "ersetzt",
+    "col_sub_title": "falsches Wort statt richtigem",
+    "col_del": "fehlt",
+    "col_del_title": "Wort der Referenz fehlt",
+    "col_ins": "zu viel",
+    "col_ins_title": "Wort, das in der Referenz nicht vorkommt",
+    "col_typ": "Zeit ⌀",
+    "col_typ_title": "Typische zeitliche Abweichung gleicher Wörter zur Referenz (Median der Abstände)",
+    "col_offset": "Versatz",
+    "col_offset_title": "Versatz: Median mit Vorzeichen – plus = später als die Referenz, minus = früher",
+    "col_off": "> {s}",
+    "col_off_title": "Anteil der Wörter, die mehr als {s} neben der Referenz liegen",
+    "col_punct": "Satzzeichen",
+    "col_punct_title": "Wörter mit Satzzeichen am Ende",
+    "better": "genauer",
+    "benchmark": "Maßstab",
+    "banner_best": "<b>ist genauer:</b> {wer_w} statt {wer_l} Fehler – {n_w} statt {n_l} falsche Wörter ({less} weniger).",
+    "banner_equal": "<b>Beide gleich genau:</b> je {wer} Fehler.",
+    "banner_shared": "Von den Fehlern machen A und B {n} gleich (siehe „Fehler in beiden“) – diese ändert der Unterschied zwischen A und B nicht.",
+    "banner_a": "<b>{wer} Fehler</b> gegenüber der Referenz – {n} von {words} Wörtern.",
+    "banner_noref": "Ohne Referenz zeigt der Bericht nur, <b>wo</b> sich A und B unterscheiden – nicht, wer recht hat. Dafür eine korrigierte SRT als Referenz angeben (5–10 Minuten reichen).",
+    "ref_span": "Fehlerquote nur im Bereich der Referenz: {t0} – {t1} ({n} Wörter).",
+    "card_similarity": "Wortübereinstimmung {a}↔ {b}",
+    "card_diffs": {
+      "one": "Wortunterschied an {places}",
+      "other": "Wortunterschiede an {places}"
+    },
+    "card_format": "nur Schreibweise (Satzzeichen, Groß/klein)",
+    "nav_diff": "Unterschiede",
+    "nav_errors_a": "Fehler von A",
+    "nav_shared": "Fehler in beiden",
+    "nav_suggest": "Ersetzungs-Vorschläge",
+    "nav_timing": "Zeit",
+    "nav_format": "Schreibweise",
+    "nav_full": "Volltext",
+    "listen": "Anhören",
+    "listen_hint": "Zeit anklicken – spielt ab 1,5 s davor",
+    "play_error": "Die Datei lässt sich hier nicht abspielen (verschoben oder Format nicht unterstützt).",
+    "h1": "Textvergleich",
+    "intro": "Nur der reine Text zählt – Zeitstempel, Nummern und Zeilenumbrüche sind egal.",
+    "colors": "Farben überall gleich: {a} blau · {b} violett · {r} grün (richtig).",
+    "file_suffix": ".vergleich",
+    "n_diffs": {
+      "one": "1 Wortunterschied",
+      "other": "{n} Wortunterschiede"
+    },
+    "n_error_places": {
+      "one": "1 Fehlerstelle",
+      "other": "{n} Fehlerstellen"
+    },
+    "sum_ab": "A↔B {sim} gleich · {diffs} an {places} · {fmt} nur Schreibweise",
+    "sum_ar": "A gegen Referenz: {places}",
+    "sum_wer": "Fehlerquote A {wer}",
+    "sum_time": "Zeit A↔B ⌀ {typ}, {offset}"
+  },
+  "tip": {
+    "files": [
+      "Dateiliste",
+      "",
+      "Art:",
+      "• Rede – wird transkribiert",
+      "• Lyrics – <name>.lyric.txt liegt daneben, der Liedtext wird nur zeitlich ausgerichtet",
+      "• JSON → SRT – ein gespeichertes WhisperX-Ergebnis wird nur neu in Untertitel umgewandelt",
+      "",
+      "Status „⚠ Lücken“: laute Stellen ohne Text gefunden – Details im Protokoll",
+      "",
+      "Doppelklick: fertige SRT im Explorer zeigen",
+      "Entf-Taste: markierte Dateien entfernen",
+      "Start verarbeitet die markierten Dateien, sonst alle offenen."
+    ],
+    "add": [
+      "Medien-, JSON- oder .lyric.txt-Dateien auswählen.",
+      "",
+      "Ganze Ordner: auf die BAT ziehen oder – mit aktiviertem Drag & Drop – direkt in die Liste."
+    ],
+    "compare": [
+      "Vergleicht zwei SRT-Dateien Wort für Wort – Zeitstempel, Nummern und Zeilenumbrüche sind egal.",
+      "",
+      "Ergebnis: HTML-Bericht im Browser mit allen Wortunterschieden samt Zeitposition (zum Nachhören), Unterschieden nur in Satzzeichen/Groß-klein und – mit korrigierter Referenz – der Fehlerquote beider Dateien.",
+      "",
+      "Ist eine Datei markiert, werden ihre SRTs vorgeschlagen."
+    ],
+    "cmp_a": "Erste Fassung, z.B. mit dem Standardmodell erstellt. Im Bericht immer blau.",
+    "cmp_b": [
+      "Zweite Fassung, z.B. mit einem Fine-Tune-Modell oder einem anderen Beam erstellt. Im Bericht immer violett.",
+      "",
+      "Optional, wenn eine Referenz angegeben ist – dann zeigt der Bericht die Fehler von A allein."
+    ],
+    "cmp_media": [
+      "Optional: das Video oder Audio der Rede. Dann sind alle Zeiten im Bericht anklickbar und spielen die Stelle ab (1,5 s davor) – so hörst du sofort, wer recht hat.",
+      "",
+      "Das Tool legt dafür eine kleine Tonspur (.m4a) neben den Bericht, die jeder Browser abspielt – egal welches Videoformat die Quelle hat."
+    ],
+    "cmp_ref": [
+      "Optional: eine von Hand korrigierte SRT derselben Aufnahme (z.B. in Subtitle Edit verbessert).",
+      "",
+      "Dann zeigt der Bericht an jeder Stelle, wer recht hat, rechnet für A und B die Fehlerquote (WER) aus, listet Fehler, die beide machen, und schlägt Ersetzungen vor – der objektivste Vergleich. Im Bericht immer grün. Schon 5–10 korrigierte Minuten reichen für eine gute Einschätzung."
+    ],
+    "remove": "Markierte Dateien aus der Liste nehmen (die Dateien selbst bleiben unverändert). Auch mit der Entf-Taste.",
+    "clear": "Liste leeren (die Dateien selbst bleiben unverändert).",
+    "folder": "Öffnet den Ordner der markierten (oder ersten) Datei im Explorer.",
+    "lang": [
+      "Sprache des Audios",
+      "",
+      "Automatisch: Whisper hört die ersten 30 Sekunden und entscheidet für die ganze Datei – pro Datei neu. Riskant, wenn am Anfang Musik, Applaus, ein Intro oder ein fremdsprachiges Zitat kommt: dann wird die ganze Datei in der falschen Sprache transkribiert.",
+      "",
+      "Fest eingestellt: zuverlässiger. Gilt für alle Dateien dieses Durchlaufs – gemischte Stapel deshalb nach Sprache trennen.",
+      "",
+      "Die Sprache bestimmt auch Prompt, Füllwörter, Dangling-Wörter und Ersetzungen (Einstellungen → Sprachen)."
+    ],
+    "mode": [
+      "Satzweise: Untertitel nach Sätzen, mit Zeichenlimit sowie Orphan-, Dangling- und Pausen-Regel – für normale Untertitel.",
+      "",
+      "Wort-für-Wort: jedes Wort ein eigener Untertitel – für Karaoke- oder Highlight-Effekte im Schnittprogramm.",
+      "",
+      "Raw: die Abschnitte von WhisperX unverändert (oft lang, bis 30 s) – als Rohtext oder wenn es keine Wort-Zeitstempel gibt."
+    ],
+    "chars": [
+      "Maximale Zeichen pro Zeile (nur Satzweise). Die Zeile wird bis genau zu diesem Wert gefüllt.",
+      "",
+      "Richtwerte:",
+      "• Netflix-Richtlinie: 42",
+      "• TV/Kino: 35–42",
+      "• Hochformat/Shorts mit großer Schrift: 20–30"
+    ],
+    "lines": "Maximale Zeilen pro Untertitel (nur Satzweise). Üblich sind 1–2; mehr als 2 verdecken viel Bild.",
+    "filter": [
+      "FFmpeg-Audiofilter vor der Transkription (nur für Reden, Lyrics bleiben ungefiltert).",
+      "",
+      "An: hilft bei Hall, Straßenlärm, Brummen und leisen Sprechern.",
+      "Aus: bei sauberen Aufnahmen oft genauso gut oder besser – Whisper ist selbst recht robust gegen Rauschen.",
+      "",
+      "Welche Filter laufen und was sie tun: Einstellungen → Audio & Ausgabe."
+    ],
+    "json": [
+      "Speichert zusätzlich das WhisperX-Ergebnis als <name>.json.",
+      "",
+      "Später die .json ins Tool ziehen → neue SRT mit anderem Layout, anderen Ersetzungen oder Regeln in Sekunden, ohne neue Transkription."
+    ],
+    "hold": [
+      "Nur für Lyrics: Zeilenende um bis zu so viele Sekunden verlängern – aber nie über den Beginn der nächsten Zeile hinaus.",
+      "",
+      "Das Alignment endet oft, bevor die Note ausklingt; dann verschwindet die Zeile zu früh.",
+      "0 = aus · Empfehlung 1–1.5"
+    ],
+    "save_defaults": [
+      "Speichert die aktuelle Auswahl dieses Bereichs als Standard in die INI: Sprache, Modus, Zeichen/Zeilen, Audiofilter, JSON, Zeile halten und Prompt-Auswahl (inkl. eigenem Text).",
+      "",
+      "Beim nächsten Öffnen des Fensters ist das vorgewählt."
+    ],
+    "pmode_ini": [
+      "Nimmt den Prompt der Sprache aus Einstellungen → Sprachen.",
+      "Bei „Automatisch“ den Prompt der erkannten Sprache."
+    ],
+    "pmode_custom": [
+      "Eigener Prompt für diesen Durchlauf (mit „Als Standard speichern“ auch dauerhaft).",
+      "",
+      "Tipps: in der Sprache des Audios schreiben, kurz halten, Namen und Fachbegriffe so schreiben, wie sie im Untertitel erscheinen sollen. Der Prompt beeinflusst auch Stil und Zeichensetzung."
+    ],
+    "pmode_none": "Ohne Prompt – zum Vergleich, oder wenn der Prompt Fehler verursacht (z.B. Prompt-Wörter tauchen in Stille oder Musik als Text auf).",
+    "prompt_field": [
+      "Der Prompt ist ein Hinweis an Whisper: Er macht seltene Namen und Begriffe wahrscheinlicher und gibt Stil und Schreibweise vor.",
+      "",
+      "WhisperX stellt ihn jedem Abschnitt voran. Ist er zu lang, zählen nur die letzten ca. 220 Tokens – der Anfang fällt weg."
+    ],
+    "start": [
+      "Startet die Verarbeitung: markierte Dateien – sonst alle noch offenen – sonst alle nochmal (z.B. mit anderem Layout).",
+      "",
+      "Die Modelle bleiben geladen, solange das Fenster offen ist; der zweite Durchlauf startet ohne Ladezeit."
+    ],
+    "cancel": "Bricht nach dem aktuellen Schritt ab. Eine laufende Transkription kann nicht mittendrin gestoppt werden.",
+    "settings": "Seltener geänderte Einstellungen: Modell, Genauigkeit, Spracherkennung (VAD), Untertitel-Regeln, Audiofilter, Prompts und Ersetzungen je Sprache, Sprache der Oberfläche, Systemprüfung, Drag & Drop.",
+    "log": [
+      "Protokoll",
+      "",
+      "graue Zeit + weißer Text = live erkannte Zeilen",
+      "gelb = Warnung · rot = Fehler · grün = fertig · blau = neue Datei",
+      "",
+      "Text lässt sich markieren und mit Strg+C kopieren."
+    ],
+    "model": [
+      "large-v3: genaueste Version, Standard.",
+      "large-v2: Vorgänger – erfindet in Stille oder Musik manchmal weniger Text.",
+      "large-v3-turbo: deutlich schneller (stark verkleinerter Decoder), etwas ungenauer.",
+      "",
+      "„Ordner …“: eigenes Modell im CTranslate2-Format, z.B. ein Fine-Tune. Im Ordner müssen u.a. model.bin und preprocessor_config.json liegen.",
+      "",
+      "Grafikspeicher für large: ca. 3–5 GB in float16, ca. 6–8 GB in float32."
+    ],
+    "beam": [
+      "Beam Search: Whisper verfolgt so viele Kandidaten-Sätze gleichzeitig und nimmt den wahrscheinlichsten.",
+      "",
+      "1 = am schnellsten",
+      "5 = WhisperX-Standard",
+      "ab ca. 10 kaum noch Gewinn",
+      "40 kostet ein Vielfaches an Zeit und Grafikspeicher"
+    ],
+    "compute": [
+      "Rechengenauigkeit auf der Grafikkarte:",
+      "",
+      "float16 – halbe Genauigkeit, auf RTX-Karten viel schneller, Ergebnis praktisch identisch",
+      "float32 – volle Genauigkeit, langsamer, doppelter Grafikspeicher",
+      "int8_float16 – weniger Grafikspeicher, minimal ungenauer",
+      "int8 – für den Betrieb auf der CPU"
+    ],
+    "batch": [
+      "Wie viele Abschnitte (bis 30 s) gleichzeitig auf der Grafikkarte dekodiert werden.",
+      "",
+      "Beeinflusst nur das Tempo, nicht das Ergebnis – WhisperX verarbeitet jeden Abschnitt unabhängig.",
+      "Höher = schneller, braucht mehr Grafikspeicher. Mit 12–16 GB Grafikspeicher sind 8–16 sinnvoll."
+    ],
+    "device": [
+      "cuda = NVIDIA-Grafikkarte.",
+      "cpu = Prozessor – funktioniert immer, ist aber um ein Vielfaches langsamer."
+    ],
+    "numerals": [
+      "Unterdrückt Ziffern und Symbole: Whisper schreibt „sechster November“ statt „6. November“, „fünfzig Prozent“ statt „50 %“.",
+      "",
+      "Vorteil: Jede Zahl bekommt einen exakten Wort-Zeitstempel (das Alignment-Modell kennt keine Ziffern).",
+      "Nachteil: keine Ziffern im Untertitel."
+    ],
+    "vad_method": [
+      "VAD = Voice Activity Detection: findet die Stellen mit Sprache – nur diese werden transkribiert. Stille, Musik und Lärm dazwischen werden übersprungen. Das verhindert erfundenen Text und spart Zeit.",
+      "",
+      "pyannote – Standard von WhisperX. Neuronales Segmentierungsmodell, setzt Sprachgrenzen präzise, robust bei Hintergrundgeräusch.",
+      "",
+      "silero – kleines, sehr schnelles Modell mit eigener Erkennung. Ausprobieren, wenn pyannote leise Sprache verschluckt oder Applaus/Musik als Sprache erkennt."
+    ],
+    "onset": [
+      "Schwelle (0–1), ab der ein Abschnitt als Sprache beginnt.",
+      "",
+      "Niedriger (z.B. 0.35–0.45): leise oder entfernte Sprecher werden erfasst – aber auch mehr Geräusche.",
+      "Höher (0.5–0.7): nur deutliche Sprache, weniger Fehlstarts.",
+      "",
+      "WhisperX-Standard: 0.500"
+    ],
+    "offset": [
+      "Schwelle (0–1), unter die die Sprachwahrscheinlichkeit fallen muss, damit ein Abschnitt endet.",
+      "",
+      "Niedriger: Abschnitte werden länger gehalten – Wortenden und kurze Pausen werden nicht abgeschnitten.",
+      "Höher: Abschnitte enden früher.",
+      "",
+      "WhisperX-Standard: 0.363 · sollte unter dem Onset liegen"
+    ],
+    "vad_defaults": "Setzt die WhisperX-Standardwerte: pyannote, Onset 0.500, Offset 0.363, Abschnittslänge 30 s.",
+    "chunk": [
+      "Erkannte Sprachstücke werden zu Abschnitten bis zu dieser Länge zusammengefasst. Whisper arbeitet in 30-Sekunden-Fenstern, daher höchstens 30.",
+      "",
+      "Kleiner (10–20): kürzere Raw-Segmente, manchmal genauere Zeiten; zu klein kann Sätze zerschneiden.",
+      "Für Satzweise und Wort-für-Wort meist ohne Bedeutung."
+    ],
+    "gap_enabled": [
+      "Lücken-Check nach jeder Transkription: sucht Stellen, die laut und stimmähnlich sind, aber keinen Text bekommen haben – typisch, wenn die Spracherkennung (VAD) leise Sprache verschluckt oder Whisper einen Satz auslässt.",
+      "",
+      "So funktioniert es: Pegel deutlich über dem Grundrauschen UND ein Klang mit Grundton und Obertönen (Stimme) statt breitem Rauschen (Applaus, Wind, Lärm).",
+      "",
+      "Fundstellen stehen gelb im Protokoll, die Datei bekommt „⚠ Lücken“ im Status. Es ist ein Hinweis zum Prüfen: auch Musik, Gesang oder Sprechchöre können gemeldet werden. Dauert ca. 5 s pro 2 h Audio."
+    ],
+    "gap_srt": [
+      "Speichert die Fundstellen zusätzlich als <name>{suffix}. Als zweite Untertitelspur in VLC oder Subtitle Edit laden – dann springst du direkt zu den verdächtigen Stellen.",
+      "",
+      "Gibt es keine Lücken mehr, wird eine alte {suffix} automatisch entfernt."
+    ],
+    "gap_min": [
+      "Nur Lücken ab dieser Länge melden. Kürzere Stellen sind meist Atmer, Lacher oder Zwischenrufe.",
+      "Standard 1.0 s."
+    ],
+    "gap_margin": [
+      "Wie deutlich eine Stelle über dem Grundrauschen der Aufnahme liegen muss, um als „laut“ zu gelten.",
+      "",
+      "Kleiner (5–6): findet auch sehr leise Sprecher, aber mehr Fehlalarme.",
+      "Größer (10–12): nur deutliche Fälle.",
+      "Standard 8 dB."
+    ],
+    "orphan_limit": [
+      "Orphan-Regel, Teil 1: Kurze Wörter (bis zu dieser Länge) direkt nach einem Komma beginnen einen neuen Untertitel, statt am Ende einer vollen Zeile zu hängen.",
+      "",
+      "Beispiel: „… in Berlin, und“ | „wir sehen …“  →  „… in Berlin,“ | „und wir sehen …“",
+      "0 = Regel aus"
+    ],
+    "orphan_fill": "Orphan-Regel, Teil 2: nur auslösen, wenn die Zeile schon mindestens so voll ist (in % von Zeichen/Zeile). Verhindert sehr kurze Untertitel.",
+    "split_pause": [
+      "Nach einer Sprechpause dieser Länge beginnt ein neuer Untertitel – auch mitten im Satz. Sonst bleibt ein Untertitel während einer langen Pause stehen.",
+      "",
+      "0 = aus · Empfehlung 1.5 s"
+    ],
+    "max_duration": [
+      "Kein Untertitel steht länger als diese Zeit, danach beginnt ein neuer.",
+      "0 = aus · Empfehlung 7 s (gängige Obergrenze)"
+    ],
+    "line_gap": "Lyrics: Mindestabstand zwischen zwei Zeilen, wenn „Zeile halten“ das Ende verlängert – damit zwei Zeilen nicht nahtlos ineinander übergehen.",
+    "ffmpeg": "Pfad zu ffmpeg.exe. ffmpeg liest jede Audio- und Videodatei, wandelt sie in 16 kHz Mono um und wendet den Audiofilter an – direkt in den Speicher, ohne Temp-Dateien.",
+    "filter_string": [
+      "FFmpeg-Filterkette, Bestandteile durch Komma getrennt. Der ursprüngliche Filter:",
+      "",
+      "highpass=f=100",
+      "Schneidet alles unter 100 Hz ab: Trittschall, Brummen, Wind-Rumpeln. Die Stimme liegt darüber.",
+      "",
+      "lowpass=f=8200",
+      "Schneidet über 8,2 kHz ab. Whisper arbeitet mit 16 kHz (nutzbar bis 8 kHz) – dieser Teil wirkt daher praktisch nicht.",
+      "",
+      "afftdn",
+      "Rauschunterdrückung per FFT: senkt gleichmäßiges Grundrauschen (Lüfter, Rauschen). Bei starker Wirkung entstehen „blubbernde“ Artefakte, die Whisper eher stören – im Zweifel mit und ohne vergleichen.",
+      "",
+      "dynaudnorm=f=150:g=15:p=1.0:m=10.0",
+      "Dynamische Lautheitsangleichung: hebt leise Passagen an, ohne laute zu übersteuern. f = Fensterlänge in ms · g = Glättung (Anzahl Fenster, ungerade) · p = Ziel-Spitzenpegel · m = maximale Verstärkung.",
+      "",
+      "Weitere nützliche Filter: loudnorm (Lautheit nach EBU R128), anlmdn (stärkere Rauschminderung, langsam).",
+      "Nicht verwenden: silenceremove, atempo – sie verschieben die Zeitstempel."
+    ],
+    "speech_suffix": [
+      "Endung der Untertiteldatei für Reden: <name> + Endung. Eine vorhandene gleichnamige Datei wird überschrieben.",
+      "",
+      "Platzhalter: {model} = verwendetes Modell, {lang} = Sprache.",
+      "Beispiel .{model}.srt → rede.large-v3.srt bzw. rede.whisper-large-v3-turkish-general.srt – so bekommt jedes Modell seine eigene SRT, ideal zum Vergleichen („Vergleichen …“ in der Dateiliste)."
+    ],
+    "lyrics_input": "Liegt <name> + diese Endung neben der Mediendatei, wird statt transkribiert der Liedtext ausgerichtet (Lyrics-Modus). Eine Liedzeile pro Zeile, UTF-8.",
+    "lyrics_suffix": "Endung der Lyrics-Untertitel: <name> + Endung.",
+    "encoding": [
+      "utf-8 – Standard, funktioniert mit allen aktuellen Programmen.",
+      "utf-8-sig – mit Kennung (BOM) am Dateianfang. Nötig, wenn ein älterer Player oder ein Programm Umlaute, türkische oder arabische Zeichen falsch darstellt."
+    ],
+    "lang_select": "Welche Sprache bearbeitet wird. „Alle Sprachen“ enthält nur Ersetzungen, die in jeder Sprache gelten.",
+    "lang_prompt": [
+      "Prompt für diese Sprache – unbedingt in dieser Sprache schreiben. Ein deutscher Prompt bei türkischem Audio kann Whisper zum Übersetzen verleiten.",
+      "",
+      "Gut: ein kurzer Satz zum Inhalt plus eine Liste seltener Namen und Begriffe in der gewünschten Schreibweise.",
+      "Zu lang: Es zählen nur die letzten ca. 220 Tokens.",
+      "Risiko: In Stille oder Musik tauchen Prompt-Wörter manchmal als Text auf – dann kürzen."
+    ],
+    "lang_filler": [
+      "Füllwörter, die in Satzweise und Wort-für-Wort entfernt werden – kommagetrennt, Groß-/Kleinschreibung egal.",
+      "Endet ein Füllwort mit Punkt („äh.“), bleibt das Satzende erhalten."
+    ],
+    "lang_dangling": [
+      "Wörter, die nie allein am Ende eines Untertitels stehen sollen (Artikel, Präpositionen) – sie wandern an den Anfang des nächsten.",
+      "",
+      "Ausnahme: Mit Satzzeichen („Ich stimme zu.“) oder vor einer langen Pause bleiben sie stehen."
+    ],
+    "lang_repl": [
+      "Korrekturen für wiederkehrende Fehlerkennungen, eine pro Zeile:",
+      "    Falsch = Richtig",
+      "",
+      "Ersetzt werden nur ganze Wörter und Phrasen: aus „Maier“ wird „Meier“, „Maierhofer“ bleibt unberührt.",
+      "Groß-/Kleinschreibung beim Suchen egal; eingesetzt wird genau die rechte Seite.",
+      "Auch mehrere Wörter: Open AI = OpenAI",
+      "Zeilen mit ; oder # am Anfang werden ignoriert."
+    ],
+    "lang_model": [
+      "Optional ein eigenes Modell nur für diese Sprache, z.B. ein türkisches Fine-Tune im CTranslate2-Format.",
+      "Leer = Standardmodell.",
+      "",
+      "Eintragen als Ordner („Ordner …“) oder direkt als Hugging-Face-Name besitzer/modell – dann wird es beim ersten Einsatz heruntergeladen (Internet nötig). Im Ordner müssen model.bin und preprocessor_config.json liegen; die Systemprüfung zeigt, ob es passt.",
+      "",
+      "Wechselt die Sprache zwischen zwei Dateien, wird das Modell neu geladen – Stapel nach Sprache sortieren spart Zeit."
+    ],
+    "timeout": "Sekunden bis zum automatischen Start, wenn Dateien auf die BAT gezogen wurden. Ein Klick ins Fenster hält an. 0 = nie automatisch starten.",
+    "skip": "Startet sofort ohne Countdown – praktisch, wenn die Standardwerte immer passen.",
+    "live": "Zeigt jede erkannte Zeile schon während der Transkription im Protokoll – wie in einem Konsolenfenster.",
+    "check": "Prüft Python, alle benötigten Pakete samt Versionen, ffmpeg und die Grafikkarte (CUDA). Läuft auch automatisch bei jedem Start des Fensters.",
+    "dnd": [
+      "Dateien direkt in die Liste ziehen braucht das kleine Paket tkinterdnd2 (ohne weitere Abhängigkeiten).",
+      "",
+      "Installiert wird mit --no-deps: nur dieses eine Paket, sonst wird im venv nichts verändert. Danach das Fenster neu starten."
+    ],
+    "ini_open": "Öffnet whisper_tool.ini im Standard-Editor – mit allen Kommentaren.",
+    "ui_language": [
+      "Sprache von Oberfläche, Protokoll und Vergleichsbericht.",
+      "",
+      "„wie Windows“: nimmt die Sprache des Systems, wenn es dafür eine Sprachdatei gibt, sonst Englisch.",
+      "",
+      "Weitere Sprachen: lang/en.json kopieren, übersetzen und als lang/<code>.json speichern – sie erscheint dann automatisch in dieser Liste."
+    ]
+  }
+}

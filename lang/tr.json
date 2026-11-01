@@ -1,0 +1,862 @@
+{
+  "_meta": {
+    "name": "Türkçe",
+    "decimal": ",",
+    "percent": "%{v}",
+    "seconds": "{v} sn",
+    "html_lang": "tr"
+  },
+  "app": {
+    "err_core_missing": "wt_core.py dosyası {dir} içinde yok – lütfen onu da kopyalayın.",
+    "err_package_missing": [
+      "“{name}” paketi eksik.",
+      "",
+      "Büyük ihtimalle WhisperX venv'indeki Python başlatılmadı (Whisper_Tool.bat'ı kullanın) ya da venv eksik.",
+      "",
+      "Başlatılan: {python}"
+    ],
+    "err_start": [
+      "WhisperX Subtitle Workbench başlatılamıyor.",
+      "",
+      "{why}",
+      "",
+      "Ayrıntılar: {log}"
+    ],
+    "err_tkinter": [
+      "Tkinter eksik – pencere açılamıyor.",
+      "",
+      "Çözüm: Python kurulum programı → “Modify” → “tcl/tk and IDLE” seçeneğini işaretleyin. venv değişmeden kalır.",
+      "",
+      "Pencere olmadan da çalışır:  python whisper_tool.py --nogui <dosyalar>"
+    ]
+  },
+  "main": {
+    "minutes": "{t} dk",
+    "settings_file": "Ayarlar: {path}",
+    "files": "Dosyalar",
+    "col_file": "Dosya",
+    "col_kind": "Tür",
+    "col_status": "Durum",
+    "add": "Ekle …",
+    "remove": "Kaldır",
+    "clear": "Listeyi temizle",
+    "open_folder": "Klasörü aç",
+    "compare": "Karşılaştır …",
+    "hint_drop": "Dosyaları veya klasörleri buraya sürükleyin",
+    "hint_bat": "Dosyaları Whisper_Tool.bat üzerine sürükleyin (doğrudan pencereye: Ayarlar → Genel)",
+    "hint_dblclick": "çift tıklama sonucu gösterir",
+    "options": "Seçenekler",
+    "language": "Dil",
+    "mode": "Mod",
+    "chars": "Karakter/satır",
+    "lines": "Satır/blok",
+    "filter": "Ses filtresi (FFmpeg)",
+    "keep_json": "JSON'u sakla",
+    "hold": "Şarkı sözü: satırı tut (sn)",
+    "save_defaults": "Varsayılan olarak kaydet",
+    "prompt": "Prompt",
+    "pmode_ini": "INI'den (dile göre)",
+    "pmode_custom": "özel",
+    "pmode_none": "yok",
+    "start": "▶  Başlat",
+    "cancel": "İptal",
+    "ready": "Hazır",
+    "settings": "⚙  Ayarlar …",
+    "log": "Günlük",
+    "prompt_auto": "algılanan dile göre",
+    "prompt_empty": "(INI'de prompt yok)",
+    "not_found": "Bulunamadı: {path}",
+    "appended": {
+      "one": "1 dosya çalışan işe eklendi",
+      "other": "{n} dosya çalışan işe eklendi"
+    },
+    "add_title": "Dosya ekle",
+    "add_types": "Medya, JSON, şarkı sözü",
+    "all_files": "Tüm dosyalar",
+    "err_number": "{name}: '{value}' bir sayı değil",
+    "err_range": "{name}: izin verilen aralık {lo} – {hi}",
+    "save_failed": [
+      "Kaydetme başarısız:",
+      "{err}"
+    ],
+    "defaults_saved": "Seçim varsayılan olarak kaydedildi",
+    "defaults_saved_log": "Varsayılanlar {file} dosyasına kaydedildi",
+    "no_files": "Listede dosya yok.",
+    "cancelling": "Geçerli adımdan sonra iptal ediliyor …",
+    "file_n": "Dosya {n} / {total}",
+    "step_asr": "Transkripsiyon",
+    "step_align": "Kelime zaman damgaları",
+    "finished": "Bitti: {ok} başarılı",
+    "total": "toplam {time}",
+    "countdown": "{n} sn sonra otomatik başlıyor – durdurmak için pencereye tıklayın",
+    "countdown_stopped": "Geri sayım durduruldu – seçenekleri kontrol edip Başlat'a basın",
+    "open_failed": [
+      "Açılamıyor:",
+      "{path}",
+      "",
+      "{err}"
+    ],
+    "quit_running": [
+      "İşlem hâlâ sürüyor.",
+      "Yine de çıkılsın mı?"
+    ],
+    "finished_err": {
+      "one": ", 1 hata",
+      "other": ", {n} hata"
+    }
+  },
+  "status": {
+    "wait": "bekliyor",
+    "cancelled": "iptal edildi",
+    "gaps": {
+      "one": "1 boşluk",
+      "other": "{n} boşluk"
+    },
+    "error": "hata – günlüğe bakın",
+    "running": "çalışıyor …",
+    "done": {
+      "one": "bitti · {time} · 1 altyazı",
+      "other": "bitti · {time} · {n} altyazı"
+    }
+  },
+  "kind": {
+    "speech": "Konuşma",
+    "lyrics": "Şarkı sözü",
+    "json": "JSON → SRT"
+  },
+  "mode": {
+    "sentence": "Cümle cümle",
+    "word": "Kelime kelime",
+    "raw": "Ham",
+    "raw_segments": "Ham (WhisperX bölümleri)"
+  },
+  "speechlang": {
+    "auto": "Otomatik",
+    "de": "Almanca",
+    "en": "İngilizce",
+    "ar": "Arapça",
+    "tr": "Türkçe",
+    "all": "Tüm diller (yalnızca değiştirmeler)"
+  },
+  "set": {
+    "title": "Ayarlar",
+    "tab_whisper": "Whisper",
+    "tab_vad": "Konuşma algılama",
+    "tab_subs": "Altyazılar",
+    "tab_audio": "Ses ve çıktı",
+    "tab_langs": "Diller",
+    "open_ini": "INI'yi düzenleyicide aç",
+    "backup_note": "Kaydetmeden önce yedek (.bak) oluşturulur",
+    "save": "Kaydet",
+    "programs": "Programlar",
+    "folder": "Klasör …",
+    "model": "Model",
+    "beam": "Beam",
+    "beam_hint": "varsayılan 5 · ~10'un üstünde kazanç çok az, yüksek = çok daha yavaş",
+    "compute": "Hassasiyet",
+    "compute_hint": "float16 = pratikte aynı doğrulukla çok daha hızlı",
+    "batch": "Batch",
+    "batch_hint": "yalnızca hız, sonuca etkisi yok · 8–16 mantıklı",
+    "device": "Cihaz",
+    "device_hint": "cuda = ekran kartı · cpu yalnızca son çare",
+    "numerals": "Sayıları kelimeyle yaz (kesin zaman damgaları, ama rakam yok)",
+    "note_whisper": "Bu sekmedeki değişiklikler modeli bir sonraki başlatmada yeniden yükler. Yalnızca bir dil için ayrı bir modeli “Diller” altında ayarlarsınız.",
+    "vad_method": "Yöntem",
+    "vad_method_hint": "pyannote = WhisperX varsayılanı",
+    "onset": "Onset",
+    "onset_hint": "konuşmanın başlangıcı · düşük = daha hassas",
+    "offset": "Offset",
+    "offset_hint": "konuşmanın sonu · düşük = konuşma daha uzun tutulur",
+    "chunk": "Bölüm uzunluğu (sn)",
+    "chunk_hint": "bir bölümün azami uzunluğu · özellikle ham modda etkili",
+    "vad_defaults": "WhisperX varsayılanı",
+    "note_vad": "Arka plan gürültüsü olan konuşmalarda varsayılandan biraz düşük değerler genellikle daha iyidir (örn. 0.4 / 0.323). Çok düşük: gürültü konuşma olarak algılanır.",
+    "gap_enabled": "Boşluk kontrolü: her transkripsiyondan sonra metinsiz yüksek sesli yerleri bildir",
+    "gap_srt": "Bulunan yerleri ayrıca <name>{suffix} olarak kaydet",
+    "gap_min": "Boşluklar: en kısa süre (sn)",
+    "gap_min_hint": "daha kısa yerleri yok say · varsayılan 1.0",
+    "gap_margin": "Boşluklar: gürültü tabanının üstü (dB)",
+    "gap_margin_hint": "küçük = daha hassas · varsayılan 8",
+    "orphan_limit": "Yetim: … karaktere kadar kelimeler",
+    "orphan_limit_hint": "virgülden sonraki kısa kelimeler sonraki altyazıyı başlatır …",
+    "orphan_fill": "Yetim: doluluk oranından itibaren (%)",
+    "orphan_fill_hint": "… ama yalnızca satır zaten bu kadar doluysa",
+    "split_pause": "Duraklamadan sonra yeni altyazı (sn)",
+    "split_pause_hint": "0 = kapalı · önerilen 1.5",
+    "max_duration": "Azami ekranda kalma süresi (sn)",
+    "max_duration_hint": "0 = kapalı · önerilen 7",
+    "line_gap": "Şarkı sözü: sonraki satıra mesafe (sn)",
+    "note_subs": "Karakter/satır, satır/blok ve “satırı tut” ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
+    "ffmpeg": "ffmpeg",
+    "orig_filter": "Orijinal filtre",
+    "filter_string": "Ses filtresi",
+    "speech_suffix": "Konuşma uzantısı",
+    "lyrics_input": "Şarkı sözü metin dosyası",
+    "lyrics_input_hint": "medya dosyasının yanında → şarkı sözü modu",
+    "lyrics_suffix": "Şarkı sözü uzantısı",
+    "encoding": "Kodlama",
+    "encoding_hint": "bir oynatıcı özel karakterleri yanlış gösteriyorsa utf-8-sig",
+    "filler": "Dolgu kelimeleri",
+    "dangling": "Sarkan kelimeler",
+    "replacements": [
+      "Değiştirmeler",
+      "Yanlış = Doğru",
+      "(her satıra bir tane)"
+    ],
+    "lang_model": "Özel model",
+    "empty_default": "boş = varsayılan",
+    "timeout": "Geri sayım (sn)",
+    "timeout_hint": "BAT üzerine sürükledikten sonra otomatik başlat · 0 = otomatik başlatma yok",
+    "skip": "Geri sayım olmadan hemen başlat",
+    "live": "Tanınan satırları günlükte canlı göster",
+    "ui_language": "Arayüz dili",
+    "ui_language_hint": "yeniden başlatma gerekir · “Windows gibi” = sistem dili, yoksa İngilizce",
+    "ui_auto": "Windows gibi",
+    "check": "Sistem kontrolü",
+    "check_now": "Şimdi kontrol et",
+    "check_hint": "paketler, sürümler, ffmpeg, ekran kartı",
+    "dnd": "Pencereye sürükle-bırak",
+    "dnd_active": "etkin ✓",
+    "dnd_restart": "kuruldu – pencere yeniden başlatılınca etkin",
+    "dnd_enable": "Etkinleştir …",
+    "dnd_hint": "küçük tkinterdnd2 paketini kurar",
+    "note_start": "Dil, mod, ses filtresi, düzen ve prompt ön seçimi ana pencerede “Varsayılan olarak kaydet” ile kaydedilir.",
+    "repl_all": "Bu değiştirmeler tüm diller için geçerlidir.",
+    "prompt_long": "uzun! WhisperX çok uzun bir prompt'un yalnızca sonunu kullanır",
+    "prompt_chars": "Prompt: {n} karakter",
+    "repl_error": [
+      "Değiştirmeler {lang}, satır {line}: “Yanlış = Doğru” bekleniyor",
+      "",
+      "{text}"
+    ],
+    "model_empty": "Model boş olamaz",
+    "no_changes": "Ayarlar: değişiklik yok",
+    "saved_log": {
+      "one": "1 ayar kaydedildi – bir sonraki başlatmadan itibaren geçerli",
+      "other": "{n} ayar kaydedildi – bir sonraki başlatmadan itibaren geçerli"
+    },
+    "saved": "Ayarlar kaydedildi",
+    "tab_general": "Genel",
+    "restart_ask": [
+      "Dil, pencere yeniden başlatıldıktan sonra değişir.",
+      "",
+      "Şimdi yeniden başlatılsın mı?"
+    ]
+  },
+  "cmpdlg": {
+    "title": "Metin karşılaştır",
+    "a": "A",
+    "b": "B",
+    "ref": "Referans",
+    "media": "Dinle",
+    "b_hint": "referans verilmişse isteğe bağlı",
+    "ref_hint": "isteğe bağlı – düzeltilmiş SRT",
+    "media_hint": "isteğe bağlı – video/ses, o zaman zamanlar tıklanabilir olur",
+    "info": "Mümkün: A + B (nerede farklılar) · A + referans (A'nın hataları) · A + B + referans (kim haklı, hata oranları). Yalnızca metin sayılır – zaman damgaları ve satır sonları önemli değil.",
+    "run": "Karşılaştır",
+    "type_media": "Video/ses",
+    "type_srt": "Altyazılar",
+    "need_two": "Lütfen B'yi veya bir referansı girin – en az iki dosya.",
+    "not_found": [
+      "{label}: dosya bulunamadı",
+      "{path}"
+    ],
+    "busy": "Karşılaştırılıyor …",
+    "busy_audio": "Karşılaştırılıyor … ve ses izi hazırlanıyor",
+    "failed": [
+      "Karşılaştırma başarısız:",
+      "{err}"
+    ],
+    "report": "Rapor: {path}",
+    "status": "Karşılaştırma: {text}"
+  },
+  "check": {
+    "failed": "Sistem kontrolü başarısız: {err}",
+    "title": "Sistem kontrolü",
+    "status_problems": {
+      "one": "Sistem kontrolü: 1 sorun – günlüğe bakın",
+      "other": "Sistem kontrolü: {n} sorun – günlüğe bakın"
+    },
+    "status_ok": "Sistem kontrolü: her şey hazır",
+    "status_hints": "Sistem kontrolü: her şey hazır (notlarla)",
+    "head_errors": "Bir şey eksik – ilgili işlevler çalışmayacak:",
+    "head_ok": "Her şey hazır.",
+    "purpose_whisperx": "konuşma transkripsiyonu",
+    "purpose_torch": "ekran kartında modeller",
+    "purpose_torchaudio": "şarkı sözü hizalama (MMS_FA)",
+    "purpose_uroman": "şarkı sözü hizalama (Latin harflerine çevirme)",
+    "purpose_numpy": "ses işleme",
+    "purpose_tkinterdnd2": "pencereye sürükle-bırak (isteğe bağlı)",
+    "no_model_bin": "Model klasöründe model.bin yok – bu bir CTranslate2 modeli değil: {path}. Transformers modelleri önce ct2-transformers-converter ile dönüştürülmelidir.",
+    "no_preprocessor": "preprocessor_config.json eksik – large-v3 modelleri bu durumda yanlış tanır (128 yerine 80 mel bandı). Dosyayı orijinal depodan ekleyin.",
+    "no_tokenizer": "tokenizer.json eksik – faster-whisper bu durumda whisper-tiny tokenizer'ını kullanır, bu da large-v3 modelleri için yanlıştır. tokenizer.json'u openai/whisper-large-v3'ten ekleyin.",
+    "model_dir_missing": "Model klasörü bulunamadı: {name}",
+    "model_unknown": "Bilinmeyen model adı “{name}” – faster-whisper yine de yüklemeyi deneyecek.",
+    "python_old": "en az 3.10 gerekli",
+    "pkg_missing": "{mod} eksik → {purpose} mümkün değil. Lütfen venv'deki WhisperX kurulumunu kontrol edin.",
+    "pkg_optional": "{mod} kurulu değil → {purpose}: Ayarlar → Genel",
+    "whisperx_old": "whisperx {version}, 3.8'den eski – araç 3.8.x ile test edildi",
+    "torch_mismatch": "torch {torch} ile torchaudio {torchaudio} uyumlu değil – şarkı sözü hizalama başarısız olabilir",
+    "ffmpeg_missing": "ffmpeg bulunamadı: {path} → hiçbir ses dosyası okunamaz. Yolu Ayarlar → Ses ve çıktı altında girin.",
+    "ct2_folder": "CTranslate2 klasörü",
+    "hf_download": "Hugging Face – ilk kullanımda indirilir",
+    "gpu": "Ekran kartı",
+    "torch_cpu": "torch, CUDA'sız bir sürüm ({version})",
+    "no_driver": "sürücüye veya ekran kartına ulaşılamıyor",
+    "no_gpu": "CUDA ekran kartı yok: {reason} → işlem CPU'da yapılırdı (çok yavaş)",
+    "torch_broken": "torch yüklenemiyor: {err}"
+  },
+  "dnd": {
+    "title": "Sürükle-bırakı etkinleştir",
+    "confirm": [
+      "{pkg} paketi şuraya kurulacak:",
+      "{prefix}",
+      "",
+      "--no-deps ile: yalnızca bu tek paket kurulur, venv'de başka hiçbir şey değişmez.",
+      "",
+      "Devam edilsin mi?"
+    ],
+    "done": "Kuruldu. Lütfen pencereyi kapatıp yeniden başlatın – ardından dosyalar doğrudan listeye sürüklenebilir.",
+    "failed": "Kurulum başarısız:",
+    "pip_failed": [
+      "pip başlatılamadı:",
+      "{err}"
+    ],
+    "short": "Sürükle-bırak"
+  },
+  "cli": {
+    "description": "konuşmalar ve şarkı sözleri için altyazı",
+    "files": "medya, JSON veya .lyric.txt dosyaları ya da klasörler",
+    "nogui": "pencere olmadan, varsayılanlar INI'den",
+    "ini": "başka bir INI dosyası kullan",
+    "cmp_description": "SRT dosyalarının metin karşılaştırması (yalnızca düz metin).",
+    "cmp_files": "A.srt [B.srt] [referans.srt]",
+    "cmp_ref": "düzeltilmiş referans SRT",
+    "cmp_media": "video/ses – rapordaki zamanlar tıklanabilir olur",
+    "cmp_ffmpeg": "dinleme izi için ffmpeg (varsayılan: whisper_tool.ini'den)",
+    "cmp_lang": "rapor dili: de, en, tr … (varsayılan: arayüz gibi)",
+    "cmp_too_many": "en fazla A, B ve bir referans",
+    "cmp_too_few": "en az iki dosya: A ve B ya da A ve --ref",
+    "not_found": "Dosya bulunamadı: {path}",
+    "error": "Hata: {err}"
+  },
+  "tag": {
+    "info": "bilgi",
+    "warn": "uyarı",
+    "error": "hata",
+    "done": "bitti",
+    "check": "kontrol",
+    "gap": "boşluk",
+    "dnd": "dnd",
+    "compare": "kıyas",
+    "device": "cihaz",
+    "model": "model",
+    "align": "hizala",
+    "lang": "dil",
+    "prompt": "prompt",
+    "asr": "asr",
+    "json": "json",
+    "lyrics": "söz",
+    "audio": "ses"
+  },
+  "core": {
+    "ini_missing": "INI bulunamadı: {path} – varsayılanlar kullanılıyor",
+    "ini_broken": "INI hatalı ({err}) – varsayılanlar kullanılıyor",
+    "ini_unknown": "{entry} bilinmiyor – {default} kullanılıyor",
+    "ini_invalid": "{entry} geçersiz – {default} kullanılıyor",
+    "ffmpeg_fallback": "ffmpeg bulunamadı: {path} – {found} kullanılıyor",
+    "ffmpeg_check": "ffmpeg bulunamadı: {path} – lütfen [System] ffmpeg_path'i kontrol edin",
+    "ffmpeg_missing": "ffmpeg bulunamadı: {path}",
+    "exit_code": "çıkış kodu {code}",
+    "no_audio": "Ses izi bulunamadı",
+    "gap_cue": "[Boşluk] {len} metinsiz · seviye konuşmaya göre {db} dB",
+    "lyrics_not_utf8": "Şarkı sözü dosyası UTF-8 değil – düzenleyicide UTF-8 kodlamasıyla kaydedin",
+    "no_media": "{name} için medya dosyası bulunamadı",
+    "no_cuda": "CUDA kullanılamıyor – CPU kullanılıyor (çok yavaş)",
+    "oom": "Ekran kartı belleği dolu – diğer modeller boşaltılıp yeniden deneniyor …",
+    "model_switch": "Model değiştiriliyor → {name}",
+    "model_load": "{name} yükleniyor ({compute}, beam {beam}) …",
+    "model_hf_failed": "“{name}” modeli yüklenemedi ({err}). Olası nedenler: ilk indirme için internet yok, depo adı yanlış ya da CTranslate2 dosyaları depoda bir alt klasörde – o zaman indirip klasörü Ayarlar → Diller altında seçin.",
+    "model_ready": "{time} sonra hazır",
+    "align_load": "'{lang}' için hizalama modeli yükleniyor …",
+    "mms_load": "MMS_FA yükleniyor (ilk başlatma: ~1,18 GB indirme, sonra önbellekte) …",
+    "lang_detected": "algılandı: {lang} ({name})",
+    "no_rules": "kendi kuralı yok",
+    "prompt_off": "kapalı",
+    "prompt_custom": "özel",
+    "asr_running": "Transkripsiyon yapılıyor …",
+    "align_words": "Kelime zaman damgaları …",
+    "lyrics_no_words": "Şarkı sözü dosyasında kelime bulunamadı",
+    "emissions": "Emisyonlar hesaplanıyor …",
+    "json_rebuild": "SRT, {name} dosyasından yeniden oluşturuluyor",
+    "line_not_aligned": "Satır {n} hizalanamadı: {text}",
+    "audio_filtered": "Filtreyle yükleniyor …",
+    "audio_original": "Orijinal yükleniyor …",
+    "json_saved": "kaydedildi: {name}",
+    "no_word_times": "Kelime zaman damgası yok – çıktı {mode} olarak",
+    "written": {
+      "one": "1 altyazı → {name}",
+      "other": "{n} altyazı → {name}"
+    },
+    "gap_suffix": ".bosluklar.srt",
+    "gap_none": "şüpheli boşluk yok",
+    "gap_found": {
+      "one": "1 yer yüksek sesli ama metinsiz – toplam {total}:",
+      "other": "{n} yer yüksek sesli ama metinsiz – toplam {total}:"
+    },
+    "gap_item": "{len}, seviye konuşmaya göre {db} dB",
+    "gap_more": "ve {n} tane daha",
+    "gap_file": "Atlamak için bulunan yerler: {name}",
+    "gap_tip": "İpucu: Konuşmaysa onset'i düşürün veya silero'yu deneyin (Ayarlar → Konuşma algılama). Müzik, şarkı veya alkış yok sayılabilir.",
+    "asr_done": {
+      "one": "{time} içinde 1 bölüm",
+      "other": "{time} içinde {n} bölüm"
+    },
+    "lyrics_lines": {
+      "one": "{name} dosyasından 1 satır",
+      "other": "{name} dosyasından {n} satır"
+    }
+  },
+  "rep": {
+    "no_cues": [
+      "{label}: altyazı bulunamadı – bu bir SRT dosyası mı?",
+      "{path}"
+    ],
+    "missing": "eksik",
+    "missing_title": "Bu dosyada burada bir şey yok",
+    "play_title": "Dinle (1,5 sn önceden)",
+    "verdict_a": "A doğru",
+    "verdict_b": "B doğru",
+    "verdict_none": "ikisi de yanlış",
+    "verdict_out": "referans yok",
+    "filter_all": "Tümü",
+    "diff_title_ab": "{a} ile {b} arasındaki farklar",
+    "diff_intro_ab": "Renkli = yalnızca bu dosyada var · “eksik” = orada bu noktada bir şey yok.",
+    "diff_intro_ref": "Yeşil Ref satırı neyin doğru olduğunu gösterir.",
+    "diff_intro_noref": "Referans olmadan kimin haklı olduğu görünmez – zamana tıklayıp dinleyin.",
+    "diff_title_ar": "{a} dosyasının {r} karşısındaki hataları",
+    "diff_intro_ar": "Mavi = A'da böyle · yeşil = referansta böyle · “eksik” = orada bir şey yok.",
+    "no_diffs": "Kelime farkı yok.",
+    "places": {
+      "one": "1 yer",
+      "other": "{n} yer"
+    },
+    "shared_title": "{a} ve {b} dosyalarının ortak hataları",
+    "shared_intro": "Kırmızı = iki dosyada da böyle · yeşil = doğrusu bu olurdu. Başka bir beam veya model bu hataları çoğu zaman değiştirmez – burada prompt (isimler/terimler) ve değiştirmeler yardımcı olur.",
+    "short_word": "Kısa kelime – başka yerlerde hiç doğru geçmediğini kontrol edin",
+    "sg_wrong": "tanınan",
+    "sg_right": "doğru",
+    "sg_count": "adet",
+    "sg_in": "içinde",
+    "sg_title": "Değiştirme önerileri",
+    "sg_intro": "Referanstan çıkarıldı: tanınan → doğrusu. Yalnızca yanlış kelime başka yerlerde hiç doğru geçmiyorsa alın (tipik olarak isimler, terimler). Hedef: Ayarlar → Diller → Değiştirmeler.",
+    "sg_multi": "Birden çok kez yanlış tanınan – {n}",
+    "copy_all": "Tüm satırları kopyala",
+    "copied": "Kopyalandı ✓",
+    "sg_none_multi": "Hiçbir hata birden fazla kez görülmedi.",
+    "sg_once": "Bir kez yanlış tanınan – {n} (çoğu zaman tesadüf, ama isimler için yine de faydalı)",
+    "none": "yok",
+    "fmt_title": "Yalnızca yazım – {places} (noktalama, büyük/küçük harf – hata sayılmaz)",
+    "legend_word": "kelime",
+    "full_legend": "{wx} yalnızca {x} içinde · {wy} yalnızca {y} içinde · {wf} farklı yazım (fareyle üzerine gelince {x} görünür)",
+    "full_title": "Tüm farklarla tam metin",
+    "offset": "kayma {val}",
+    "offset_ab_later": "kayma {val} (B, A'dan sonra)",
+    "offset_ab_earlier": "kayma {val} (B, A'dan önce)",
+    "offset_late": "kayma {val} ({who} geç)",
+    "offset_early": "kayma {val} ({who} erken)",
+    "card_timing": "zaman sapması {a}↔ {b}",
+    "share_off": "kelimelerin {pct} kadarı > {s}",
+    "vs_ref": "{who} – {r} karşısında",
+    "timing_line": "tipik olarak {typ} sapma · {offset} · kelimelerin {pct} kadarı {s} üzerinde",
+    "stretch_ab_later": "B, A'dan {val} sonra",
+    "stretch_ab_earlier": "B, A'dan {val} önce",
+    "stretch_late": "{who} {val} geç",
+    "stretch_early": "{who} {val} erken",
+    "words": {
+      "one": "1 kelime",
+      "other": "{n} kelime"
+    },
+    "timing_none": "Aşırı sapma olan yer yok.",
+    "timing_note_ref": "Not: Referans zamanları yalnızca kontrol edildiyse anlamlıdır – referans A'dan düzeltildiyse A otomatik olarak iyi görünür.",
+    "timing_title": "Zaman sapması – {s} üzerinde {places}",
+    "timing_explain": "Aynı kelimelerin zamanları karşılaştırılır. SRT'lerde yalnızca blok başına zaman vardır, her kelimenin zamanı bunun içinde tahmin edilir – bu yüzden yalnızca {s} üzerindeki sapmalar ve en az {n} kelime art arda etkilendiğinde sayılır.",
+    "col_file": "Dosya",
+    "col_words": "Kelime",
+    "col_wer": "Hata oranı",
+    "col_wer_title": "Referans aralığındaki yanlış kelimelerin oranı",
+    "col_sub": "değişmiş",
+    "col_sub_title": "doğru kelime yerine yanlış kelime",
+    "col_del": "eksik",
+    "col_del_title": "referanstaki kelime eksik",
+    "col_ins": "fazla",
+    "col_ins_title": "referansta olmayan kelime",
+    "col_typ": "Zaman ⌀",
+    "col_typ_title": "Aynı kelimelerin referansa göre tipik zaman sapması (farkların medyanı)",
+    "col_offset": "Kayma",
+    "col_offset_title": "Kayma: işaretli medyan – artı = referanstan sonra, eksi = önce",
+    "col_off": "> {s}",
+    "col_off_title": "Referanstan {s} fazla sapan kelimelerin oranı",
+    "col_punct": "Noktalama",
+    "col_punct_title": "Sonunda noktalama işareti olan kelimeler",
+    "better": "daha doğru",
+    "benchmark": "ölçüt",
+    "banner_best": "<b>daha doğru:</b> {wer_l} yerine {wer_w} hata – {n_l} yerine {n_w} yanlış kelime ({less} daha az).",
+    "banner_equal": "<b>İkisi de aynı doğrulukta:</b> her biri {wer} hata.",
+    "banner_shared": "Bu hataların {n} tanesi A ve B'de ortak (bkz. “İkisinde de hata”) – A ile B arasındaki fark bunları değiştirmez.",
+    "banner_a": "Referansa göre <b>{wer} hata</b> – {words} kelimeden {n} tanesi.",
+    "banner_noref": "Referans olmadan rapor yalnızca A ile B'nin <b>nerede</b> farklı olduğunu gösterir – kimin haklı olduğunu değil. Bunun için düzeltilmiş bir SRT'yi referans olarak verin (5–10 dakika yeterli).",
+    "ref_span": "Hata oranı yalnızca referans aralığında: {t0} – {t1} ({n} kelime).",
+    "card_similarity": "kelime uyumu {a}↔ {b}",
+    "card_diffs": {
+      "one": "kelime farkı, {places}de",
+      "other": "kelime farkı, {places}de"
+    },
+    "card_format": "yalnızca yazım (noktalama, büyük/küçük harf)",
+    "nav_diff": "Farklar",
+    "nav_errors_a": "A'nın hataları",
+    "nav_shared": "İkisinde de hata",
+    "nav_suggest": "Değiştirme önerileri",
+    "nav_timing": "Zaman",
+    "nav_format": "Yazım",
+    "nav_full": "Tam metin",
+    "listen": "Dinle",
+    "listen_hint": "zamana tıklayın – 1,5 sn önceden çalar",
+    "play_error": "Dosya burada oynatılamıyor (taşınmış veya biçim desteklenmiyor).",
+    "h1": "Metin karşılaştırması",
+    "intro": "Yalnızca düz metin sayılır – zaman damgaları, numaralar ve satır sonları önemli değil.",
+    "colors": "Renkler her yerde aynı: {a} mavi · {b} mor · {r} yeşil (doğru).",
+    "file_suffix": ".karsilastirma",
+    "n_diffs": {
+      "one": "1 kelime farkı",
+      "other": "{n} kelime farkı"
+    },
+    "n_error_places": {
+      "one": "1 hata",
+      "other": "{n} hata"
+    },
+    "sum_ab": "A↔B {sim} aynı · {diffs}, {places}de · {fmt} yalnızca yazım",
+    "sum_ar": "A – referans: {places}",
+    "sum_wer": "hata oranı A {wer}",
+    "sum_time": "zaman A↔B ⌀ {typ}, {offset}"
+  },
+  "tip": {
+    "files": [
+      "Dosya listesi",
+      "",
+      "Tür:",
+      "• Konuşma – transkribe edilir",
+      "• Şarkı sözü – yanında <name>.lyric.txt var, şarkı metni yalnızca zamana göre hizalanır",
+      "• JSON → SRT – kaydedilmiş bir WhisperX sonucu yalnızca yeniden altyazıya dönüştürülür",
+      "",
+      "“⚠ boşluk” durumu: metinsiz yüksek sesli yerler bulundu – ayrıntılar günlükte",
+      "",
+      "Çift tıklama: hazır SRT'yi Gezgin'de göster",
+      "Del tuşu: seçili dosyaları kaldır",
+      "Başlat, seçili dosyaları işler; seçim yoksa tüm bekleyenleri."
+    ],
+    "add": [
+      "Medya, JSON veya .lyric.txt dosyalarını seçin.",
+      "",
+      "Klasörlerin tamamı: BAT üzerine ya da – sürükle-bırak etkinse – doğrudan listeye sürükleyin."
+    ],
+    "compare": [
+      "İki SRT dosyasını kelime kelime karşılaştırır – zaman damgaları, numaralar ve satır sonları önemli değildir.",
+      "",
+      "Sonuç: tarayıcıda bir HTML raporu; tüm kelime farkları ve zaman konumları (dinlemek için), yalnızca noktalama/büyük-küçük harf farkları ve – düzeltilmiş bir referansla – iki dosyanın hata oranı.",
+      "",
+      "Bir dosya seçiliyse onun SRT'leri önerilir."
+    ],
+    "cmp_a": "İlk sürüm, örn. standart modelle oluşturulmuş. Raporda her zaman mavi.",
+    "cmp_b": [
+      "İkinci sürüm, örn. ince ayarlı bir modelle veya farklı bir beam ile oluşturulmuş. Raporda her zaman mor.",
+      "",
+      "Referans verilmişse isteğe bağlı – o zaman rapor yalnızca A'nın hatalarını gösterir."
+    ],
+    "cmp_media": [
+      "İsteğe bağlı: konuşmanın videosu veya sesi. O zaman rapordaki tüm zamanlar tıklanabilir olur ve ilgili yeri çalar (1,5 sn önceden) – böylece kimin haklı olduğunu hemen duyarsınız.",
+      "",
+      "Araç bunun için raporun yanına her tarayıcının çalabildiği küçük bir ses izi (.m4a) koyar – kaynağın video biçimi ne olursa olsun."
+    ],
+    "cmp_ref": [
+      "İsteğe bağlı: aynı kaydın elle düzeltilmiş bir SRT'si (örn. Subtitle Edit'te iyileştirilmiş).",
+      "",
+      "O zaman rapor her noktada kimin haklı olduğunu gösterir, A ve B için hata oranını (WER) hesaplar, ikisinin de yaptığı hataları listeler ve değiştirmeler önerir – en nesnel karşılaştırma. Raporda her zaman yeşil. 5–10 dakikalık düzeltilmiş bölüm bile iyi bir değerlendirme için yeterlidir."
+    ],
+    "remove": "Seçili dosyaları listeden çıkarır (dosyaların kendisi değişmez). Del tuşuyla da olur.",
+    "clear": "Listeyi temizler (dosyaların kendisi değişmez).",
+    "folder": "Seçili (veya ilk) dosyanın klasörünü Gezgin'de açar.",
+    "lang": [
+      "Sesin dili",
+      "",
+      "Otomatik: Whisper ilk 30 saniyeyi dinler ve tüm dosya için karar verir – her dosya için yeniden. Başta müzik, alkış, bir giriş veya yabancı dilde bir alıntı varsa risklidir: o zaman tüm dosya yanlış dilde transkribe edilir.",
+      "",
+      "Sabit: daha güvenilir. Bu çalıştırmadaki tüm dosyalar için geçerlidir – karışık grupları bu yüzden dile göre ayırın.",
+      "",
+      "Dil ayrıca prompt'u, dolgu kelimelerini, sarkan kelimeleri ve değiştirmeleri belirler (Ayarlar → Diller)."
+    ],
+    "mode": [
+      "Cümle cümle: cümlelere göre altyazılar; karakter sınırı ile yetim, sarkan kelime ve duraklama kurallarıyla – normal altyazılar için.",
+      "",
+      "Kelime kelime: her kelime ayrı bir altyazı – kurgu programında karaoke veya vurgulama efektleri için.",
+      "",
+      "Ham: WhisperX bölümleri değiştirilmeden (çoğu zaman uzun, 30 sn'ye kadar) – ham metin olarak veya kelime zaman damgası olmadığında."
+    ],
+    "chars": [
+      "Satır başına azami karakter (yalnızca cümle cümle modunda). Satır tam bu değere kadar doldurulur.",
+      "",
+      "Yönergeler:",
+      "• Netflix yönergesi: 42",
+      "• TV/sinema: 35–42",
+      "• Dikey video/shorts, büyük yazı: 20–30"
+    ],
+    "lines": "Altyazı başına azami satır (yalnızca cümle cümle modunda). 1–2 yaygındır; 2'den fazlası görüntünün çoğunu kapatır.",
+    "filter": [
+      "Transkripsiyondan önce FFmpeg ses filtresi (yalnızca konuşma; şarkı sözleri filtresiz kalır).",
+      "",
+      "Açık: yankı, sokak gürültüsü, uğultu ve kısık sesli konuşmacılarda yardımcı olur.",
+      "Kapalı: temiz kayıtlarda çoğu zaman aynı derecede iyi veya daha iyi – Whisper gürültüye karşı oldukça dayanıklıdır.",
+      "",
+      "Hangi filtrelerin çalıştığı ve ne yaptıkları: Ayarlar → Ses ve çıktı."
+    ],
+    "json": [
+      "WhisperX sonucunu ayrıca <name>.json olarak kaydeder.",
+      "",
+      "Daha sonra .json'u araca sürükleyin → farklı düzen, değiştirmeler veya kurallarla yeni SRT, saniyeler içinde ve yeni transkripsiyon olmadan."
+    ],
+    "hold": [
+      "Yalnızca şarkı sözü: satır sonunu en fazla bu kadar saniye uzatır – ama asla sonraki satırın başlangıcını geçmez.",
+      "",
+      "Hizalama çoğu zaman nota sönmeden biter; o zaman satır çok erken kaybolur.",
+      "0 = kapalı · önerilen 1–1.5"
+    ],
+    "save_defaults": [
+      "Bu alandaki mevcut seçimi INI'ye varsayılan olarak kaydeder: dil, mod, karakter/satır, ses filtresi, JSON, satırı tut ve prompt seçimi (özel metin dahil).",
+      "",
+      "Pencere bir sonraki açılışta bunlarla gelir."
+    ],
+    "pmode_ini": [
+      "Dilin prompt'unu Ayarlar → Diller'den alır.",
+      "“Otomatik”te algılanan dilin prompt'u."
+    ],
+    "pmode_custom": [
+      "Bu çalıştırma için özel prompt (“Varsayılan olarak kaydet” ile kalıcı).",
+      "",
+      "İpuçları: sesin dilinde yazın, kısa tutun, isimleri ve terimleri altyazıda görünmeleri gerektiği gibi yazın. Prompt üslubu ve noktalamayı da etkiler."
+    ],
+    "pmode_none": "Prompt olmadan – karşılaştırma için ya da prompt hatalara yol açıyorsa (örn. prompt kelimeleri sessizlikte veya müzikte metin olarak çıkıyorsa).",
+    "prompt_field": [
+      "Prompt, Whisper'a bir ipucudur: nadir isimleri ve terimleri daha olası kılar, üslubu ve yazımı belirler.",
+      "",
+      "WhisperX onu her bölümün önüne koyar. Çok uzunsa yalnızca son ~220 token sayılır – baş kısmı düşer."
+    ],
+    "start": [
+      "İşlemi başlatır: seçili dosyalar – yoksa henüz bekleyenlerin hepsi – yoksa hepsi yeniden (örn. farklı bir düzenle).",
+      "",
+      "Pencere açık kaldığı sürece modeller yüklü kalır; ikinci çalıştırma yükleme süresi olmadan başlar."
+    ],
+    "cancel": "Geçerli adımdan sonra iptal eder. Çalışan bir transkripsiyon ortasında durdurulamaz.",
+    "settings": "Daha seyrek değiştirilen ayarlar: model, hassasiyet, konuşma algılama (VAD), altyazı kuralları, ses filtresi, dile göre prompt ve değiştirmeler, arayüz dili, sistem kontrolü, sürükle-bırak.",
+    "log": [
+      "Günlük",
+      "",
+      "gri zaman + beyaz metin = canlı tanınan satırlar",
+      "sarı = uyarı · kırmızı = hata · yeşil = bitti · mavi = yeni dosya",
+      "",
+      "Metin seçilip Ctrl+C ile kopyalanabilir."
+    ],
+    "model": [
+      "large-v3: en doğru sürüm, varsayılan.",
+      "large-v2: önceki sürüm – sessizlikte veya müzikte bazen daha az metin uydurur.",
+      "large-v3-turbo: çok daha hızlı (büyük ölçüde küçültülmüş kod çözücü), biraz daha az doğru.",
+      "",
+      "“Klasör …”: CTranslate2 biçiminde kendi modeliniz, örn. ince ayarlı bir model. Klasörde diğerlerinin yanında model.bin ve preprocessor_config.json bulunmalıdır.",
+      "",
+      "large için ekran kartı belleği: float16'da yaklaşık 3–5 GB, float32'de yaklaşık 6–8 GB."
+    ],
+    "beam": [
+      "Beam search: Whisper bu kadar aday cümleyi aynı anda takip eder ve en olasısını alır.",
+      "",
+      "1 = en hızlı",
+      "5 = WhisperX varsayılanı",
+      "~10'un üstünde kazanç çok az",
+      "40 kat kat fazla zaman ve ekran kartı belleği ister"
+    ],
+    "compute": [
+      "Ekran kartında hesaplama hassasiyeti:",
+      "",
+      "float16 – yarım hassasiyet, RTX kartlarda çok daha hızlı, sonuç pratikte aynı",
+      "float32 – tam hassasiyet, daha yavaş, iki kat ekran kartı belleği",
+      "int8_float16 – daha az ekran kartı belleği, çok az daha az doğru",
+      "int8 – CPU'da çalıştırmak için"
+    ],
+    "batch": [
+      "Ekran kartında aynı anda kaç bölümün (30 sn'ye kadar) çözüleceği.",
+      "",
+      "Yalnızca hızı etkiler, sonucu değil – WhisperX her bölümü bağımsız işler.",
+      "Yüksek = daha hızlı, daha fazla ekran kartı belleği gerekir. 12–16 GB ekran kartı belleğiyle 8–16 mantıklıdır."
+    ],
+    "device": [
+      "cuda = NVIDIA ekran kartı.",
+      "cpu = işlemci – her zaman çalışır ama kat kat daha yavaştır."
+    ],
+    "numerals": [
+      "Rakamları ve sembolleri bastırır: Whisper “6 Kasım” yerine “altı Kasım”, “%50” yerine “yüzde elli” yazar.",
+      "",
+      "Avantaj: her sayı kesin bir kelime zaman damgası alır (hizalama modeli rakamları bilmez).",
+      "Dezavantaj: altyazıda rakam olmaz."
+    ],
+    "vad_method": [
+      "VAD = ses etkinliği algılama (voice activity detection): konuşma olan yerleri bulur – yalnızca bunlar transkribe edilir. Aradaki sessizlik, müzik ve gürültü atlanır. Bu, uydurma metni önler ve zaman kazandırır.",
+      "",
+      "pyannote – WhisperX varsayılanı. Sinirsel bölütleme modeli, konuşma sınırlarını hassas belirler, arka plan gürültüsüne dayanıklıdır.",
+      "",
+      "silero – kendi algılaması olan küçük, çok hızlı bir model. pyannote kısık sesli konuşmayı yutuyorsa veya alkışı/müziği konuşma olarak algılıyorsa deneyin."
+    ],
+    "onset": [
+      "Bir bölümün konuşma olarak başladığı eşik (0–1).",
+      "",
+      "Daha düşük (örn. 0.35–0.45): kısık veya uzak konuşmacılar yakalanır – ama daha fazla gürültü de.",
+      "Daha yüksek (0.5–0.7): yalnızca net konuşma, daha az yanlış başlangıç.",
+      "",
+      "WhisperX varsayılanı: 0.500"
+    ],
+    "offset": [
+      "Bir bölümün bitmesi için konuşma olasılığının altına düşmesi gereken eşik (0–1).",
+      "",
+      "Daha düşük: bölümler daha uzun tutulur – kelime sonları ve kısa duraklamalar kesilmez.",
+      "Daha yüksek: bölümler daha erken biter.",
+      "",
+      "WhisperX varsayılanı: 0.363 · onset'in altında olmalı"
+    ],
+    "vad_defaults": "WhisperX varsayılanlarını ayarlar: pyannote, onset 0.500, offset 0.363, bölüm uzunluğu 30 sn.",
+    "chunk": [
+      "Algılanan konuşma parçaları bu uzunluğa kadar bölümlerde birleştirilir. Whisper 30 saniyelik pencerelerle çalışır, bu yüzden en fazla 30.",
+      "",
+      "Daha küçük (10–20): daha kısa ham bölümler, bazen daha hassas zamanlar; çok küçük cümleleri bölebilir.",
+      "Cümle cümle ve kelime kelime modlarında çoğu zaman önemsiz."
+    ],
+    "gap_enabled": [
+      "Her transkripsiyondan sonra boşluk kontrolü: yüksek sesli ve sese benzeyen ama metin almamış yerleri arar – konuşma algılama (VAD) kısık sesli konuşmayı yuttuğunda veya Whisper bir cümleyi atladığında tipiktir.",
+      "",
+      "Nasıl çalışır: seviye gürültü tabanının belirgin üstünde VE geniş bantlı gürültü (alkış, rüzgâr, trafik) yerine temel ton ve harmonikleri olan bir ses (insan sesi).",
+      "",
+      "Bulunan yerler günlükte sarı görünür, dosyanın durumu “⚠ boşluk” olur. Bu, kontrol için bir ipucudur: müzik, şarkı veya slogan da bildirilebilir. 2 saatlik ses için yaklaşık 5 sn sürer."
+    ],
+    "gap_srt": [
+      "Bulunan yerleri ayrıca <name>{suffix} olarak kaydeder. VLC'de veya Subtitle Edit'te ikinci altyazı izi olarak yükleyin – böylece şüpheli yerlere doğrudan atlarsınız.",
+      "",
+      "Artık boşluk yoksa eski bir {suffix} otomatik olarak silinir."
+    ],
+    "gap_min": [
+      "Yalnızca en az bu uzunluktaki boşlukları bildir. Daha kısa yerler çoğunlukla nefes, gülme veya laf atmadır.",
+      "Varsayılan 1,0 sn."
+    ],
+    "gap_margin": [
+      "Bir yerin “yüksek sesli” sayılması için kaydın gürültü tabanının ne kadar belirgin üstünde olması gerektiği.",
+      "",
+      "Daha küçük (5–6): çok kısık konuşmacıları da bulur ama daha fazla yanlış alarm.",
+      "Daha büyük (10–12): yalnızca belirgin durumlar.",
+      "Varsayılan 8 dB."
+    ],
+    "orphan_limit": [
+      "Yetim kuralı, 1. bölüm: virgülden hemen sonraki kısa kelimeler (bu uzunluğa kadar), dolu bir satırın sonunda asılı kalmak yerine yeni bir altyazı başlatır.",
+      "",
+      "Örnek: “… Berlin'de, ve” | “görüyoruz …”  →  “… Berlin'de,” | “ve görüyoruz …”",
+      "0 = kural kapalı"
+    ],
+    "orphan_fill": "Yetim kuralı, 2. bölüm: yalnızca satır zaten en az bu kadar doluysa uygula (karakter/satır'ın yüzdesi olarak). Çok kısa altyazıları önler.",
+    "split_pause": [
+      "Bu uzunlukta bir konuşma duraklamasından sonra yeni bir altyazı başlar – cümlenin ortasında bile. Aksi hâlde uzun bir duraklama boyunca altyazı ekranda kalır.",
+      "",
+      "0 = kapalı · önerilen 1,5 sn"
+    ],
+    "max_duration": [
+      "Hiçbir altyazı bu süreden uzun ekranda kalmaz, sonra yenisi başlar.",
+      "0 = kapalı · önerilen 7 sn (yaygın üst sınır)"
+    ],
+    "line_gap": "Şarkı sözü: “satırı tut” sonu uzattığında iki satır arasındaki en kısa mesafe – iki satır kesintisiz birbirine geçmesin diye.",
+    "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular – geçici dosya olmadan doğrudan belleğe.",
+    "filter_string": [
+      "FFmpeg filtre zinciri, parçalar virgülle ayrılır. Orijinal filtre:",
+      "",
+      "highpass=f=100",
+      "100 Hz altındaki her şeyi keser: adım sesi, uğultu, rüzgâr gümbürtüsü. İnsan sesi bunun üstündedir.",
+      "",
+      "lowpass=f=8200",
+      "8,2 kHz üstünü keser. Whisper 16 kHz ile çalışır (8 kHz'e kadar kullanılabilir) – bu yüzden bu kısım pratikte etkisizdir.",
+      "",
+      "afftdn",
+      "FFT ile gürültü azaltma: sabit arka plan gürültüsünü (fan, hışırtı) düşürür. Güçlü ayarlarda Whisper'ı daha çok rahatsız eden “fokurdayan” bozulmalar oluşur – şüphede filtreli ve filtresiz karşılaştırın.",
+      "",
+      "dynaudnorm=f=150:g=15:p=1.0:m=10.0",
+      "Dinamik ses yüksekliği dengeleme: yüksek yerleri patlatmadan kısık yerleri yükseltir. f = ms cinsinden pencere uzunluğu · g = yumuşatma (pencere sayısı, tek) · p = hedef tepe seviyesi · m = azami kazanç.",
+      "",
+      "Diğer faydalı filtreler: loudnorm (EBU R128'e göre ses yüksekliği), anlmdn (daha güçlü gürültü azaltma, yavaş).",
+      "Kullanmayın: silenceremove, atempo – zaman damgalarını kaydırırlar."
+    ],
+    "speech_suffix": [
+      "Konuşma için altyazı dosyasının uzantısı: <name> + uzantı. Aynı adlı mevcut bir dosyanın üzerine yazılır.",
+      "",
+      "Yer tutucular: {model} = kullanılan model, {lang} = dil.",
+      "Örnek .{model}.srt → konusma.large-v3.srt veya konusma.whisper-large-v3-turkish-general.srt – böylece her model kendi SRT'sini alır, karşılaştırma için ideal (dosya listesinde “Karşılaştır …”)."
+    ],
+    "lyrics_input": "Medya dosyasının yanında <name> + bu uzantı varsa, transkripsiyon yerine şarkı metni hizalanır (şarkı sözü modu). Her satıra bir şarkı satırı, UTF-8.",
+    "lyrics_suffix": "Şarkı sözü altyazılarının uzantısı: <name> + uzantı.",
+    "encoding": [
+      "utf-8 – varsayılan, tüm güncel programlarla çalışır.",
+      "utf-8-sig – dosya başında işaretli (BOM). Eski bir oynatıcı veya program umlautları, Türkçe veya Arapça karakterleri yanlış gösteriyorsa gerekir."
+    ],
+    "lang_select": "Hangi dilin düzenlendiği. “Tüm diller” yalnızca her dilde geçerli olan değiştirmeleri içerir.",
+    "lang_prompt": [
+      "Bu dil için prompt – mutlaka bu dilde yazın. Türkçe sese Almanca bir prompt, Whisper'ı çeviri yapmaya yöneltebilir.",
+      "",
+      "İyi: içerik hakkında kısa bir cümle artı nadir isim ve terimlerin istenen yazımla bir listesi.",
+      "Çok uzun: yalnızca son ~220 token sayılır.",
+      "Risk: sessizlikte veya müzikte prompt kelimeleri bazen metin olarak çıkar – o zaman kısaltın."
+    ],
+    "lang_filler": [
+      "Cümle cümle ve kelime kelime modlarında çıkarılan dolgu kelimeleri – virgülle ayrılmış, büyük/küçük harf önemsiz.",
+      "Bir dolgu kelimesi noktayla bitiyorsa (“ııı.”), cümle sonu korunur."
+    ],
+    "lang_dangling": [
+      "Bir altyazının sonunda asla tek başına durmaması gereken kelimeler (tanımlıklar, edatlar) – bir sonrakinin başına taşınır.",
+      "",
+      "İstisna: noktalama işaretiyle veya uzun bir duraklamadan önce yerinde kalırlar."
+    ],
+    "lang_repl": [
+      "Tekrarlayan yanlış tanımalar için düzeltmeler, her satıra bir tane:",
+      "    Yanlış = Doğru",
+      "",
+      "Yalnızca tam kelimeler ve ifadeler değiştirilir: “Mayer” → “Meyer” olur, “Mayerhofer” dokunulmadan kalır.",
+      "Aramada büyük/küçük harf önemsiz; tam olarak sağ taraf yazılır.",
+      "Birden fazla kelime de olur: Open AI = OpenAI",
+      "; veya # ile başlayan satırlar yok sayılır."
+    ],
+    "lang_model": [
+      "İsteğe bağlı olarak yalnızca bu dil için ayrı bir model, örn. CTranslate2 biçiminde Türkçe ince ayarlı bir model.",
+      "Boş = varsayılan model.",
+      "",
+      "Klasör olarak (“Klasör …”) veya doğrudan Hugging Face adı sahip/model olarak girin – o zaman ilk kullanımda indirilir (internet gerekir). Klasörde model.bin ve preprocessor_config.json bulunmalıdır; sistem kontrolü uyup uymadığını gösterir.",
+      "",
+      "İki dosya arasında dil değişirse model yeniden yüklenir – grupları dile göre sıralamak zaman kazandırır."
+    ],
+    "timeout": "Dosyalar BAT üzerine sürüklendiğinde otomatik başlamaya kadar geçen saniye. Pencereye bir tıklama durdurur. 0 = asla otomatik başlatma.",
+    "skip": "Geri sayım olmadan hemen başlatır – varsayılanlar her zaman uyuyorsa pratik.",
+    "live": "Tanınan her satırı transkripsiyon sırasında günlükte gösterir – bir konsol penceresindeki gibi.",
+    "check": "Python'u, gerekli tüm paketleri sürümleriyle, ffmpeg'i ve ekran kartını (CUDA) kontrol eder. Pencerenin her açılışında otomatik olarak da çalışır.",
+    "dnd": [
+      "Dosyaları doğrudan listeye sürüklemek için küçük tkinterdnd2 paketi gerekir (başka bağımlılığı yok).",
+      "",
+      "--no-deps ile kurulur: yalnızca bu tek paket, venv'de başka hiçbir şey değişmez. Ardından pencereyi yeniden başlatın."
+    ],
+    "ini_open": "whisper_tool.ini'yi tüm açıklamalarıyla varsayılan düzenleyicide açar.",
+    "ui_language": [
+      "Arayüzün, günlüğün ve karşılaştırma raporunun dili.",
+      "",
+      "“Windows gibi”: sistem dili için bir dil dosyası varsa onu, yoksa İngilizceyi kullanır.",
+      "",
+      "Başka diller: lang/en.json'u kopyalayın, çevirin ve lang/<kod>.json olarak kaydedin – listede otomatik olarak görünür."
+    ]
+  }
+}

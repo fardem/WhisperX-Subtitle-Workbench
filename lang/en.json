@@ -188,33 +188,26 @@
     "gap_min_hint": "ignore shorter passages · default 1.0",
     "gap_margin": "Gaps: above noise floor (dB)",
     "gap_margin_hint": "smaller = more sensitive · default 8",
-    "orphan_limit": "Orphans: words up to … chars",
-    "orphan_limit_hint": "short words after a comma start the next subtitle …",
-    "orphan_fill": "Orphans: from fill level (%)",
-    "orphan_fill_hint": "… but only if the line is already this full",
-    "split_pause": "New subtitle after pause (seconds)",
-    "max_duration": "Max. display time (seconds)",
-    "min_duration": "Min. display time (seconds)",
-    "max_cps": "Max. reading speed (characters per second)",
+    "orphan_limit": "Short words after a comma (characters)",
+    "orphan_fill": "Short words after a comma: fill level (percent)",
+    "split_pause": "New subtitle after speech pause (seconds)",
+    "max_duration": "Split long sentences (seconds of speech)",
+    "min_duration": "Show at least (seconds)",
+    "max_cps": "Reading time (characters per second)",
     "balance_lines": "Balance lines: spread the words evenly over the lines",
-    "bridge_gaps": "Close gaps (seconds)",
-    "grp_split": "Splitting subtitles",
-    "grp_read": "Readability (sentence mode only)",
-    "grp_flicker": "Flicker-free, e.g. for DaVinci Resolve (all modes)",
-    "grp_lyrics": "Lyrics",
-    "sw_split_pause": "New subtitle after a speech pause of",
+    "bridge_gaps": "Keep until the next subtitle (seconds)",
+    "sw_split_pause": "New subtitle after a speech pause of at least",
     "sw_split_pause_unit": "seconds",
-    "sw_max_duration": "A subtitle stays on screen at most",
-    "sw_max_duration_unit": "seconds",
-    "sw_min_duration": "A subtitle stays on screen at least",
-    "sw_min_duration_unit": "seconds",
-    "sw_max_cps": "Reading speed at most",
-    "sw_max_cps_unit": "characters per second",
-    "sw_bridge_gaps": "Close gaps when the pause is shorter than",
-    "sw_bridge_gaps_unit": "seconds",
-    "bridge_gaps_note": "The subtitle then stays until the next one starts, so nothing flickers. Longer pauses stay empty. Recommended for DaVinci Resolve: 2 seconds.",
-    "line_gap": "Gap to the next line (seconds)",
-    "note_subs": "Chars/line, lines/cue and “hold line” are set in the main window and saved there with “Save as default”.",
+    "sw_max_duration": "Split long sentences: at most",
+    "sw_max_duration_unit": "seconds of speech per subtitle",
+    "sw_min_duration": "Show at least",
+    "sw_min_duration_unit": "seconds · “Sentences” only",
+    "sw_max_cps": "Leave reading time: at most",
+    "sw_max_cps_unit": "characters per second · “Sentences” only",
+    "sw_bridge_gaps": "… if the pause is shorter than",
+    "sw_bridge_gaps_unit": "seconds · Sentences, Word by word, Raw",
+    "line_gap": "Gap to the next song line (seconds)",
+    "note_subs": "Characters per line and lines per subtitle are set in the main window and saved there with “Save as default”.",
     "ffmpeg": "ffmpeg",
     "orig_filter": "Original filter",
     "filter_string": "Audio filter",
@@ -271,7 +264,20 @@
       "",
       "Restart now?"
     ],
-    "version": "Version"
+    "version": "Version",
+    "sec_split": "1 · Splitting – which words go together into one subtitle (“Sentences” mode only)",
+    "sec_time": "2 · Display time – how long a subtitle stays on screen",
+    "sec_time_info": "A subtitle always appears exactly when it is spoken. Without a tick it disappears as soon as the speech ends. The ticks only extend the end – into the pause after it, never into the next subtitle.",
+    "sec_lyrics": "3 · Lyrics – own rules for song lines",
+    "sec_lyrics_info": "How long a song line stays is set in the main window with “Lyrics: hold line”. The settings under 1 and 2 do not apply to lyrics.",
+    "sw_orphan": "Move short words after a comma into the next subtitle",
+    "sw_orphan_limit": "Words of at most",
+    "sw_orphan_limit_unit": "characters",
+    "sw_orphan_fill": "… if the line is already this full:",
+    "sw_orphan_fill_unit": "percent",
+    "sw_bridge": "Keep on screen until the next subtitle – seamless, no flicker (e.g. for DaVinci Resolve)",
+    "sw_line_gap": "Gap to the next song line",
+    "sw_line_gap_unit": "seconds · 0 = seamless, e.g. for DaVinci Resolve"
   },
   "cmpdlg": {
     "title": "Compare text",
@@ -797,35 +803,40 @@
       "Default 8 dB."
     ],
     "orphan_limit": [
-      "Orphan rule, part 1: short words (up to this length) directly after a comma start a new subtitle instead of hanging at the end of a full line.",
+      "A short word right after a comma starts the next subtitle instead of hanging alone at the end of a full line:",
       "",
-      "Example: “… in Berlin, and” | “we see …”  →  “… in Berlin,” | “and we see …”",
-      "0 = rule off"
+      "“… in Berlin, and” | “we see …”  →  “… in Berlin,” | “and we see …”",
+      "",
+      "Applies to words up to this length."
     ],
-    "orphan_fill": "Orphan rule, part 2: only trigger if the line is already at least this full (in % of chars/line). Prevents very short subtitles.",
+    "orphan_fill": "… but only if the line is already at least this full (in percent of characters per line). Prevents very short subtitles.",
     "split_pause": [
-      "After a speech pause of this length a new subtitle begins – even in the middle of a sentence. Otherwise a subtitle stays on screen during a long pause.",
+      "After a speech pause of this length a new subtitle begins – even in the middle of a sentence.",
       "",
-      "Without the tick: pauses do not end a subtitle. Recommended: 1.5 seconds."
+      "This only decides which words go together into one subtitle. How long the previous one stays after that is set under “2 · Display time”.",
+      "",
+      "Recommended: 1.5 seconds."
     ],
     "max_duration": [
-      "No subtitle stays longer than this time, then a new one begins.",
+      "Long sentences are split: a subtitle holds at most this many seconds of speech, then a new one begins.",
       "",
-      "Without the tick: no upper limit. Recommended: 7 seconds (common upper limit)."
+      "This is not a display time – how long a subtitle stays on screen is set under “2 · Display time”.",
+      "",
+      "Recommended: 7 seconds (common upper limit)."
     ],
     "min_duration": [
       "A subtitle stays on screen at least this long, so that short ones like “Thanks.” do not just flash.",
       "",
-      "Only the end moves – into the pause after the subtitle, never into the next one. The start stays in sync with the voice.",
+      "Only the end moves – into the pause after the subtitle, never into the next one.",
       "",
-      "Without the tick: a subtitle stays exactly as long as it is spoken. Recommended: 1 second."
+      "“Sentences” mode only: word by word and raw stay exactly as long as spoken. Recommended: 1 second."
     ],
     "max_cps": [
-      "Reading speed in characters per second (spaces count). A subtitle that would be faster stays on screen longer, if there is a pause after it.",
+      "Reading time: a subtitle with a lot of text stays longer so that it can be read – measured in characters per second (spaces count).",
       "",
-      "If there is no pause, the log lists it as a warning – the tool never changes the text. Shorten it in Subtitle Edit if needed.",
+      "It is only extended into the pause after it. If the pause is too short, the log lists the subtitle as a warning – the text is never changed. Shorten it in Subtitle Edit if needed.",
       "",
-      "Without the tick: no check. Recommended: 17 characters per second (common guidelines: 15–20)."
+      "“Sentences” mode only. Recommended: 17 characters per second (common guidelines: 15–20)."
     ],
     "balance_lines": [
       "Spreads the words of a subtitle evenly over its lines instead of filling the first line to the limit:",
@@ -838,15 +849,19 @@
     "bridge_gaps": [
       "For programs that show nothing for a moment between two subtitles and therefore flicker – e.g. the subtitle track of DaVinci Resolve.",
       "",
-      "With the tick, a subtitle stays until the next one starts – but only if the pause between them is shorter than the set number of seconds. Longer pauses stay empty, e.g. a music break.",
+      "With the tick, a subtitle stays until the next one starts – end and next start are then exactly the same. This only applies if the pause between them is shorter than the set number of seconds. Longer pauses stay empty, e.g. a music break.",
       "",
       "Example with 2 seconds: a pause of 0.1 seconds is closed, a pause of 5 seconds stays empty.",
       "",
-      "Starts never move: every word and sentence still appears exactly when it is spoken. All modes, also word by word and lyrics.",
+      "Together with “Show at least” and “Reading time”: those extend first, this tick then closes the remaining gap.",
       "",
-      "Recommended for DaVinci Resolve: 2 seconds. Players or plugins that hold the subtitle themselves do not need this."
+      "Sentences, word by word and raw. Lyrics have their own rules (3 · Lyrics). Recommended for DaVinci Resolve: 2 seconds."
     ],
-    "line_gap": "Lyrics: minimum gap between two lines when “hold line” extends the end – so that two lines do not merge seamlessly.",
+    "line_gap": [
+      "Song lines: gap to the next line when “Lyrics: hold line” (main window) extends the end – so that two lines visibly change.",
+      "",
+      "0 = the lines follow each other seamlessly, without flicker – e.g. for DaVinci Resolve."
+    ],
     "ffmpeg": "Path to ffmpeg.exe. ffmpeg reads any audio and video file, converts it to 16 kHz mono and applies the audio filter – directly into memory, without temp files.",
     "filter_string": [
       "FFmpeg filter chain, parts separated by commas. The original filter:",

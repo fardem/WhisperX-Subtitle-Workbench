@@ -89,5 +89,20 @@ def test_reading_time_gap_is_closed_too(tmp_path):
     assert not any(0 < g < 2 for g in gaps)
 
 
+def test_lyrics_keep_their_own_rules():
+    # lyrics: "hold line" + gap to the next line decide – close gaps does not override them
+    cues = [(0.0, 1.0, ["Zeile 1"]), (1.05, 2.0, ["Zeile 2"])]
+    assert core.bridge_for_mode(cues, "lyrics", 2.0) == cues
+    for mode in ("sentence", "word", "raw"):
+        assert core.bridge_for_mode(cues, mode, 2.0)[0][1] == 1.05
+
+
+def test_lyrics_seamless_with_gap_zero():
+    # for DaVinci: lyrics get seamless with "gap to the next line" = 0
+    cues = [[0.0, 1.0, ["Zeile 1"]], [1.5, 2.0, ["Zeile 2"]]]
+    core.extend_line_ends(cues, duration=10.0, hold=1.0, gap=0.0)
+    assert cues[0][1] == 1.5
+
+
 def test_off_by_default():
     assert core.Config(ROOT / "whisper_tool.example.ini").bridge_gaps == 0

@@ -38,6 +38,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
   - **Satzweise:** ganze Sätze mit Zeichenlimit sowie Regeln für verwaiste Wörter (Orphans), Dangling-Wörter, Pausen und maximale Standzeit.
     Kurze Untertitel stehen eine Mindestzeit, und die Lesegeschwindigkeit (Zeichen pro Sekunde) wird geprüft. Dafür wird nur das Ende eines Untertitels in die Pause danach verlängert; der Text ändert sich nie.
     Der Zeilenausgleich verteilt die Wörter gleichmäßig auf die Zeilen (`müssen und / zwar ohne Ende` statt `müssen und zwar ohne / Ende`), wenn möglich mit Umbruch nach einem Komma.
+    Abkürzungen und Datumsangaben bleiben zusammen: `Dr. Müller`, `z. B. gestern` und `6. November` werden nie auf zwei Zeilen oder zwei Untertitel verteilt. Die Liste je Sprache steht unter *Einstellungen → Sprachen*.
   - **Wort-für-Wort:** ein Untertitel pro Wort, z.B. für Karaoke-Effekte.
   - **Raw:** die WhisperX-Abschnitte unverändert.
 - **Sprache pro Datei:** Die Sprache wird pro Datei erkannt, oder du legst sie fest. Jede Sprache hat ihren eigenen Prompt, Füllwörter, Dangling-Wörter, Ersetzungen und optional ein eigenes Modell (z.B. ein türkisches Fine-Tune).

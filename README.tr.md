@@ -38,6 +38,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
   - **Cümle cümle:** karakter sınırı ile yetim kelimeler, sarkan kelimeler, duraklamalar ve azami ekranda kalma süresi kurallarına göre tam cümleler.
     Kısa altyazılar asgari bir süre ekranda kalır ve okuma hızı (saniye başına karakter) kontrol edilir. Bunun için yalnızca altyazının sonu sonraki duraklamaya uzatılır; metin asla değişmez.
     Satır dengeleme kelimeleri satırlara eşit dağıtır (`bunu hiç beklemiyorduk / ama` yerine `bunu hiç / beklemiyorduk ama`), mümkünse virgülden sonra bölerek.
+    Kısaltmalar ve tarihler bir arada kalır: `Dr. Ayşe`, `örn. dün` ve `6. Kasım` asla iki satıra veya iki altyazıya bölünmez. Dile göre liste *Ayarlar → Diller* altındadır.
   - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
   - **Ham:** WhisperX bölümleri değiştirilmeden.
 - **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).

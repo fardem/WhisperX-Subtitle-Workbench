@@ -214,6 +214,7 @@
     "encoding_hint": "bir oynatıcı özel karakterleri yanlış gösteriyorsa utf-8-sig",
     "filler": "Dolgu kelimeleri",
     "dangling": "Sarkan kelimeler",
+    "abbrev": "Kısaltmalar",
     "replacements": [
       "Değiştirmeler",
       "Yanlış = Doğru",
@@ -869,6 +870,14 @@
       "Bir altyazının sonunda asla tek başına durmaması gereken kelimeler (tanımlıklar, edatlar) – bir sonrakinin başına taşınır.",
       "",
       "İstisna: noktalama işaretiyle veya uzun bir duraklamadan önce yerinde kalırlar."
+    ],
+    "lang_abbrev": [
+      "Sonraki kelimeyle birlikte kalan ve asla cümle sonu olmayan kısaltmalar, virgülle ayrılmış: “Dr. Ayşe”, “örn. dün” asla ayrılmaz – ne iki satıra ne de iki altyazıya.",
+      "",
+      "Çok parçalı olanları Whisper'ın yazdığı gibi yazın. “6.” gibi sıra sayıları her zaman sonraki kelimeyle kalır (“6. Kasım”).",
+      "",
+      "Bilerek eklenmedi: vb., vs. – genellikle cümle sonunda olurlar.",
+      "Yalnızca cümle modunda."
     ],
     "lang_repl": [
       "Tekrarlayan yanlış tanımalar için düzeltmeler, her satıra bir tane:",

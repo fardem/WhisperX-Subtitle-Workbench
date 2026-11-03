@@ -46,6 +46,17 @@ ORDINAL       = re.compile(r'\d{1,2}\.')       # "6." in "am 6. November" (Germa
 ORDINAL_LANGS = {"de", "tr"}
 STRIP_CHARS   = ".,?!;:،؛؟\"'“”„«»()[]…"
 
+# Abbreviations belong to the next word: never a sentence end, never a line or subtitle
+# break between them ("Dr. Müller", "z. B. gestern"). Used when a language has no entry
+# in [Abbreviations] of the INI. Not included on purpose: usw., etc. – they often end a sentence.
+ABBREVIATIONS = {
+    "de": "Dr., Prof., Dipl.-Ing., Hr., Fr., Nr., St., z. B., z.B., d. h., d.h., u. a., u.a., "
+          "bzw., ca., ggf., evtl., vgl., inkl., bspw., sog.",
+    "en": "Mr., Mrs., Ms., Dr., Prof., e.g., i.e., vs., approx.",
+    "tr": "Dr., Prof., Doç., Av., Sn., Yrd., örn., No.",
+    "ar": "د.",
+}
+
 # No console window for ffmpeg when the tool runs without a console (pythonw)
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
@@ -59,6 +70,21 @@ class ToolError(RuntimeError):
 
 
 # ─── TEXT HELPERS ─────────────────────────────────────────────────────────────
+
+def abbr_key(token: str, lang: str) -> str:
+    """Word for comparing with the abbreviation list: lower case, the dot stays."""
+    t = token.strip().lstrip("(\"'„“«[¿¡")
+    if lang == "tr":
+        t = t.replace("I", "ı").replace("İ", "i")
+    return t.lower()
+
+
+def parse_abbreviations(text: str, lang: str) -> tuple:
+    """ "Dr., z. B." → (("dr.",), ("z.", "b.")) – longest first, so "z. B." wins over "B." """
+    # only the comma separates entries – a line break in the INI may fall between "z." and "B."
+    entries = {tuple(abbr_key(t, lang) for t in e.split()) for e in text.replace("\n", " ").split(",") if e.strip()}
+    return tuple(sorted(entries, key=len, reverse=True))
+
 
 def norm(text: str, lang: str) -> str:
     """Word for comparisons: punctuation removed, lower case (Turkish: I→ı, İ→i)."""
@@ -104,6 +130,7 @@ class LangRules:
     repl_word:   list      = field(default_factory=list)
     repl_phrase: list      = field(default_factory=list)
     ordinal:     bool      = False
+    abbrev:      tuple     = ()        # (("dr.",), ("z.", "b.")) – see parse_abbreviations
 
     @property
     def repl_all(self) -> list:
@@ -246,6 +273,7 @@ class Config:
                 raw = self._section(section).get(lang, "")
                 return frozenset(norm(w, lang) for w in raw.split(",") if w.strip())
             repl = {**self._section("Replacements"), **self._section(f"Replacements.{lang}")}
+            abbrev = self._section("Abbreviations")      # a language without an entry gets the built-in list
             self._rules[lang] = LangRules(
                 lang        = lang,
                 prompt      = " ".join(self._section("Prompt").get(lang, "").split()),
@@ -254,6 +282,7 @@ class Config:
                 repl_word   = compile_replacements([(k, v) for k, v in repl.items() if ' ' not in k.strip()]),
                 repl_phrase = compile_replacements([(k, v) for k, v in repl.items() if ' ' in k.strip()]),
                 ordinal     = lang in ORDINAL_LANGS,
+                abbrev      = parse_abbreviations(abbrev[lang] if lang in abbrev else ABBREVIATIONS.get(lang, ""), lang),
             )
         return self._rules[lang]
 
@@ -404,6 +433,36 @@ def wrap_greedy(words: list[dict], max_chars: int) -> list[list[dict]]:
     return lines + [line] if line else lines
 
 
+def glue_words(words: list[dict], rules: LangRules) -> list[dict]:
+    """
+    Abbreviations ("Dr.", "z. B.") and – in German/Turkish – ordinal numbers ("6.") belong
+    to the next word. They are merged into ONE unit ("Dr. Müller", "6. November") with the
+    start of the first and the end of the last word, so no rule can break between them:
+    no line break, no new subtitle, no sentence end. Chains work too ("Prof. Dr. Müller").
+    """
+    n = len(words)
+    keys = [abbr_key(w['word'], rules.lang) for w in words]
+    glue = [False] * n                        # glue[i]: word i stays with word i + 1
+    i = 0
+    while i < n:
+        size = next((len(ab) for ab in rules.abbrev if tuple(keys[i:i + len(ab)]) == ab), 0)
+        if size:
+            glue[i:i + size] = [True] * size
+            i += size
+            continue
+        if rules.ordinal and ORDINAL.fullmatch(words[i]['word']):
+            glue[i] = True
+        i += 1
+    out: list[dict] = []
+    for i, w in enumerate(words):
+        if out and glue[i - 1]:
+            prev = out[-1]
+            out[-1] = {'word': f"{prev['word']} {w['word']}", 'start': prev['start'], 'end': w['end']}
+        else:
+            out.append({'word': w['word'], 'start': w['start'], 'end': w['end']})
+    return out
+
+
 def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     """
     Smart split with:
@@ -413,6 +472,7 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     - dangling word rule (article/preposition at the end of a full subtitle → starts the next one)
     - pause rule (optional)
     - line balancing (optional): even lines inside a subtitle, times unchanged
+    - abbreviations and ordinals stay with the next word ("Dr. Müller", "6. November")
     """
     lang = rules.lang
 
@@ -434,9 +494,11 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
 
     if not clean:
         return []
+    clean = glue_words(clean, rules)          # "Dr. Müller" is one unit from here on
 
     def is_dangling(w):
-        return not w['word'].endswith(PUNCT) and norm(w['word'], lang) in rules.dangling
+        last = w['word'].split()[-1]          # of a unit like "z. B. am" the last word counts
+        return not last.endswith(PUNCT) and norm(last, lang) in rules.dangling
 
     # ── Build segments ─────────────────────────────────────────────────────────
     # The subtitles are built from the words alone (WhisperX segments do not matter).
@@ -1228,7 +1290,7 @@ def quiet_library_logs():
 # ─── WRITING THE INI (comments are kept) ──────────────────────────────────────
 
 _HEADER_RE    = re.compile(r'^\s*\[([^\]]+)\]\s*$')
-WRAP_SECTIONS = {"prompt", "filler", "dangling"}     # wrap long values onto continuation lines here
+WRAP_SECTIONS = {"prompt", "filler", "dangling", "abbreviations"}     # wrap long values onto continuation lines here
 
 
 def read_section_raw(path, section: str) -> list[tuple[str, str]]:

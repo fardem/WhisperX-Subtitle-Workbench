@@ -214,6 +214,7 @@
     "encoding_hint": "utf-8-sig if a player shows special characters wrongly",
     "filler": "Filler words",
     "dangling": "Dangling words",
+    "abbrev": "Abbreviations",
     "replacements": [
       "Replacements",
       "Wrong = Right",
@@ -869,6 +870,14 @@
       "Words that should never stand alone at the end of a subtitle (articles, prepositions) – they move to the start of the next one.",
       "",
       "Exception: with punctuation (“I agree to.”) or before a long pause they stay."
+    ],
+    "lang_abbrev": [
+      "Abbreviations that stay with the next word and never end a sentence, comma-separated: “Dr. Smith”, “e.g. Monday” are never split – not into two lines, not into two subtitles.",
+      "",
+      "Write multi-part ones the way Whisper writes them (“e. g.” and “e.g.” are different). Ordinal numbers like “6.” in German and Turkish always stay with the next word.",
+      "",
+      "Not included on purpose: etc. – it often ends a sentence.",
+      "Sentence mode only."
     ],
     "lang_repl": [
       "Corrections for recurring misrecognitions, one per line:",

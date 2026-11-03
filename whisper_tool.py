@@ -1101,6 +1101,11 @@ def clean_list(text: str) -> str:
     return ", ".join(w.strip() for w in text.replace("\n", ",").split(",") if w.strip())
 
 
+def clean_abbrev(text: str) -> str:
+    """Like clean_list, but a line break is a space: "z.\n B." stays the one entry "z. B." """
+    return ", ".join(" ".join(e.split()) for e in text.replace("\n", " ").split(",") if e.strip())
+
+
 class SettingsDialog(tk.Toplevel if tk else object):
     """Less frequently changed settings. Saving writes only what changed into the INI."""
 
@@ -1285,6 +1290,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
             self.lang_buf[code] = {"prompt": " ".join(c.raw("Prompt", code).split()),
                                    "filler": clean_list(c.raw("Filler", code)),
                                    "dangling": clean_list(c.raw("Dangling", code)),
+                                   "abbrev": clean_abbrev(c.raw("Abbreviations", code, core.ABBREVIATIONS.get(code, ""))),
                                    "repl": repl(f"Replacements.{code}"),
                                    "model": c.models.get(code, "")}
         mono = "Consolas" if "Consolas" in tkfont.families() else "TkFixedFont"
@@ -1299,7 +1305,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         tip(cb, "lang_select", self.app.scale)
 
         f.columnconfigure(1, weight=1)
-        f.rowconfigure(4, weight=1)
+        f.rowconfigure(5, weight=1)
         def lbl(r, t, key):
             w = ttk.Label(f, text=t + "  ⓘ")
             w.grid(row=r, column=0, sticky="nw", padx=(0, 12), pady=(8, 0))
@@ -1315,9 +1321,13 @@ class SettingsDialog(tk.Toplevel if tk else object):
         lbl(3, T("set.dangling"), "lang_dangling")
         self.t_dangling = tk.Text(f, height=2, wrap="word", undo=True, font="TkDefaultFont")
         self.t_dangling.grid(row=3, column=1, columnspan=2, sticky="ew", pady=(8, 0))
-        lbl(4, T("set.replacements"), "lang_repl")
+        lbl(4, T("set.abbrev"), "lang_abbrev")
+        self.v_abbrev = tk.StringVar()
+        self.e_abbrev = ttk.Entry(f, textvariable=self.v_abbrev)
+        self.e_abbrev.grid(row=4, column=1, columnspan=2, sticky="ew", pady=(8, 0))
+        lbl(5, T("set.replacements"), "lang_repl")
         rf = ttk.Frame(f)
-        rf.grid(row=4, column=1, columnspan=2, sticky="nsew", pady=(8, 0))
+        rf.grid(row=5, column=1, columnspan=2, sticky="nsew", pady=(8, 0))
         rf.columnconfigure(0, weight=1)
         rf.rowconfigure(0, weight=1)
         self.t_repl = tk.Text(rf, height=6, wrap="none", undo=True, font=(mono, 9))
@@ -1325,9 +1335,9 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.t_repl.configure(yscrollcommand=rsb.set)
         self.t_repl.grid(row=0, column=0, sticky="nsew")
         rsb.grid(row=0, column=1, sticky="ns")
-        lbl(5, T("set.lang_model"), "lang_model")
+        lbl(6, T("set.lang_model"), "lang_model")
         mf = ttk.Frame(f)
-        mf.grid(row=5, column=1, columnspan=2, sticky="w", pady=(8, 0))
+        mf.grid(row=6, column=1, columnspan=2, sticky="w", pady=(8, 0))
         self.v_lmodel = tk.StringVar()
         self.e_lmodel = ttk.Entry(mf, width=44, textvariable=self.v_lmodel)
         self.e_lmodel.pack(side="left")
@@ -1335,7 +1345,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.b_lmodel.pack(side="left", padx=6)
         ttk.Label(mf, text=T("set.empty_default"), foreground="#77767b").pack(side="left", padx=6)
         self.l_pinfo = ttk.Label(f, foreground="#77767b")
-        self.l_pinfo.grid(row=6, column=1, columnspan=2, sticky="w", pady=(6, 0))
+        self.l_pinfo.grid(row=7, column=1, columnspan=2, sticky="w", pady=(6, 0))
         self.cur_lang = "de"
         self._load_lang("de")
 
@@ -1378,6 +1388,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
             buf["prompt"]   = self.t_prompt.get("1.0", "end-1c")
             buf["filler"]   = self.v_filler.get()
             buf["dangling"] = self.t_dangling.get("1.0", "end-1c")
+            buf["abbrev"]   = self.v_abbrev.get()
             buf["model"]    = self.v_lmodel.get()
 
     def _load_lang(self, code):
@@ -1389,8 +1400,9 @@ class SettingsDialog(tk.Toplevel if tk else object):
             if only_repl and t is not self.t_repl:
                 t.configure(state="disabled")
         self.v_filler.set(buf.get("filler", ""))
+        self.v_abbrev.set(buf.get("abbrev", ""))
         self.v_lmodel.set(buf.get("model", ""))
-        for w in (self.e_filler, self.e_lmodel, self.b_lmodel):
+        for w in (self.e_filler, self.e_abbrev, self.e_lmodel, self.b_lmodel):
             w.state(["disabled" if only_repl else "!disabled"])
         self._prompt_info()
 
@@ -1463,6 +1475,8 @@ class SettingsDialog(tk.Toplevel if tk else object):
                     values[("Filler", code)] = clean_list(buf["filler"])
                 if buf["dangling"] != orig["dangling"]:
                     values[("Dangling", code)] = clean_list(buf["dangling"])
+                if clean_abbrev(buf["abbrev"]) != orig["abbrev"]:
+                    values[("Abbreviations", code)] = clean_abbrev(buf["abbrev"])
                 if buf["model"].strip() != orig["model"]:
                     values[("Whisper", f"model.{code}")] = buf["model"].strip()
         except ValueError as e:

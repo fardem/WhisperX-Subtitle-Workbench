@@ -214,6 +214,7 @@
     "encoding_hint": "utf-8-sig, falls ein Player Umlaute falsch anzeigt",
     "filler": "Füllwörter",
     "dangling": "Dangling-Wörter",
+    "abbrev": "Abkürzungen",
     "replacements": [
       "Ersetzungen",
       "Falsch = Richtig",
@@ -869,6 +870,14 @@
       "Wörter, die nie allein am Ende eines Untertitels stehen sollen (Artikel, Präpositionen) – sie wandern an den Anfang des nächsten.",
       "",
       "Ausnahme: Mit Satzzeichen („Ich stimme zu.“) oder vor einer langen Pause bleiben sie stehen."
+    ],
+    "lang_abbrev": [
+      "Abkürzungen, die beim folgenden Wort bleiben und nie ein Satzende sind, durch Komma getrennt: „Dr. Müller“, „z. B. gestern“, „ca. acht Uhr“ werden nie getrennt – weder auf zwei Zeilen noch auf zwei Untertitel.",
+      "",
+      "Mehrteilige so schreiben, wie Whisper sie ausgibt („z. B.“ und „z.B.“ sind verschiedene Wörter). Ordnungszahlen wie „6.“ bleiben immer beim folgenden Wort („6. November“).",
+      "",
+      "Bewusst nicht enthalten: usw., etc. – sie stehen oft am Satzende.",
+      "Nur im Satz-Modus."
     ],
     "lang_repl": [
       "Korrekturen für wiederkehrende Fehlerkennungen, eine pro Zeile:",

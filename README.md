@@ -36,6 +36,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
   - **Sentences:** full sentences with a character limit and rules for orphans, dangling words, pauses and maximum display time.
     Short subtitles stay on screen for a minimum time, and the reading speed (characters per second) is checked. Only the end of a subtitle moves into the pause after it, and the text never changes.
     Line balancing spreads the words evenly over the lines (`we did not / see that coming` instead of `we did not see that / coming`), with a break after a comma where possible.
+    Abbreviations and dates stay together: `Dr. Smith`, `e.g. Monday` and (in German) `6. November` are never split into two lines or two subtitles. The list per language is under *Settings → Languages*.
   - **Word by word:** one cue per word, e.g. for karaoke effects.
   - **Raw:** the WhisperX segments unchanged.
 - **Language per file:** the language is detected per file, or you set it. Each language has its own prompt, filler words, dangling words, replacements and optionally its own model (for example a Turkish fine-tune).

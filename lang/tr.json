@@ -188,33 +188,26 @@
     "gap_min_hint": "daha kısa yerleri yok say · varsayılan 1.0",
     "gap_margin": "Boşluklar: gürültü tabanının üstü (dB)",
     "gap_margin_hint": "küçük = daha hassas · varsayılan 8",
-    "orphan_limit": "Yetim: … karaktere kadar kelimeler",
-    "orphan_limit_hint": "virgülden sonraki kısa kelimeler sonraki altyazıyı başlatır …",
-    "orphan_fill": "Yetim: doluluk oranından itibaren (%)",
-    "orphan_fill_hint": "… ama yalnızca satır zaten bu kadar doluysa",
-    "split_pause": "Duraklamadan sonra yeni altyazı (saniye)",
-    "max_duration": "Azami ekranda kalma süresi (saniye)",
-    "min_duration": "Asgari ekranda kalma süresi (saniye)",
-    "max_cps": "Azami okuma hızı (karakter / saniye)",
+    "orphan_limit": "Virgülden sonraki kısa kelimeler (karakter)",
+    "orphan_fill": "Virgülden sonraki kısa kelimeler: doluluk (yüzde)",
+    "split_pause": "Konuşma duraklamasından sonra yeni altyazı (saniye)",
+    "max_duration": "Uzun cümleleri böl (saniye konuşma)",
+    "min_duration": "En az göster (saniye)",
+    "max_cps": "Okuma süresi (karakter / saniye)",
     "balance_lines": "Satırları dengele: kelimeleri satırlara eşit dağıt",
-    "bridge_gaps": "Boşlukları kapat (saniye)",
-    "grp_split": "Altyazıları bölme",
-    "grp_read": "Okunabilirlik (yalnızca cümle modu)",
-    "grp_flicker": "Titremesiz, örn. DaVinci Resolve için (tüm modlar)",
-    "grp_lyrics": "Şarkı sözleri",
+    "bridge_gaps": "Bir sonraki altyazıya kadar tut (saniye)",
     "sw_split_pause": "Konuşma duraklaması en az",
     "sw_split_pause_unit": "saniye ise yeni altyazı başlar",
-    "sw_max_duration": "Bir altyazı en fazla",
-    "sw_max_duration_unit": "saniye ekranda kalır",
-    "sw_min_duration": "Bir altyazı en az",
-    "sw_min_duration_unit": "saniye ekranda kalır",
-    "sw_max_cps": "Okuma hızı en fazla",
-    "sw_max_cps_unit": "karakter / saniye",
-    "sw_bridge_gaps": "Boşlukları kapat – duraklama şundan kısaysa:",
-    "sw_bridge_gaps_unit": "saniye",
-    "bridge_gaps_note": "Altyazı o zaman bir sonraki başlayana kadar ekranda kalır, hiçbir şey titremez. Daha uzun duraklamalar boş kalır. DaVinci Resolve için önerilen: 2 saniye.",
-    "line_gap": "Sonraki satıra mesafe (saniye)",
-    "note_subs": "Karakter/satır, satır/blok ve “satırı tut” ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
+    "sw_max_duration": "Uzun cümleleri böl: altyazı başına en fazla",
+    "sw_max_duration_unit": "saniye konuşma",
+    "sw_min_duration": "En az göster:",
+    "sw_min_duration_unit": "saniye · yalnızca “Cümle cümle”",
+    "sw_max_cps": "Okuma süresi bırak: en fazla",
+    "sw_max_cps_unit": "karakter / saniye · yalnızca “Cümle cümle”",
+    "sw_bridge_gaps": "… duraklama şundan kısaysa:",
+    "sw_bridge_gaps_unit": "saniye · Cümle cümle, Kelime kelime, Ham",
+    "line_gap": "Sonraki şarkı satırına mesafe (saniye)",
+    "note_subs": "Satır başına karakter ve altyazı başına satır sayısı ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
     "ffmpeg": "ffmpeg",
     "orig_filter": "Orijinal filtre",
     "filter_string": "Ses filtresi",
@@ -271,7 +264,20 @@
       "",
       "Şimdi yeniden başlatılsın mı?"
     ],
-    "version": "Sürüm"
+    "version": "Sürüm",
+    "sec_split": "1 · Bölme – hangi kelimeler birlikte bir altyazıya girer (yalnızca “Cümle cümle” modu)",
+    "sec_time": "2 · Gösterim süresi – bir altyazı ne kadar ekranda kalır",
+    "sec_time_info": "Bir altyazı her zaman tam konuşulduğu anda görünür. İşaret yoksa konuşma biter bitmez kaybolur. İşaretler yalnızca bitişi uzatır – sonraki duraklamaya, asla bir sonraki altyazının içine değil.",
+    "sec_lyrics": "3 · Şarkı sözleri – şarkı satırları için ayrı kurallar",
+    "sec_lyrics_info": "Bir şarkı satırının ne kadar kalacağını ana penceredeki “Şarkı sözü: satırı tut” ile ayarlarsınız. 1 ve 2'deki ayarlar şarkı sözleri için geçerli değildir.",
+    "sw_orphan": "Virgülden sonraki kısa kelimeleri sonraki altyazıya taşı",
+    "sw_orphan_limit": "En fazla şu uzunluktaki kelimeler:",
+    "sw_orphan_limit_unit": "karakter",
+    "sw_orphan_fill": "… satır zaten şu kadar doluysa:",
+    "sw_orphan_fill_unit": "yüzde",
+    "sw_bridge": "Bir sonraki altyazıya kadar ekranda tut – kesintisiz, titremesiz (örn. DaVinci Resolve için)",
+    "sw_line_gap": "Sonraki şarkı satırına mesafe",
+    "sw_line_gap_unit": "saniye · 0 = kesintisiz, örn. DaVinci Resolve için"
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -797,35 +803,38 @@
       "Varsayılan 8 dB."
     ],
     "orphan_limit": [
-      "Yetim kuralı, 1. bölüm: virgülden hemen sonraki kısa kelimeler (bu uzunluğa kadar), dolu bir satırın sonunda asılı kalmak yerine yeni bir altyazı başlatır.",
+      "Virgülden hemen sonraki kısa bir kelime, dolu bir satırın sonunda yalnız kalmak yerine sonraki altyazıyı başlatır.",
       "",
-      "Örnek: “… Berlin'de, ve” | “görüyoruz …”  →  “… Berlin'de,” | “ve görüyoruz …”",
-      "0 = kural kapalı"
+      "Bu uzunluğa kadar olan kelimeler için geçerlidir."
     ],
-    "orphan_fill": "Yetim kuralı, 2. bölüm: yalnızca satır zaten en az bu kadar doluysa uygula (karakter/satır'ın yüzdesi olarak). Çok kısa altyazıları önler.",
+    "orphan_fill": "… ama yalnızca satır zaten en az bu kadar doluysa (satır başına karakterin yüzdesi olarak). Çok kısa altyazıları önler.",
     "split_pause": [
-      "Bu uzunlukta bir konuşma duraklamasından sonra yeni bir altyazı başlar – cümlenin ortasında bile. Aksi hâlde uzun bir duraklama boyunca altyazı ekranda kalır.",
+      "Bu uzunlukta bir konuşma duraklamasından sonra yeni bir altyazı başlar – cümlenin ortasında bile.",
       "",
-      "İşaret yoksa: duraklamalar altyazıyı bitirmez. Önerilen: 1,5 saniye."
+      "Bu yalnızca hangi kelimelerin birlikte bir altyazıya gireceğini belirler. Öncekinin ardından ne kadar ekranda kalacağını “2 · Gösterim süresi” altında ayarlarsınız.",
+      "",
+      "Önerilen: 1,5 saniye."
     ],
     "max_duration": [
-      "Hiçbir altyazı bu süreden uzun ekranda kalmaz, sonra yenisi başlar.",
+      "Uzun cümleler bölünür: bir altyazı en fazla bu kadar saniyelik konuşma içerir, sonra yenisi başlar.",
       "",
-      "İşaret yoksa: üst sınır yok. Önerilen: 7 saniye (yaygın üst sınır)."
+      "Bu bir gösterim süresi değildir – bir altyazının ne kadar ekranda kalacağını “2 · Gösterim süresi” altında ayarlarsınız.",
+      "",
+      "Önerilen: 7 saniye (yaygın üst sınır)."
     ],
     "min_duration": [
       "Bir altyazı en az bu kadar ekranda kalır; böylece “Teşekkürler.” gibi kısa altyazılar sadece yanıp sönmez.",
       "",
-      "Yalnızca bitiş uzatılır – sonraki duraklamaya, asla bir sonraki altyazının içine değil. Başlangıç sesle senkron kalır.",
+      "Yalnızca bitiş uzatılır – sonraki duraklamaya, asla bir sonraki altyazının içine değil.",
       "",
-      "İşaret yoksa: altyazı tam konuşulduğu kadar kalır. Önerilen: 1 saniye."
+      "Yalnızca “Cümle cümle” modunda: kelime kelime ve ham mod tam konuşulduğu kadar kalır. Önerilen: 1 saniye."
     ],
     "max_cps": [
-      "Saniye başına karakter olarak okuma hızı (boşluklar dahil). Daha hızlı olacak bir altyazı, sonrasında duraklama varsa daha uzun ekranda kalır.",
+      "Okuma süresi: çok metin içeren bir altyazı okunabilmesi için daha uzun kalır – saniye başına karakter olarak ölçülür (boşluklar dahil).",
       "",
-      "Duraklama yoksa günlük onu uyarı olarak listeler – metin asla değiştirilmez. Gerekirse Subtitle Edit'te kısaltın.",
+      "Yalnızca sonraki duraklamaya uzatılır. Duraklama yetmezse günlük altyazıyı uyarı olarak listeler – metin asla değiştirilmez. Gerekirse Subtitle Edit'te kısaltın.",
       "",
-      "İşaret yoksa: kontrol yok. Önerilen: saniyede 17 karakter (yaygın kurallar: 15–20)."
+      "Yalnızca “Cümle cümle” modunda. Önerilen: saniyede 17 karakter (yaygın kurallar: 15–20)."
     ],
     "balance_lines": [
       "Bir altyazının kelimelerini, ilk satırı sınıra kadar doldurmak yerine satırlarına eşit dağıtır:",
@@ -838,15 +847,19 @@
     "bridge_gaps": [
       "İki altyazı arasında kısa bir an hiçbir şey göstermeyen ve bu yüzden titreyen programlar için – örn. DaVinci Resolve'un altyazı izi.",
       "",
-      "İşaretliyse bir altyazı, bir sonraki başlayana kadar ekranda kalır – ama yalnızca aradaki duraklama ayarlanan saniyeden kısaysa. Daha uzun duraklamalar boş kalır, örn. bir müzik arası.",
+      "İşaretliyse bir altyazı, bir sonraki başlayana kadar ekranda kalır – bitiş ve sonraki başlangıç tam olarak aynı olur. Bu yalnızca aradaki duraklama ayarlanan saniyeden kısaysa geçerlidir. Daha uzun duraklamalar boş kalır, örn. bir müzik arası.",
       "",
       "2 saniye ile örnek: 0,1 saniyelik duraklama kapatılır, 5 saniyelik duraklama boş kalır.",
       "",
-      "Başlangıçlar asla kaymaz: her kelime ve cümle tam konuşulduğu anda görünür. Tüm modlar, kelime kelime ve şarkı sözleri de dahil.",
+      "“En az göster” ve “Okuma süresi” ile birlikte: onlar önce uzatır, bu işaret ardından kalan boşluğu kapatır.",
       "",
-      "DaVinci Resolve için önerilen: 2 saniye. Altyazıyı kendisi tutan oynatıcılar veya eklentiler buna ihtiyaç duymaz."
+      "Cümle cümle, kelime kelime ve ham. Şarkı sözlerinin kendi kuralları vardır (3 · Şarkı sözleri). DaVinci Resolve için önerilen: 2 saniye."
     ],
-    "line_gap": "Şarkı sözü: “satırı tut” sonu uzattığında iki satır arasındaki en kısa mesafe – iki satır kesintisiz birbirine geçmesin diye.",
+    "line_gap": [
+      "Şarkı satırları: “Şarkı sözü: satırı tut” (ana pencere) bitişi uzattığında sonraki satıra mesafe – iki satır görünür şekilde değişsin diye.",
+      "",
+      "0 = satırlar kesintisiz, titremeden birbirini izler – örn. DaVinci Resolve için."
+    ],
     "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular – geçici dosya olmadan doğrudan belleğe.",
     "filter_string": [
       "FFmpeg filtre zinciri, parçalar virgülle ayrılır. Orijinal filtre:",

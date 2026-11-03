@@ -1210,30 +1210,57 @@ class SettingsDialog(tk.Toplevel if tk else object):
         on = tk.BooleanVar(value=value > 0)
         val = tk.StringVar(value=f"{value if value > 0 else default:g}")
         self.vars[(sec, ini_key)] = SwitchVar(on, val)
-        kw = {"format": fmt} if fmt else {}
         cb = ttk.Checkbutton(f, text=T(f"set.sw_{key}"), variable=on)
-        sp = ttk.Spinbox(f, from_=lo, to=hi, increment=step, width=7, textvariable=val, **kw)
-        unit = ttk.Label(f, text=T(f"set.sw_{key}_unit"))
         cb.grid(row=r, column=0, sticky="w", pady=3)
-        sp.grid(row=r, column=1, sticky="w", pady=3)
-        unit.grid(row=r, column=2, sticky="w", padx=(8, 0))
+        sp, unit = self._number(f, r, key, val, lo, hi, step, fmt)
+        self._bind_state(on, [sp, unit])
+        tip([cb, sp, unit], key, self.app.scale)
 
+    def _switch_head(self, f, r, key, on):
+        """Tick box over a whole row – its numbers follow in indented rows below (_sub_row)."""
+        cb = ttk.Checkbutton(f, text=T(f"set.sw_{key}"), variable=on)
+        cb.grid(row=r, column=0, columnspan=3, sticky="w", pady=(3, 0))
+        return cb
+
+    def _sub_row(self, f, r, key, var, lo, hi, step, fmt=None, indent=True):
+        """Row "text [number] unit" – indented under a tick box, or a plain row (indent=False)."""
+        lbl = ttk.Label(f, text=T(f"set.sw_{key}"))
+        lbl.grid(row=r, column=0, sticky="w", padx=(26 if indent else 0, 0), pady=2)
+        return [lbl, *self._number(f, r, key, var, lo, hi, step, fmt)]
+
+    def _number(self, f, r, key, var, lo, hi, step, fmt=None):
+        kw = {"format": fmt} if fmt else {}
+        sp = ttk.Spinbox(f, from_=lo, to=hi, increment=step, width=7, textvariable=var, **kw)
+        sp.grid(row=r, column=1, sticky="w", padx=(8, 0), pady=2)
+        unit = ttk.Label(f, text=T(f"set.sw_{key}_unit"))
+        unit.grid(row=r, column=2, sticky="w", padx=(8, 0))
+        return sp, unit
+
+    @staticmethod
+    def _bind_state(on, widgets):
+        """Widgets are only active with the tick."""
         def sync(*_):
             state = ["!disabled"] if on.get() else ["disabled"]
-            sp.state(state)
-            unit.state(state)
+            for w in widgets:
+                w.state(state)
         on.trace_add("write", sync)
         sync()
-        tip([cb, sp, unit], key, self.app.scale)
-        return cb, sp
 
-    def _group(self, f, r, key):
-        """Framed group with a heading; column 0 has the same width in every group, so the fields line up."""
-        g = ttk.LabelFrame(f, text=T(f"set.grp_{key}"), padding=(10, 2, 10, 6))
-        g.grid(row=r, column=0, columnspan=3, sticky="ew", pady=(0, 6))
-        g.columnconfigure(0, minsize=int(330 * self.app.scale))
-        g.columnconfigure(2, weight=1)
-        return g
+    def _section(self, f, r, key):
+        """Heading + line + explanation. The whole tab is ONE grid, so all number fields line up."""
+        if not hasattr(self, "_bold"):
+            self._bold = tkfont.nametofont("TkDefaultFont").copy()
+            self._bold.configure(weight="bold")
+        ttk.Label(f, text=T(f"set.sec_{key}"), font=self._bold).grid(
+            row=r, column=0, columnspan=3, sticky="w", pady=(12 if r else 0, 0))
+        ttk.Separator(f).grid(row=r + 1, column=0, columnspan=3, sticky="ew", pady=(2, 4))
+        r += 2
+        if i18n.has(f"set.sec_{key}_info"):
+            ttk.Label(f, text=T(f"set.sec_{key}_info"), foreground="#77767b", justify="left",
+                      wraplength=int(840 * self.app.scale)).grid(row=r, column=0, columnspan=3, sticky="w",
+                                                                  pady=(0, 4))
+            r += 1
+        return r
 
     def _combo(self, f, sec, key, value, values, width=14):
         return ttk.Combobox(f, width=width, state="readonly", values=values, textvariable=self._var(sec, key, value))
@@ -1294,29 +1321,46 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self._row(f, 10, "gap_margin", self._spin(f, "Gaps", "margin_db", f"{c.gap_margin:g}", 2, 30, 1))
 
     def _tab_subs(self, f):
+        """
+        Ordered by the two questions the tool answers one after the other:
+        1 which words go into one subtitle (splitting), 2 how long it stays (display time).
+        Lyrics have their own rules (3).
+        """
         c, sc = self.cfg, self.app.scale
-        g = self._group(f, 0, "split")
-        self._row(g, 0, "orphan_limit", self._spin(g, "Layout", "orphan_limit", c.orphan_limit, 0, 20))
-        self._row(g, 1, "orphan_fill", self._spin(g, "Layout", "orphan_min_fill", c.orphan_fill, 0, 100, 5))
-        self._switch(g, 2, "split_pause", "Layout", "split_pause", c.split_pause, 1.5, 0.5, 30, 0.5, "%.1f")
-        self._switch(g, 3, "max_duration", "Layout", "max_duration", c.max_duration, 7, 1, 60, 0.5, "%.1f")
 
-        g = self._group(f, 1, "read")
-        self._switch(g, 0, "min_duration", "Layout", "min_duration", c.min_duration, 1, 0.1, 10, 0.1, "%.1f")
-        self._switch(g, 1, "max_cps", "Layout", "max_cps", c.max_cps, 17, 5, 60, 1)
-        cb = ttk.Checkbutton(g, text=T("set.balance_lines"),
+        r = self._section(f, 0, "split")
+        self._switch(f, r, "split_pause", "Layout", "split_pause", c.split_pause, 1.5, 0.5, 30, 0.5, "%.1f")
+        self._switch(f, r + 1, "max_duration", "Layout", "max_duration", c.max_duration, 7, 1, 60, 0.5, "%.1f")
+        on = tk.BooleanVar(value=c.orphan_limit > 0)            # short words after a comma: tick + 2 numbers
+        limit = tk.StringVar(value=str(c.orphan_limit if c.orphan_limit > 0 else 4))
+        self.vars[("Layout", "orphan_limit")] = SwitchVar(on, limit)
+        cb = self._switch_head(f, r + 2, "orphan", on)
+        w1 = self._sub_row(f, r + 3, "orphan_limit", limit, 1, 20, 1)
+        w2 = self._sub_row(f, r + 4, "orphan_fill", self._var("Layout", "orphan_min_fill", c.orphan_fill), 0, 100, 5)
+        self._bind_state(on, w1 + w2)
+        tip([cb] + w1, "orphan_limit", sc)
+        tip(w2, "orphan_fill", sc)
+        cb = ttk.Checkbutton(f, text=T("set.balance_lines"),
                              variable=self._var("Layout", "balance_lines", c.balance_lines, True))
-        cb.grid(row=2, column=0, columnspan=3, sticky="w", pady=4)
+        cb.grid(row=r + 5, column=0, columnspan=3, sticky="w", pady=3)
         tip(cb, "balance_lines", sc)
 
-        g = self._group(f, 2, "flicker")
-        self._switch(g, 0, "bridge_gaps", "Layout", "bridge_gaps", c.bridge_gaps, 2, 0.5, 30, 0.5, "%.1f")
-        ttk.Label(g, text=T("set.bridge_gaps_note"), foreground="#77767b", wraplength=int(800 * sc),
-                  justify="left").grid(row=1, column=0, columnspan=3, sticky="w", pady=(0, 2))
+        r = self._section(f, r + 6, "time")
+        self._switch(f, r, "min_duration", "Layout", "min_duration", c.min_duration, 1, 0.1, 10, 0.1, "%.1f")
+        self._switch(f, r + 1, "max_cps", "Layout", "max_cps", c.max_cps, 17, 5, 60, 1)
+        on = tk.BooleanVar(value=c.bridge_gaps > 0)
+        gap = tk.StringVar(value=f"{c.bridge_gaps if c.bridge_gaps > 0 else 2:g}")
+        self.vars[("Layout", "bridge_gaps")] = SwitchVar(on, gap)
+        cb = self._switch_head(f, r + 2, "bridge", on)
+        w = self._sub_row(f, r + 3, "bridge_gaps", gap, 0.5, 30, 0.5, "%.1f")
+        self._bind_state(on, w)
+        tip([cb] + w, "bridge_gaps", sc)
 
-        g = self._group(f, 3, "lyrics")
-        self._row(g, 0, "line_gap", self._spin(g, "Lyrics", "line_gap", f"{c.line_gap:g}", 0, 2, 0.01, "%.2f"))
-        self._note(f, 4, T("set.note_subs"))
+        r = self._section(f, r + 4, "lyrics")
+        w = self._sub_row(f, r, "line_gap", self._var("Lyrics", "line_gap", f"{c.line_gap:g}"), 0, 2, 0.01, "%.2f",
+                          indent=False)
+        tip(w, "line_gap", sc)
+        self._note(f, r + 1, T("set.note_subs"))
 
     def _tab_audio(self, f):
         c = self.cfg

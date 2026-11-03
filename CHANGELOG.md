@@ -2,6 +2,19 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.3.2] – 2026-11-03
+
+**Updating from 0.3.1:** nothing to do – the INI format is unchanged. If you used *Close gaps* for lyrics in DaVinci Resolve, set *Gap to the next song line* to 0 instead.
+
+- *Settings → Subtitles* is ordered by the two questions the tool answers one after the other, so no option overlaps with another:
+  - **1 · Splitting** – which words go together into one subtitle ("Sentences" only): speech pause, long sentences, short words after a comma, line balancing
+  - **2 · Display time** – how long a subtitle stays on screen: show at least, reading time, keep on screen until the next subtitle; an explanation says how they work together
+  - **3 · Lyrics** – own rules for song lines; *hold line* stays in the main window
+- *Max. display time* was really a rule for splitting long sentences. It is now *Split long sentences: at most X seconds of speech per subtitle* under *Splitting* and no longer cuts the display time
+- *Close gaps* is now *Keep on screen until the next subtitle* under *Display time* and no longer applies to lyrics – it silently overrode *Gap to the next song line*. Lyrics keep their own rules; with a gap of 0 the lines follow each other seamlessly
+- *Orphan* rows are now *Move short words after a comma into the next subtitle*, with their two numbers below the tick box
+- Mode names as in the main window (*Sentences*, *Word by word*, *Raw*); the INI template comments follow the same order
+
 ## [0.3.1] – 2026-11-03
 
 - *Settings → Subtitles* is grouped: *Splitting subtitles*, *Readability (sentence mode only)*, *Flicker-free, e.g. for DaVinci Resolve (all modes)* and *Lyrics*

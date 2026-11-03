@@ -39,9 +39,11 @@ def test_never_shortens_a_subtitle():
     assert cues[0][1] == 0.5
 
 
-def test_max_duration_wins():
-    cues = core.extend_reading_time([(0.0, 0.3, ["x" * 80])], layout(max_cps=10, max_duration=3))
-    assert cues[0][1] == pytest.approx(3.0)
+def test_max_duration_is_no_display_limit():
+    # "split long sentences" decides which words form a subtitle – how long it stays is display time
+    cues = core.extend_reading_time([(0.0, 0.3, ["x" * 80]), (20.0, 21.0, ["next"])],
+                                    layout(max_cps=10, max_duration=3))
+    assert cues[0][1] == pytest.approx(8.0)
 
 
 def test_last_subtitle_stops_at_end_of_audio():

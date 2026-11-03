@@ -614,9 +614,9 @@ def extend_reading_time(cues: list, layout: Layout, duration: float | None = Non
     """
     Keep subtitles on screen long enough to read them:
     needed time = max(min_duration, characters / max_cps).
-    Only the END moves – into the pause after the subtitle, never into the next one,
-    never beyond max_duration or the end of the audio. The start and the text stay;
-    a subtitle is never shortened.
+    Only the END moves – into the pause after the subtitle, never into the next one and
+    never beyond the end of the audio. The start and the text stay; a subtitle is never
+    shortened. (max_duration is a rule for splitting long sentences, not a display limit.)
     """
     if not cues or (layout.min_duration <= 0 and layout.max_cps <= 0):
         return cues
@@ -626,8 +626,6 @@ def extend_reading_time(cues: list, layout: Layout, duration: float | None = Non
         if layout.max_cps > 0:
             need = max(need, cue_chars(lines) / layout.max_cps)
         target = start + need
-        if layout.max_duration > 0:
-            target = min(target, start + layout.max_duration)
         if i + 1 < len(cues):
             target = min(target, cues[i + 1][0] - CUE_GAP)
         elif duration:
@@ -643,6 +641,7 @@ def bridge_gaps(cues: list, max_gap: float) -> list:
     and next start are then exactly the same, so the screen is never empty for a moment.
     Overlaps are cut the same way. Longer pauses stay empty. Starts never move, so every word
     and sentence still appears exactly when it is spoken. 0 = off.
+    Speech subtitles only – see bridge_for_mode.
     """
     if max_gap <= 0 or not cues:
         return cues
@@ -654,6 +653,12 @@ def bridge_gaps(cues: list, max_gap: float) -> list:
                 end = nxt
         out.append((start, end, lines))
     return out
+
+
+def bridge_for_mode(cues: list, mode: str, max_gap: float) -> list:
+    """Close gaps for speech subtitles (sentences, word by word, raw). Lyrics keep their own
+    rules – "hold line" and the gap to the next line – so one setting never overrides another."""
+    return cues if mode == "lyrics" else bridge_gaps(cues, max_gap)
 
 
 def fast_cues(cues: list, max_cps: float) -> list[tuple[float, float, float]]:
@@ -1108,7 +1113,7 @@ class Engine:
             if cfg.gap_check:
                 info["gaps"] = self._report_gaps(audio, result, src)
 
-        cues = bridge_gaps(cues, cfg.bridge_gaps)        # all modes, also lyrics – a setting for the player
+        cues = bridge_for_mode(cues, mode, cfg.bridge_gaps)   # speech only – lyrics have their own rules
         if mode == "sentence":
             info["fast"] = self._report_fast(cues)
         write_srt(out, cues, cfg.encoding)

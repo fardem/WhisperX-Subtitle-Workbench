@@ -2,13 +2,13 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.1.0** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.2.0** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
 ![Ana pencere](docs/images/main-window.png)
 
-Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, duraklamalar ve azami ekranda kalma süresi. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla.
+Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, duraklamalar, asgari ve azami ekranda kalma süresi ile okuma hızı. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla.
 
 > Ekran görüntüleri İngilizce arayüzü gösterir; *Ayarlar → Genel* altında Türkçeye geçebilirsiniz.
 
@@ -36,6 +36,9 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 - **Konuşma → SRT**, WhisperX ile (faster-whisper + kelime zaman damgaları). Modeller dosyalar arasında yüklü kalır, bu yüzden ikinci dosya yükleme süresi olmadan başlar.
 - **Üç altyazı modu:**
   - **Cümle cümle:** karakter sınırı ile yetim kelimeler, sarkan kelimeler, duraklamalar ve azami ekranda kalma süresi kurallarına göre tam cümleler.
+    Kısa altyazılar asgari bir süre ekranda kalır ve okuma hızı (saniye başına karakter) kontrol edilir. Bunun için yalnızca altyazının sonu sonraki duraklamaya uzatılır; metin asla değişmez.
+    Satır dengeleme kelimeleri satırlara eşit dağıtır (`bunu hiç beklemiyorduk / ama` yerine `bunu hiç / beklemiyorduk ama`), mümkünse virgülden sonra bölerek.
+    Kısaltmalar ve tarihler bir arada kalır: `Dr. Ayşe`, `örn. dün` ve `6. Kasım` asla iki satıra veya iki altyazıya bölünmez. Dile göre liste *Ayarlar → Diller* altındadır.
   - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
   - **Ham:** WhisperX bölümleri değiştirilmeden.
 - **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).
@@ -68,9 +71,9 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 | Ne | Test edilen | Not |
 |---|---|---|
 | Windows | Windows 10/11, 64 bit | Arayüz Tkinter'dır; çekirdek Linux'ta da çalışır, BAT başlatıcısı Windows içindir |
-| NVIDIA ekran kartı | RTX 5080 (16 GB) | `large-v3` için ≥ 8 GB ekran kartı belleği önerilir. CPU ile de çalışır ama çok yavaştır |
+| NVIDIA ekran kartı | RTX 5080 (16 GB) | `large-v3` için ≥ 8 GB ekran kartı belleği önerilir. RTX 20xx veya daha yenisi; GTX 10xx ve daha eskileri başka bir PyTorch derlemesi gerektirir (4. adım). CPU ile de çalışır ama çok yavaştır |
 | NVIDIA sürücüsü | R570 veya daha yeni | CUDA 12.8 paketleri için gerekli. Yalnızca sürücü yeterli; CUDA araç setini kurmanız **gerekmez** |
-| Python | **3.10** (WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir |
+| Python | **3.10.11** (WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir. 3.10.11, Windows kurulum programı olan son 3.10 sürümüdür. Python 3.10 Ekim 2026'dan beri güvenlik güncellemesi almıyor; paket kombinasyonu 3.10 ile test edilmiştir |
 | ffmpeg | 6.x / 7.x | Ayrı bir program, pip paketi değil. Herhangi bir tam sürüm, örn. `winget install Gyan.FFmpeg` |
 | İnternet | yalnızca ilk başlatmada | Whisper modeli (~3 GB), dile göre hizalama modelleri, MMS_FA (şarkı sözleri için ~1,2 GB) |
 
@@ -111,10 +114,12 @@ whisperx 3.8.x ── ister: torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.23.
 | Ne olur | Tipik belirti | Önleme / çözüm |
 |---|---|---|
 | torch'tan **önce** `pip install whisperx` | torch PyPI'dan CPU sürümü olarak gelir → sistem kontrolü: “torch, CUDA'sız bir sürüm” | Her zaman önce torch'u PyTorch dizininden kurun (aşağıda 4. adım) |
-| `pip install -U whisperx` veya başka bir paket farklı bir torch çeker | torch/torchaudio değişir, şarkı sözleri veya VAD başarısız olur, CUDA gider | Önce `pip install --dry-run …` çalıştırın; `torch`, `torchaudio` veya `torchcodec` değişecekse iptal edin |
+| `pip install -U whisperx` veya başka bir paket farklı bir torch çeker | torch/torchaudio değişir, şarkı sözleri veya VAD başarısız olur, CUDA gider | Önce `pip install --dry-run …` çalıştırın; `torch`, `torchaudio`, `torchvision`, `torchcodec` veya `ctranslate2` değişecekse iptal edin |
 | torch ve torchaudio farklı sürüm veya derlemeden | torchaudio'da içe aktarma hataları (`DLL load failed`, `WinError 127`), şarkı sözleri başarısız olur; sistem kontrolü uyarır | İkisini aynı sürüm ve `--index-url` ile birlikte yeniden kurun |
 | `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | ctranslate2 ≥ 4.5 kullanın (test edilen: 4.7.1) |
 | RTX 50xx'te eski bir CUDA derlemesi (cu121/cu124) | `no kernel image is available for execution on the device` | cu128 derlemesini kullanın |
+| GTX 10xx, GTX 9xx veya Titan V'de cu128 derlemesi | “… CUDA capability sm_61 is not compatible …” uyarısı, ardından `no kernel image is available` | cu126 derlemesini kullanın (4. adım) |
+| Farklı bir torch içeren **mevcut** bir venv'de `pip install -r requirements.txt` | pip o torch'u PyPI'daki CPU sürümüyle değiştirir ve orada kurulu WhisperX de artık çalışmaz | Asla mevcut bir venv'e kurmayın; kendi venv'i olan yeni bir klasör kullanın |
 | Başka bir yapay zekâ aracı aynı venv'e kuruldu | farklı torch veya `numpy<2` → çeşitli hatalar | Diğer araçlara kendi venv'lerini verin |
 | Tkinter'sız Python | Araç “Tkinter eksik” der | Python kurulum programı → Modify → “tcl/tk and IDLE” |
 
@@ -124,7 +129,10 @@ whisperx 3.8.x ── ister: torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.23.
 
 Tüm komutlar `cmd.exe` içindir. Örnek klasör `C:\WhisperX-Subtitle-Workbench`. Başka bir klasör de olur, yeter ki `venv` onun **içinde** olsun; çünkü `Whisper_Tool.bat` onu orada arar.
 
-**1. Python 3.10'u kurun**, [python.org](https://www.python.org/downloads/windows/) adresinden. “tcl/tk and IDLE” seçili kalsın.
+**1. Python 3.10.11'i kurun**, [python.org](https://www.python.org/downloads/release/python-31011/) adresinden (*Windows installer (64-bit)*). Daha yeni 3.10 sürümleri yalnızca kaynak kod olarak, kurulum programı olmadan sunulur.
+
+- “tcl/tk and IDLE” seçili kalsın.
+- Zaten başka bir Python kullanıyorsanız “Add python.exe to PATH” seçeneğini **işaretlemeyin**. Bu kılavuzun buna ihtiyacı yoktur (`py -3.10`), ve diğer Python'unuz varsayılan olarak kalır.
 
 **2. ffmpeg'i kurun**, örneğin:
 
@@ -132,7 +140,7 @@ Tüm komutlar `cmd.exe` içindir. Örnek klasör `C:\WhisperX-Subtitle-Workbench
 winget install Gyan.FFmpeg
 ```
 
-İsterseniz bir sürümü `C:\ffmpeg` klasörüne açıp daha sonra *Ayarlar → Ses ve çıktı* altında `C:\ffmpeg\bin\ffmpeg.exe` yolunu da girebilirsiniz.
+Ardından **yeni** bir `cmd` penceresi açın; winget'i çalıştırdığınız pencere yeni yolu henüz bilmez. İsterseniz bir sürümü `C:\ffmpeg` klasörüne açıp daha sonra *Ayarlar → Ses ve çıktı* altında `C:\ffmpeg\bin\ffmpeg.exe` yolunu da girebilirsiniz.
 
 **3. Workbench'i edinin**, git ile ya da ZIP'i GitHub'dan indirip açarak:
 
@@ -140,7 +148,15 @@ winget install Gyan.FFmpeg
 git clone https://github.com/fardem/WhisperX-Subtitle-Workbench C:\WhisperX-Subtitle-Workbench
 ```
 
-**4. venv oluşturun ve PyTorch'u CUDA ile kurun.** Bu adım önce gelir ve belirleyici olandır:
+ZIP, `WhisperX-Subtitle-Workbench-main` adlı bir klasöre açılır. Adını `WhisperX-Subtitle-Workbench` olarak değiştirin veya aşağıdaki komutlarda yolu uyarlayın.
+
+**4. venv oluşturun ve PyTorch'u CUDA ile kurun.** Bu adım önce gelir ve belirleyici olandır.
+
+Önce sürücüyü kontrol edin. `nvidia-smi` en üstte *Driver Version* değerini gösterir; 570 veya daha yüksek olmalıdır:
+
+```bash
+nvidia-smi
+```
 
 ```bash
 cd /d C:\WhisperX-Subtitle-Workbench
@@ -158,13 +174,20 @@ venv\Scripts\python.exe -m pip install --upgrade pip
 venv\Scripts\python.exe -m pip install torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu128
 ```
 
-**5. WhisperX'i ve gerisini kurun**, `requirements.txt` içindeki test edilmiş sürümlerle:
+> **Hangi ekran kartı için hangi derleme:**
+> - RTX 50xx için `cu128` gerekir.
+> - RTX 20xx ile 40xx arası `cu128` ile çalışır.
+> - GTX 10xx, GTX 9xx ve Titan V artık cu128 derlemesi tarafından **desteklenmiyor**. Yukarıdaki komutun sonunda `cu128` yerine `cu126` yazın; 6. adım o zaman `2.8.0+cu126 12.6 True` gösterir. GTX 10xx kartlarında ayrıca hızlı float16 yoktur, bu yüzden *Ayarlar → Whisper → Hassasiyet* değerini `int8` veya `float32` yapın.
+>
+> Yalnızca RTX 5080 üzerinde cu128 derlemesi test edilmiştir.
+
+**5. WhisperX'i ve gerisini kurun**, test edilmiş sürümlerle:
 
 ```bash
-venv\Scripts\python.exe -m pip install -r requirements.txt
+venv\Scripts\python.exe -m pip install -r requirements.txt -c constraints.txt
 ```
 
-pip mevcut `torch 2.8.0+cu128` sürümünü korur, çünkü bu sürüm WhisperX'in `torch~=2.8.0` şartını zaten karşılar.
+`requirements.txt` *neyin* kurulacağını söyler. `constraints.txt` ise dolaylı olarak gelen yaklaşık 100 paket dahil **tüm** paketleri, test edilmiş kurulumdaki sürümlere sabitler. Böylece bir paket daha sonra yeni bir sürüm çıkarsa bile yeni bir kurulum test edilmiş olanla aynı olur. pip mevcut `torch 2.8.0+cu128` sürümünü korur, çünkü bu sürüm WhisperX'in `torch~=2.8.0` şartını zaten karşılar.
 
 **6. Kurulumu kontrol edin:**
 
@@ -192,29 +215,37 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 Çalışan bir WhisperX venv'iniz zaten varsa, örn. `C:\WhisperX\venv`, bu deponun dosyalarını `C:\WhisperX` klasörüne, `venv` klasörünün yanına kopyalayın. Hiçbir şey kurulmaz; araç yalnızca zaten var olan paketleri kullanır. Kopyalamadan önce aracı kapatın ve dosyaları bir alt klasöre değil, doğrudan `C:\WhisperX` içine çıkarın.
 
+> **Bu venv'de `pip install` çalıştırmayın, özellikle de `requirements.txt` ile.** Orada 2.8.x dışında bir torch kuruluysa pip onu PyPI'daki CPU sürümüyle değiştirir ve mevcut WhisperX'iniz de artık çalışmaz. Sistem kontrolü WhisperX'i çok eski olarak bildirirse, Workbench'i bunun yerine kendi venv'i olan **yeni bir klasöre** kurun (1–8. adımlar). Eski kurulumunuza dokunulmaz.
+
 ---
 
 ## Güvenli güncelleme
 
-- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.1.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.2.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 
-1. Mevcut, çalışan durumu kaydedin:
+1. **venv'i yedekleyin:** aracı kapatın ve tüm `venv` klasörünü kopyalayın, örn. `venv-backup` olarak. Asıl yedek budur. Geri almak için `venv` klasörünü silin ve `venv-backup` adını yeniden `venv` yapın. Yalnızca orijinal yolunda çalışır.
+
+2. Daha sonra bakabilmek için mevcut durumu not edin:
 
    ```bash
    venv\Scripts\python.exe -m pip freeze > requirements-working.txt
    ```
 
-2. Önce bir deneme çalıştırması yapın. Hiçbir şey kurmaz:
+   Bu liste `torch==2.8.0+cu128` içerir ve bu sürüm PyPI'da yoktur. Listeden **yeni** bir venv'e kurmak için pip'in ayrıca PyTorch dizinine ihtiyacı vardır:
+
+   ```bash
+   venv\Scripts\python.exe -m pip install -r requirements-working.txt --extra-index-url https://download.pytorch.org/whl/cu128
+   ```
+
+3. Önce bir deneme çalıştırması yapın. Hiçbir şey kurmaz:
 
    ```bash
    venv\Scripts\python.exe -m pip install --dry-run -U whisperx
    ```
 
-3. Deneme çıktısında “Would install” altında `torch`, `torchaudio` veya `torchcodec` görünüyorsa **iptal edin**. Bu güncelleme kombinasyonu bozardı.
-
-4. En güvenli yedek, tüm `venv` klasörünün bir kopyasıdır. Aynı yola geri kopyalandığında hemen yeniden çalışır.
+4. Deneme çıktısında “Would install” altında `torch`, `torchaudio`, `torchvision`, `torchcodec` veya `ctranslate2` görünüyorsa **iptal edin**. Bu güncelleme kombinasyonu bozardı.
 
 ---
 
@@ -351,6 +382,8 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | `whisper_tool.example.ini` | Ayar şablonu; ilk başlatmada `whisper_tool.ini` olarak kopyalanır |
 | `Whisper_Tool.bat` | Başlatıcı: çift tıklayın veya dosyaları üzerine sürükleyin |
 | `requirements.txt` | Test edilmiş paket sürümleri (önce torch'u kurun!) |
+| `constraints.txt` | Test edilmiş kurulumdaki tüm paketlerin tam sürümleri (`pip freeze`), 5. adımda `-c` ile kullanılır |
+| `tests/` | Otomatik testler (pytest). Ekran kartı veya WhisperX gerektirmez, GitHub'da her push'ta çalışır |
 
 ---
 

@@ -196,6 +196,11 @@
     "split_pause_hint": "0 = off · recommended 1.5",
     "max_duration": "Max. display time (s)",
     "max_duration_hint": "0 = off · recommended 7",
+    "min_duration": "Min. display time (s)",
+    "min_duration_hint": "0 = off · recommended 1 · sentence mode only",
+    "max_cps": "Max. reading speed (chars/s)",
+    "max_cps_hint": "0 = off · recommended 17 · sentence mode only",
+    "balance_lines": "Balance lines: spread the words evenly over the lines (sentence mode)",
     "line_gap": "Lyrics: gap to the next line (s)",
     "note_subs": "Chars/line, lines/cue and “hold line” are set in the main window and saved there with “Save as default”.",
     "ffmpeg": "ffmpeg",
@@ -209,6 +214,7 @@
     "encoding_hint": "utf-8-sig if a player shows special characters wrongly",
     "filler": "Filler words",
     "dangling": "Dangling words",
+    "abbrev": "Abbreviations",
     "replacements": [
       "Replacements",
       "Wrong = Right",
@@ -410,6 +416,12 @@
       "one": "1 subtitle → {name}",
       "other": "{n} subtitles → {name}"
     },
+    "fast_found": {
+      "one": "1 subtitle faster than {cps} characters/s – no pause to extend it:",
+      "other": "{n} subtitles faster than {cps} characters/s – no pause to extend them:"
+    },
+    "fast_item": "{cps} characters/s",
+    "fast_tip": "Tip: the tool never changes the text – shorten these subtitles in Subtitle Edit if they are hard to read.",
     "gap_suffix": ".gaps.srt",
     "gap_none": "no suspicious gaps",
     "gap_found": {
@@ -788,6 +800,28 @@
       "No subtitle stays longer than this time, then a new one begins.",
       "0 = off · recommended 7 s (common upper limit)"
     ],
+    "min_duration": [
+      "A subtitle stays on screen at least this long, so that short ones like “Thanks.” do not just flash.",
+      "",
+      "Only the end moves – into the pause after the subtitle, never into the next one. The start stays in sync with the voice.",
+      "Sentence mode only: word by word and raw stay exactly as long as spoken.",
+      "0 = off · recommended 1 s"
+    ],
+    "max_cps": [
+      "Reading speed: characters per second (spaces count). A subtitle that would be faster is kept on screen longer, if there is a pause after it.",
+      "",
+      "If there is no pause, the log lists it as a warning – the tool never changes the text. Shorten it in Subtitle Edit if needed.",
+      "Sentence mode only.",
+      "0 = off · recommended 17 (common guideline 15–20)"
+    ],
+    "balance_lines": [
+      "Spreads the words of a subtitle evenly over its lines instead of filling the first line to the limit:",
+      "",
+      "“we did not see that / coming”  →  “we did not / see that coming”",
+      "",
+      "Prefers a break after a comma and avoids an article or preposition at the end of a line. Same words, same number of lines – the times do not change.",
+      "Sentence mode only."
+    ],
     "line_gap": "Lyrics: minimum gap between two lines when “hold line” extends the end – so that two lines do not merge seamlessly.",
     "ffmpeg": "Path to ffmpeg.exe. ffmpeg reads any audio and video file, converts it to 16 kHz mono and applies the audio filter – directly into memory, without temp files.",
     "filter_string": [
@@ -836,6 +870,14 @@
       "Words that should never stand alone at the end of a subtitle (articles, prepositions) – they move to the start of the next one.",
       "",
       "Exception: with punctuation (“I agree to.”) or before a long pause they stay."
+    ],
+    "lang_abbrev": [
+      "Abbreviations that stay with the next word and never end a sentence, comma-separated: “Dr. Smith”, “e.g. Monday” are never split – not into two lines, not into two subtitles.",
+      "",
+      "Write multi-part ones the way Whisper writes them (“e. g.” and “e.g.” are different). Ordinal numbers like “6.” in German and Turkish always stay with the next word.",
+      "",
+      "Not included on purpose: etc. – it often ends a sentence.",
+      "Sentence mode only."
     ],
     "lang_repl": [
       "Corrections for recurring misrecognitions, one per line:",

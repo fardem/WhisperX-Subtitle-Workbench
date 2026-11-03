@@ -8,9 +8,10 @@
 #
 # Then:
 #
-#   venv\Scripts\python.exe -m pip install -r requirements.txt
+#   venv\Scripts\python.exe -m pip install -r requirements.txt -c constraints.txt
 #
 # pip keeps torch 2.8.0+cu128, because it already satisfies whisperx's torch~=2.8.0.
+# constraints.txt pins ALL other packages (also the indirect ones) to the tested versions.
 # See README -> "Requirements and dependencies" for how the packages depend on each other.
 
 whisperx==3.8.5

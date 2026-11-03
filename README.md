@@ -2,13 +2,13 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.1.0** · [Changelog](CHANGELOG.md)
+**Version 0.2.0** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word**, with a user interface in English, German and Turkish.
 
 ![Main window](docs/images/main-window.png)
 
-You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, pauses and maximum display time. A gap check finds loud passages that got no text. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio.
+You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, pauses, minimum and maximum display time, and reading speed. A gap check finds loud passages that got no text. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio.
 
 ---
 
@@ -34,6 +34,9 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
 - **Speech → SRT** with WhisperX (faster-whisper + word timestamps). It keeps the models loaded between files, so the second file starts without loading time.
 - **Three subtitle modes:**
   - **Sentences:** full sentences with a character limit and rules for orphans, dangling words, pauses and maximum display time.
+    Short subtitles stay on screen for a minimum time, and the reading speed (characters per second) is checked. Only the end of a subtitle moves into the pause after it, and the text never changes.
+    Line balancing spreads the words evenly over the lines (`we did not / see that coming` instead of `we did not see that / coming`), with a break after a comma where possible.
+    Abbreviations and dates stay together: `Dr. Smith`, `e.g. Monday` and (in German) `6. November` are never split into two lines or two subtitles. The list per language is under *Settings → Languages*.
   - **Word by word:** one cue per word, e.g. for karaoke effects.
   - **Raw:** the WhisperX segments unchanged.
 - **Language per file:** the language is detected per file, or you set it. Each language has its own prompt, filler words, dangling words, replacements and optionally its own model (for example a Turkish fine-tune).
@@ -66,9 +69,9 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
 | What | Tested with | Notes |
 |---|---|---|
 | Windows | Windows 10/11, 64-bit | The UI is Tkinter; the core also runs on Linux, but the BAT starter is for Windows |
-| NVIDIA graphics card | RTX 5080 (16 GB) | ≥ 8 GB VRAM recommended for `large-v3`. CPU works, but is very slow |
+| NVIDIA graphics card | RTX 5080 (16 GB) | ≥ 8 GB VRAM recommended for `large-v3`. RTX 20xx or newer; GTX 10xx and older need a different PyTorch build (step 4). CPU works, but is very slow |
 | NVIDIA driver | R570 or newer | Needed for CUDA 12.8 wheels. Only the driver is required; you do **not** need to install the CUDA toolkit |
-| Python | **3.10** (3.10–3.13 allowed by WhisperX) | From python.org, with “tcl/tk and IDLE” (Tkinter), which is ticked by default |
+| Python | **3.10.11** (3.10–3.13 allowed by WhisperX) | From python.org, with “tcl/tk and IDLE” (Tkinter), which is ticked by default. 3.10.11 is the last 3.10 version with a Windows installer. Python 3.10 has had no security updates since October 2026; the package set is tested with 3.10 |
 | ffmpeg | 6.x / 7.x | A separate program, not a pip package. Any full build, e.g. `winget install Gyan.FFmpeg` |
 | Internet | first run only | Whisper model (~3 GB), alignment models per language, MMS_FA (~1.2 GB for lyrics) |
 
@@ -109,10 +112,12 @@ whisperx 3.8.x ── requires torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 | What happens | Typical symptom | Prevention / fix |
 |---|---|---|
 | `pip install whisperx` **before** torch | torch comes from PyPI as a CPU build → system check: “torch is a build without CUDA” | Always install torch first from the PyTorch index (step 4 below) |
-| `pip install -U whisperx` or another package pulls a different torch | torch/torchaudio replaced, lyrics or VAD fail, CUDA gone | Run `pip install --dry-run …` first and abort if `torch`, `torchaudio` or `torchcodec` would change |
+| `pip install -U whisperx` or another package pulls a different torch | torch/torchaudio replaced, lyrics or VAD fail, CUDA gone | Run `pip install --dry-run …` first and abort if `torch`, `torchaudio`, `torchvision`, `torchcodec` or `ctranslate2` would change |
 | torch and torchaudio from different versions or builds | Import errors in torchaudio (`DLL load failed`, `WinError 127`), lyrics fail; the system check warns | Reinstall both together with the same version and `--index-url` |
 | `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | Use ctranslate2 ≥ 4.5 (tested: 4.7.1) |
 | An older CUDA build (cu121/cu124) on an RTX 50xx | `no kernel image is available for execution on the device` | Use the cu128 build |
+| The cu128 build on a GTX 10xx, GTX 9xx or Titan V | Warning “… CUDA capability sm_61 is not compatible …”, then `no kernel image is available` | Use the cu126 build (step 4) |
+| `pip install -r requirements.txt` in an **existing** venv with a different torch | pip replaces that torch with the CPU build from PyPI, and the WhisperX that was installed there stops working too | Never install into an existing venv; use a new folder with its own venv |
 | Another AI tool installed into the same venv | Different torch or `numpy<2` → various errors | Give other tools their own venv |
 | Python without Tkinter | The tool reports “Tkinter is missing” | Python installer → Modify → “tcl/tk and IDLE” |
 
@@ -122,7 +127,10 @@ whisperx 3.8.x ── requires torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 
 All commands are for `cmd.exe`. The example folder is `C:\WhisperX-Subtitle-Workbench`. You can use any other folder, as long as `venv` sits **inside** it, because `Whisper_Tool.bat` looks for it there.
 
-**1. Install Python 3.10** from [python.org](https://www.python.org/downloads/windows/). Keep “tcl/tk and IDLE” ticked.
+**1. Install Python 3.10.11** from [python.org](https://www.python.org/downloads/release/python-31011/) (*Windows installer (64-bit)*). Newer 3.10 versions are only available as source code, without an installer.
+
+- Keep “tcl/tk and IDLE” ticked.
+- If you already use another Python, leave “Add python.exe to PATH” **unticked**. This guide does not need it (`py -3.10`), and your other Python stays the default.
 
 **2. Install ffmpeg**, for example:
 
@@ -130,7 +138,7 @@ All commands are for `cmd.exe`. The example folder is `C:\WhisperX-Subtitle-Work
 winget install Gyan.FFmpeg
 ```
 
-You can also unzip a build to `C:\ffmpeg` and later enter `C:\ffmpeg\bin\ffmpeg.exe` under *Settings → Audio & output*.
+Then open a **new** `cmd` window; the window you used for winget does not know the new path yet. You can also unzip a build to `C:\ffmpeg` and later enter `C:\ffmpeg\bin\ffmpeg.exe` under *Settings → Audio & output*.
 
 **3. Get the workbench** with git, or download the ZIP from GitHub and unzip it:
 
@@ -138,7 +146,15 @@ You can also unzip a build to `C:\ffmpeg` and later enter `C:\ffmpeg\bin\ffmpeg.
 git clone https://github.com/fardem/WhisperX-Subtitle-Workbench C:\WhisperX-Subtitle-Workbench
 ```
 
-**4. Create the venv and install PyTorch with CUDA**. This step comes first and is the important one:
+The ZIP unpacks into a folder called `WhisperX-Subtitle-Workbench-main`. Rename it to `WhisperX-Subtitle-Workbench`, or adjust the path in the commands below.
+
+**4. Create the venv and install PyTorch with CUDA**. This step comes first and is the important one.
+
+First check the driver. `nvidia-smi` shows the *Driver Version* in the top row; it should be 570 or higher:
+
+```bash
+nvidia-smi
+```
 
 ```bash
 cd /d C:\WhisperX-Subtitle-Workbench
@@ -156,13 +172,20 @@ venv\Scripts\python.exe -m pip install --upgrade pip
 venv\Scripts\python.exe -m pip install torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu128
 ```
 
-**5. Install WhisperX and the rest** with the tested versions from `requirements.txt`:
+> **Which build for which graphics card:**
+> - RTX 50xx needs `cu128`.
+> - RTX 20xx to 40xx work with `cu128`.
+> - GTX 10xx, GTX 9xx and Titan V are **no longer supported** by the cu128 build. Use `cu126` instead of `cu128` at the end of the command above; step 6 then shows `2.8.0+cu126 12.6 True`. GTX 10xx cards also have no fast float16, so set *Settings → Whisper → Precision* to `int8` or `float32`.
+>
+> Only the cu128 build on an RTX 5080 is tested.
+
+**5. Install WhisperX and the rest** with the tested versions:
 
 ```bash
-venv\Scripts\python.exe -m pip install -r requirements.txt
+venv\Scripts\python.exe -m pip install -r requirements.txt -c constraints.txt
 ```
 
-pip keeps the existing `torch 2.8.0+cu128`, because it already satisfies WhisperX's `torch~=2.8.0`.
+`requirements.txt` says *what* gets installed. `constraints.txt` fixes **all** packages, including the ~100 that come along indirectly, to exactly the versions of the tested installation. A new installation therefore matches the tested one, even if a package releases a new version later. pip keeps the existing `torch 2.8.0+cu128`, because it already satisfies WhisperX's `torch~=2.8.0`.
 
 **6. Check the installation:**
 
@@ -190,29 +213,37 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy the files of this repository into `C:\WhisperX`, next to the `venv` folder. Nothing gets installed; the tool only uses the packages that are already there. Close the tool before copying, and extract the files directly into `C:\WhisperX`, not into a subfolder.
 
+> **Do not run `pip install` in that venv, and especially not `requirements.txt`.** If its torch is not 2.8.x, pip replaces it with the CPU build from PyPI, and your existing WhisperX stops working as well. If the system check reports WhisperX as too old, install the workbench into a **new folder** with its own venv instead (steps 1–8). Your old installation stays untouched.
+
 ---
 
 ## Updating safely
 
-- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.1.0*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
+- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.2.0*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
 - **The workbench itself:** `git pull`, or copy the new files over the old ones. Your settings are in `whisper_tool.ini`. That file is not part of the repository, so an update never overwrites it. New options get default values automatically.
 - **Python packages:** only update when you need something new. This is the safe way:
 
-1. Save the current, working state:
+1. **Back up the venv:** close the tool and copy the whole `venv` folder, e.g. to `venv-backup`. This is the real backup. To restore it, delete `venv` and rename `venv-backup` back to `venv`. It only works at its original path.
+
+2. Write down the current state, so you can look it up later:
 
    ```bash
    venv\Scripts\python.exe -m pip freeze > requirements-working.txt
    ```
 
-2. Do a dry run first. It installs nothing:
+   This list contains `torch==2.8.0+cu128`, which does not exist on PyPI. To install from it into a **new** venv, pip also needs the PyTorch index:
+
+   ```bash
+   venv\Scripts\python.exe -m pip install -r requirements-working.txt --extra-index-url https://download.pytorch.org/whl/cu128
+   ```
+
+3. Do a dry run first. It installs nothing:
 
    ```bash
    venv\Scripts\python.exe -m pip install --dry-run -U whisperx
    ```
 
-3. If the dry-run output lists `torch`, `torchaudio` or `torchcodec` under “Would install”, **stop**. That update would break the combination.
-
-4. The safest backup is a copy of the whole `venv` folder. Copied back to the same path, it works again immediately.
+4. If the dry-run output lists `torch`, `torchaudio`, `torchvision`, `torchcodec` or `ctranslate2` under “Would install”, **stop**. That update would break the combination.
 
 ---
 
@@ -349,6 +380,8 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | `whisper_tool.example.ini` | Settings template; copied to `whisper_tool.ini` on the first start |
 | `Whisper_Tool.bat` | Starter: double-click it or drop files onto it |
 | `requirements.txt` | The tested package versions (install torch first!) |
+| `constraints.txt` | Exact versions of all packages of the tested installation (`pip freeze`), used with `-c` in step 5 |
+| `tests/` | Automatic tests (pytest). They need no GPU and no WhisperX and run on GitHub with every push |
 
 ---
 

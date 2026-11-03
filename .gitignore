@@ -24,3 +24,6 @@ whisper_tool_error.log
 
 # Models downloaded into the folder
 models/
+
+# Tests
+.pytest_cache/

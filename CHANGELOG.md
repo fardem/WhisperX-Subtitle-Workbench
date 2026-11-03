@@ -2,7 +2,9 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
-## [Unreleased]
+## [0.2.0] – 2026-11-03
+
+**Updating from 0.1.0:** close the old window first. Your `whisper_tool.ini` stays as it is, so the new options are off. Switch them on under *Settings → Subtitles* (recommended: min. display time 1, reading speed 17, balance lines on). Python packages need no update.
 
 - Sentence mode: minimum display time (`[Layout] min_duration`) and maximum reading speed (`[Layout] max_cps`, characters per second). Only the end of a subtitle moves into the pause after it – never into the next subtitle, never beyond `max_duration`; start and text stay unchanged. Subtitles that are still too fast are listed in the log. Word by word, raw and lyrics are not affected. Both are off (0) in an existing `whisper_tool.ini`; the template recommends 1 s and 17 characters/s
 - Sentence mode: line balancing (`[Layout] balance_lines`). The words of a subtitle are spread evenly over its lines instead of filling the first line to the limit; a break after a comma is preferred, an article/preposition at the end of a line is avoided. Same words and same number of lines, so the times do not change. Off in an existing `whisper_tool.ini`, on in the template

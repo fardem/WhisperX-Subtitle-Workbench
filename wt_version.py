@@ -7,4 +7,4 @@ Versioning: MAJOR.MINOR.PATCH (https://semver.org), changes in CHANGELOG.md.
 """
 
 APP_NAME = "WhisperX Subtitle Workbench"
-VERSION = "0.1.0"
+VERSION = "0.2.0"

@@ -6,6 +6,7 @@ All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic
 
 - Sentence mode: minimum display time (`[Layout] min_duration`) and maximum reading speed (`[Layout] max_cps`, characters per second). Only the end of a subtitle moves into the pause after it – never into the next subtitle, never beyond `max_duration`; start and text stay unchanged. Subtitles that are still too fast are listed in the log. Word by word, raw and lyrics are not affected. Both are off (0) in an existing `whisper_tool.ini`; the template recommends 1 s and 17 characters/s
 - Fixed: the dangling word rule could make the next subtitle longer than characters/line or lines/subtitle allow. The rule now applies while the subtitles are built, so every following subtitle keeps all limits
+- README: installation guide checked against the package data – which PyTorch build for which graphics card (GTX 10xx and older need cu126), Python 3.10.11 as the last 3.10 with a Windows installer, a warning against installing into an existing venv, `nvidia-smi` driver check, and safer backup and update steps
 - Automatic tests (`tests/`, pytest) for subtitle rules, reading time, gap check, comparison, INI and language files; they run on GitHub with every push (Windows and Linux)
 
 ## [0.1.0] – 2026-11-01

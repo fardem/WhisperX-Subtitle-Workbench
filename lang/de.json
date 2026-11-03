@@ -196,6 +196,10 @@
     "split_pause_hint": "0 = aus · Empfehlung 1.5",
     "max_duration": "Max. Standzeit (s)",
     "max_duration_hint": "0 = aus · Empfehlung 7",
+    "min_duration": "Min. Standzeit (s)",
+    "min_duration_hint": "0 = aus · Empfehlung 1 · nur Satz-Modus",
+    "max_cps": "Max. Lesegeschwindigkeit (Zeichen/s)",
+    "max_cps_hint": "0 = aus · Empfehlung 17 · nur Satz-Modus",
     "line_gap": "Lyrics: Abstand zur nächsten Zeile (s)",
     "note_subs": "Zeichen/Zeile, Zeilen/Block und „Zeile halten“ stellst du im Hauptfenster ein und speicherst sie dort mit „Als Standard speichern“.",
     "ffmpeg": "ffmpeg",
@@ -410,6 +414,12 @@
       "one": "1 Untertitel → {name}",
       "other": "{n} Untertitel → {name}"
     },
+    "fast_found": {
+      "one": "1 Untertitel schneller als {cps} Zeichen/s – keine Pause zum Verlängern:",
+      "other": "{n} Untertitel schneller als {cps} Zeichen/s – keine Pause zum Verlängern:"
+    },
+    "fast_item": "{cps} Zeichen/s",
+    "fast_tip": "Tipp: Das Tool ändert nie den Text – diese Untertitel in Subtitle Edit kürzen, wenn sie schwer lesbar sind.",
     "gap_suffix": ".luecken.srt",
     "gap_none": "keine verdächtigen Lücken",
     "gap_found": {
@@ -787,6 +797,20 @@
     "max_duration": [
       "Kein Untertitel steht länger als diese Zeit, danach beginnt ein neuer.",
       "0 = aus · Empfehlung 7 s (gängige Obergrenze)"
+    ],
+    "min_duration": [
+      "Ein Untertitel steht mindestens so lange, damit kurze wie „Danke.“ nicht nur aufblitzen.",
+      "",
+      "Nur das Ende wird verlängert – in die Pause danach, nie in den nächsten Untertitel hinein. Der Anfang bleibt synchron zur Stimme.",
+      "Nur im Satz-Modus: Wort-für-Wort und Raw bleiben genau so lange, wie gesprochen wird.",
+      "0 = aus · Empfehlung 1 s"
+    ],
+    "max_cps": [
+      "Lesegeschwindigkeit: Zeichen pro Sekunde (Leerzeichen zählen mit). Ein Untertitel, der schneller wäre, bleibt länger stehen, wenn danach eine Pause ist.",
+      "",
+      "Ist keine Pause da, meldet das Protokoll ihn als Warnung – der Text wird nie verändert. Bei Bedarf in Subtitle Edit kürzen.",
+      "Nur im Satz-Modus.",
+      "0 = aus · Empfehlung 17 (übliche Richtlinien 15–20)"
     ],
     "line_gap": "Lyrics: Mindestabstand zwischen zwei Zeilen, wenn „Zeile halten“ das Ende verlängert – damit zwei Zeilen nicht nahtlos ineinander übergehen.",
     "ffmpeg": "Pfad zu ffmpeg.exe. ffmpeg liest jede Audio- und Videodatei, wandelt sie in 16 kHz Mono um und wendet den Audiofilter an – direkt in den Speicher, ohne Temp-Dateien.",

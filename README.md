@@ -8,7 +8,7 @@ A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics alig
 
 ![Main window](docs/images/main-window.png)
 
-You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, pauses and maximum display time. A gap check finds loud passages that got no text. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio.
+You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, pauses, minimum and maximum display time, and reading speed. A gap check finds loud passages that got no text. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio.
 
 ---
 
@@ -34,6 +34,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
 - **Speech → SRT** with WhisperX (faster-whisper + word timestamps). It keeps the models loaded between files, so the second file starts without loading time.
 - **Three subtitle modes:**
   - **Sentences:** full sentences with a character limit and rules for orphans, dangling words, pauses and maximum display time.
+    Short subtitles stay on screen for a minimum time, and the reading speed (characters per second) is checked. Only the end of a subtitle moves into the pause after it, and the text never changes.
   - **Word by word:** one cue per word, e.g. for karaoke effects.
   - **Raw:** the WhisperX segments unchanged.
 - **Language per file:** the language is detected per file, or you set it. Each language has its own prompt, filler words, dangling words, replacements and optionally its own model (for example a Turkish fine-tune).
@@ -349,6 +350,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | `whisper_tool.example.ini` | Settings template; copied to `whisper_tool.ini` on the first start |
 | `Whisper_Tool.bat` | Starter: double-click it or drop files onto it |
 | `requirements.txt` | The tested package versions (install torch first!) |
+| `tests/` | Automatic tests (pytest). They need no GPU and no WhisperX and run on GitHub with every push |
 
 ---
 

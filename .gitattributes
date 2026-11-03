@@ -4,3 +4,4 @@
 *.md text eol=lf
 *.ini text eol=lf
 *.png binary
+*.yml text eol=lf

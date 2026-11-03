@@ -7,7 +7,7 @@ Core logic for whisper_tool.py (no user interface).
   - audio via ffmpeg directly into memory (optionally filtered, no temp files)
   - transcription + alignment with WhisperX – models are loaded only once
   - lyrics alignment with MMS_FA when <name>.lyric.txt is next to the file
-  - subtitle rules: sentences (orphan, dangling, pauses), word by word, raw
+  - subtitle rules: sentences (orphan, dangling, pauses, reading time), word by word, raw
 
 Heavy libraries (torch, whisperx, torchaudio, uroman) are only imported
 when they are really needed.
@@ -118,6 +118,8 @@ class Layout:
     orphan_fill:  int   = 80
     split_pause:  float = 0.0
     max_duration: float = 0.0
+    min_duration: float = 0.0       # sentence mode: subtitle stays at least this long (0 = off)
+    max_cps:      float = 0.0       # sentence mode: max. reading speed in characters/s (0 = off)
 
 
 def _bool(v: str) -> bool:
@@ -180,6 +182,8 @@ class Config:
         self.orphan_fill       = g("Layout", "orphan_min_fill", 80, int)
         self.split_pause       = g("Layout", "split_pause", 0.0, float)
         self.max_duration      = g("Layout", "max_duration", 0.0, float)
+        self.min_duration      = g("Layout", "min_duration", 0.0, float)
+        self.max_cps           = g("Layout", "max_cps", 0.0, float)
         # Lyrics
         self.line_hold         = g("Lyrics", "line_hold", 0.0, float)
         self.line_gap          = g("Lyrics", "line_gap", 0.05, float)
@@ -231,7 +235,8 @@ class Config:
 
     def layout(self, max_chars=None, max_lines=None) -> Layout:
         return Layout(max_chars or self.default_chars, max_lines or self.default_lines,
-                      self.orphan_limit, self.orphan_fill, self.split_pause, self.max_duration)
+                      self.orphan_limit, self.orphan_fill, self.split_pause, self.max_duration,
+                      self.min_duration, self.max_cps)
 
     def rules(self, lang: str) -> LangRules:
         if lang not in self._rules:
@@ -325,7 +330,7 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     - filler filter
     - replacements (single words per word, phrases on the finished line)
     - orphan rule (short words after a comma move to the next segment)
-    - dangling word rule (article/preposition at the segment end → next segment)
+    - dangling word rule (article/preposition at the end of a full subtitle → starts the next one)
     - pause rule (optional)
     """
     lang = rules.lang
@@ -349,13 +354,23 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     if not clean:
         return []
 
+    def is_dangling(w):
+        return not w['word'].endswith(PUNCT) and norm(w['word'], lang) in rules.dangling
+
     # ── Build segments ─────────────────────────────────────────────────────────
+    # The subtitles are built from the words alone (WhisperX segments do not matter).
     segments: list[list[list[dict]]] = []
     block:    list[list[dict]] = []
     line:     list[dict]       = []
     line_len  = 0                       # characters incl. one space per word
+    carried   = 0                       # words at the start of the block that came from the previous one
     last_text = ""
     last_end  = 0.0
+
+    def add(w):
+        nonlocal line_len
+        line.append(w)
+        line_len += len(w['word']) + 1
 
     def flush_line():
         nonlocal line, line_len
@@ -363,23 +378,47 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
             block.append(line)
         line, line_len = [], 0
 
-    def flush_block():
-        nonlocal block
+    def flush_block(next_word=None):
+        """
+        Close the subtitle. With next_word (block closed because it is full or too long):
+        dangling word rule – articles/prepositions at the end ("… the") start the next
+        subtitle instead. Then the next subtitle is built normally from them, so every
+        following subtitle keeps all limits.
+        """
+        nonlocal block, carried
         flush_line()
+        tail: list[dict] = []
+        if next_word is not None:
+            flat = [w for ln in block for w in ln]
+            k = len(flat)
+            # keep at least one own word – never move the words carried over before (no loop)
+            while k - 1 >= carried + 1 and is_dangling(flat[k - 1]):
+                k -= 1
+            tail = flat[k:]
+            # only if they fit together with the next word on one line
+            if sum(len(w['word']) + 1 for w in tail) + len(next_word['word']) > layout.max_chars:
+                tail = []
+            for _ in tail:
+                block[-1].pop()
+                if not block[-1]:
+                    block.pop()
         if block:
             segments.append(block)
         block = []
+        for w in tail:
+            add(w)
+        carried = len(tail)
 
     for w in clean:
         t = w['word']
 
-        # pause rule: long speech pause or too long on screen → close the block
+        # pause rule: long speech pause → close the block (a word before a pause stays)
         if block or line:
             block_start = (block[0][0] if block else line[0])['start']
             if layout.split_pause > 0 and w['start'] - last_end >= layout.split_pause:
                 flush_block()
             elif layout.max_duration > 0 and w['end'] - block_start > layout.max_duration:
-                flush_block()
+                flush_block(w)
 
         # orphan rule: short word after a comma → close the block
         if line and len(t) <= layout.orphan_limit and last_text.endswith(COMMA):
@@ -390,10 +429,9 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
         if line and (line_len + len(t)) > layout.max_chars:
             flush_line()
             if len(block) >= layout.max_lines:
-                flush_block()
+                flush_block(w)
 
-        line.append(w)
-        line_len += len(t) + 1
+        add(w)
         last_text = t
         last_end  = w['end']
 
@@ -401,30 +439,6 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
             flush_block()
 
     flush_block()
-
-    # ── Dangling word rule ─────────────────────────────────────────────────────
-    i = 0
-    while i < len(segments) - 1:
-        seg, next_seg = segments[i], segments[i + 1]
-        last_line = seg[-1]
-        last_word = last_line[-1]
-        lw_text   = last_word['word']
-
-        # do not move: word with punctuation ("to.") or a long pause after it
-        pause_after = next_seg[0][0]['start'] - last_word['end']
-        movable = (not lw_text.endswith(PUNCT)
-                   and not (layout.split_pause > 0 and pause_after >= layout.split_pause))
-
-        if movable and norm(lw_text, lang) in rules.dangling:
-            last_line.pop()
-            if not last_line:
-                seg.pop()
-            next_seg[0].insert(0, last_word)
-            if not seg:
-                segments.pop(i)
-            # check the same segment again ("in the" → move both)
-            continue
-        i += 1
 
     # ── Cues ───────────────────────────────────────────────────────────────────
     cues = []
@@ -435,8 +449,60 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     return cues
 
 
-def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout) -> tuple[list, str]:
-    """Returns (cues, actual_mode) – without word timestamps it falls back to raw."""
+# ─── READING TIME (sentence mode only) ────────────────────────────────────────
+# Word by word must stay exactly in sync with the voice (karaoke), raw stays unchanged –
+# so only sentence-mode subtitles are extended.
+
+CUE_GAP = 0.08          # seconds kept free before the next subtitle when an end is extended (~2 frames)
+
+
+def cue_chars(lines) -> int:
+    """Characters a viewer has to read (spaces and punctuation count, line breaks do not)."""
+    return sum(len(line) for line in lines)
+
+
+def extend_reading_time(cues: list, layout: Layout, duration: float | None = None) -> list:
+    """
+    Keep subtitles on screen long enough to read them:
+    needed time = max(min_duration, characters / max_cps).
+    Only the END moves – into the pause after the subtitle, never into the next one,
+    never beyond max_duration or the end of the audio. The start and the text stay;
+    a subtitle is never shortened.
+    """
+    if not cues or (layout.min_duration <= 0 and layout.max_cps <= 0):
+        return cues
+    out = []
+    for i, (start, end, lines) in enumerate(cues):
+        need = layout.min_duration
+        if layout.max_cps > 0:
+            need = max(need, cue_chars(lines) / layout.max_cps)
+        target = start + need
+        if layout.max_duration > 0:
+            target = min(target, start + layout.max_duration)
+        if i + 1 < len(cues):
+            target = min(target, cues[i + 1][0] - CUE_GAP)
+        elif duration:
+            target = min(target, duration)
+        out.append((start, max(end, target), lines))
+    return out
+
+
+def fast_cues(cues: list, max_cps: float) -> list[tuple[float, float, float]]:
+    """→ [(start, end, characters_per_second)] for subtitles that are still faster than max_cps."""
+    if max_cps <= 0:
+        return []
+    fast = []
+    for start, end, lines in cues:
+        cps = cue_chars(lines) / max(end - start, 0.001)
+        if cps > max_cps + 0.05:            # tolerance for rounding to milliseconds
+            fast.append((start, end, cps))
+    return fast
+
+
+def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout,
+               duration: float | None = None) -> tuple[list, str]:
+    """Returns (cues, actual_mode) – without word timestamps it falls back to raw.
+    duration (audio length in s) limits how far the last subtitle may be extended."""
     if mode == "raw":
         return cues_raw(result, rules), "raw"
     words = collect_words(result)
@@ -444,7 +510,7 @@ def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout) -> tup
         return cues_raw(result, rules), "raw"
     if mode == "word":
         return cues_word(words, rules), "word"
-    return cues_sentence(words, rules, layout), "sentence"
+    return extend_reading_time(cues_sentence(words, rules, layout), layout, duration), "sentence"
 
 
 def write_srt(path, cues, encoding="utf-8"):
@@ -866,16 +932,34 @@ class Engine:
                 json_out = src.with_name(src.stem + ".json")
                 json_out.write_text(json.dumps(result, ensure_ascii=False, default=_json_default), encoding="utf-8")
                 self.log(i18n.line("json", "core.json_saved", name=json_out.name))
-            cues, mode = build_cues(result, opts.mode, rules, cfg.layout(opts.max_chars, opts.max_lines))
+            cues, mode = build_cues(result, opts.mode, rules, cfg.layout(opts.max_chars, opts.max_lines),
+                                    duration=audio.shape[0] / SAMPLE_RATE)
             if mode != opts.mode:
                 self.log(i18n.line("warn", "core.no_word_times", mode=T(f"mode.{mode}")))
             if cfg.gap_check:
                 info["gaps"] = self._report_gaps(audio, result, src)
 
+        if mode == "sentence":
+            info["fast"] = self._report_fast(cues)
         write_srt(out, cues, cfg.encoding)
         self.log(i18n.tag("done") + Tn("core.written", len(cues), name=out.name))
         info.update(language=lang, mode=mode, cues=len(cues), output=out)
         return info
+
+    def _report_fast(self, cues) -> int:
+        """Warn about subtitles that stay too fast to read even after extending them."""
+        max_cps = self.cfg.max_cps
+        fast = fast_cues(cues, max_cps)
+        if not fast:
+            return 0
+        tag = i18n.tag("warn")
+        self.log(tag + Tn("core.fast_found", len(fast), cps=f"{max_cps:g}"))
+        for s, e, cps in fast[:15]:
+            self.log(f"{tag}  {fmt_pos(s)} – {fmt_pos(e)}   (" + T("core.fast_item", cps=f"{cps:.0f}") + ")")
+        if len(fast) > 15:
+            self.log(f"{tag}  … " + T("core.gap_more", n=len(fast) - 15))
+        self.log(tag + T("core.fast_tip"))
+        return len(fast)
 
     def _report_gaps(self, audio, result, src: Path) -> int:
         cfg = self.cfg

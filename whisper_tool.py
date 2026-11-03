@@ -1115,6 +1115,8 @@ class SettingsDialog(tk.Toplevel if tk else object):
         ("Layout", "orphan_min_fill"): (int, 0, 100, "orphan_fill"),
         ("Layout", "split_pause"):     (float, 0, 30, "split_pause"),
         ("Layout", "max_duration"):    (float, 0, 60, "max_duration"),
+        ("Layout", "min_duration"):    (float, 0, 10, "min_duration"),
+        ("Layout", "max_cps"):         (float, 0, 60, "max_cps"),
         ("Lyrics", "line_gap"):        (float, 0, 2, "line_gap"),
         ("Menu", "timeout"):           (int, 0, 600, "timeout"),
         ("Gaps", "min_length"):        (float, 0.3, 30, "gap_min"),
@@ -1248,8 +1250,10 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self._row(f, 1, "orphan_fill", self._spin(f, "Layout", "orphan_min_fill", c.orphan_fill, 0, 100, 5))
         self._row(f, 2, "split_pause", self._spin(f, "Layout", "split_pause", f"{c.split_pause:g}", 0, 30, 0.5, "%.1f"))
         self._row(f, 3, "max_duration", self._spin(f, "Layout", "max_duration", f"{c.max_duration:g}", 0, 60, 0.5, "%.1f"))
-        self._row(f, 4, "line_gap", self._spin(f, "Lyrics", "line_gap", f"{c.line_gap:g}", 0, 2, 0.01, "%.2f"))
-        self._note(f, 5, T("set.note_subs"))
+        self._row(f, 4, "min_duration", self._spin(f, "Layout", "min_duration", f"{c.min_duration:g}", 0, 10, 0.1, "%.1f"))
+        self._row(f, 5, "max_cps", self._spin(f, "Layout", "max_cps", f"{c.max_cps:g}", 0, 60, 1))
+        self._row(f, 6, "line_gap", self._spin(f, "Lyrics", "line_gap", f"{c.line_gap:g}", 0, 2, 0.01, "%.2f"))
+        self._note(f, 7, T("set.note_subs"))
 
     def _tab_audio(self, f):
         c = self.cfg

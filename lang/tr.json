@@ -196,6 +196,10 @@
     "split_pause_hint": "0 = kapalı · önerilen 1.5",
     "max_duration": "Azami ekranda kalma süresi (sn)",
     "max_duration_hint": "0 = kapalı · önerilen 7",
+    "min_duration": "Asgari ekranda kalma süresi (sn)",
+    "min_duration_hint": "0 = kapalı · önerilen 1 · yalnızca cümle modu",
+    "max_cps": "Azami okuma hızı (karakter/sn)",
+    "max_cps_hint": "0 = kapalı · önerilen 17 · yalnızca cümle modu",
     "line_gap": "Şarkı sözü: sonraki satıra mesafe (sn)",
     "note_subs": "Karakter/satır, satır/blok ve “satırı tut” ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
     "ffmpeg": "ffmpeg",
@@ -410,6 +414,12 @@
       "one": "1 altyazı → {name}",
       "other": "{n} altyazı → {name}"
     },
+    "fast_found": {
+      "one": "1 altyazı {cps} karakter/sn'den hızlı – uzatmak için duraklama yok:",
+      "other": "{n} altyazı {cps} karakter/sn'den hızlı – uzatmak için duraklama yok:"
+    },
+    "fast_item": "{cps} karakter/sn",
+    "fast_tip": "İpucu: Araç metni asla değiştirmez – okunması zorsa bu altyazıları Subtitle Edit'te kısaltın.",
     "gap_suffix": ".bosluklar.srt",
     "gap_none": "şüpheli boşluk yok",
     "gap_found": {
@@ -787,6 +797,20 @@
     "max_duration": [
       "Hiçbir altyazı bu süreden uzun ekranda kalmaz, sonra yenisi başlar.",
       "0 = kapalı · önerilen 7 sn (yaygın üst sınır)"
+    ],
+    "min_duration": [
+      "Bir altyazı en az bu kadar ekranda kalır; böylece “Teşekkürler.” gibi kısa altyazılar sadece yanıp sönmez.",
+      "",
+      "Yalnızca bitiş uzatılır – sonraki duraklamaya, asla bir sonraki altyazının içine değil. Başlangıç sesle senkron kalır.",
+      "Yalnızca cümle modunda: kelime kelime ve ham mod tam konuşulduğu kadar kalır.",
+      "0 = kapalı · önerilen 1 sn"
+    ],
+    "max_cps": [
+      "Okuma hızı: saniye başına karakter (boşluklar dahil). Daha hızlı olacak bir altyazı, sonrasında duraklama varsa daha uzun ekranda kalır.",
+      "",
+      "Duraklama yoksa günlük onu uyarı olarak listeler – metin asla değiştirilmez. Gerekirse Subtitle Edit'te kısaltın.",
+      "Yalnızca cümle modunda.",
+      "0 = kapalı · önerilen 17 (yaygın kurallar 15–20)"
     ],
     "line_gap": "Şarkı sözü: “satırı tut” sonu uzattığında iki satır arasındaki en kısa mesafe – iki satır kesintisiz birbirine geçmesin diye.",
     "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular – geçici dosya olmadan doğrudan belleğe.",

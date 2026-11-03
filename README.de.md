@@ -41,6 +41,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
     Abkürzungen und Datumsangaben bleiben zusammen: `Dr. Müller`, `z. B. gestern` und `6. November` werden nie auf zwei Zeilen oder zwei Untertitel verteilt. Die Liste je Sprache steht unter *Einstellungen → Sprachen*.
   - **Wort-für-Wort:** ein Untertitel pro Wort, z.B. für Karaoke-Effekte.
   - **Raw:** die WhisperX-Abschnitte unverändert.
+- **Flackerfrei für DaVinci Resolve** (*Einstellungen → Untertitel → Lücken schließen*): Ist die Lücke zum nächsten Untertitel kurz, bleibt der Untertitel stehen, bis der nächste beginnt. Die Untertitelspur von DaVinci zeigt dann zwischendurch nie einen leeren Moment. Die Anfänge bleiben exakt, längere Pausen bleiben leer. Gilt für alle Modi, auch Wort für Wort.
 - **Sprache pro Datei:** Die Sprache wird pro Datei erkannt, oder du legst sie fest. Jede Sprache hat ihren eigenen Prompt, Füllwörter, Dangling-Wörter, Ersetzungen und optional ein eigenes Modell (z.B. ein türkisches Fine-Tune).
 - **Lyrics-Modus:** Liegt `lied.lyric.txt` neben `lied.mp3`, wird jede Zeile des Liedtexts zeitlich auf das Audio ausgerichtet. Das läuft über Forced Alignment (MMS_FA + uroman) und funktioniert für jede Sprache.
 - **JSON → SRT:** Du kannst das WhisperX-Ergebnis behalten und die Untertitel später in Sekunden mit anderem Layout neu bauen.

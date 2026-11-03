@@ -41,6 +41,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
     Kısaltmalar ve tarihler bir arada kalır: `Dr. Ayşe`, `örn. dün` ve `6. Kasım` asla iki satıra veya iki altyazıya bölünmez. Dile göre liste *Ayarlar → Diller* altındadır.
   - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
   - **Ham:** WhisperX bölümleri değiştirilmeden.
+- **DaVinci Resolve için titremesiz** (*Ayarlar → Altyazılar → Boşlukları kapat*): sonraki altyazıya olan boşluk kısaysa, altyazı bir sonraki başlayana kadar ekranda kalır. DaVinci'nin altyazı izi arada hiç boş an göstermez. Başlangıçlar tam kalır, uzun duraklamalar boş kalır. Kelime kelime dahil tüm modlarda çalışır.
 - **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).
 - **Şarkı sözü modu:** `sarki.mp3` dosyasının yanına `sarki.lyric.txt` koyarsanız şarkı metninin her satırı sese göre zamanlanır. Bu, zorlamalı hizalama (MMS_FA + uroman) ile çalışır ve her dilde işler.
 - **JSON → SRT:** WhisperX sonucunu saklayabilir ve altyazıları daha sonra saniyeler içinde farklı bir düzenle yeniden oluşturabilirsiniz.

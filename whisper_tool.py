@@ -1122,6 +1122,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         ("Layout", "max_duration"):    (float, 0, 60, "max_duration"),
         ("Layout", "min_duration"):    (float, 0, 10, "min_duration"),
         ("Layout", "max_cps"):         (float, 0, 60, "max_cps"),
+        ("Layout", "bridge_gaps"):     (float, 0, 30, "bridge_gaps"),
         ("Lyrics", "line_gap"):        (float, 0, 2, "line_gap"),
         ("Menu", "timeout"):           (int, 0, 600, "timeout"),
         ("Gaps", "min_length"):        (float, 0.3, 30, "gap_min"),
@@ -1261,8 +1262,9 @@ class SettingsDialog(tk.Toplevel if tk else object):
                              variable=self._var("Layout", "balance_lines", c.balance_lines, True))
         cb.grid(row=6, column=0, columnspan=3, sticky="w", pady=5)
         tip(cb, "balance_lines", self.app.scale)
-        self._row(f, 7, "line_gap", self._spin(f, "Lyrics", "line_gap", f"{c.line_gap:g}", 0, 2, 0.01, "%.2f"))
-        self._note(f, 8, T("set.note_subs"))
+        self._row(f, 7, "bridge_gaps", self._spin(f, "Layout", "bridge_gaps", f"{c.bridge_gaps:g}", 0, 30, 0.5, "%.1f"))
+        self._row(f, 8, "line_gap", self._spin(f, "Lyrics", "line_gap", f"{c.line_gap:g}", 0, 2, 0.01, "%.2f"))
+        self._note(f, 9, T("set.note_subs"))
 
     def _tab_audio(self, f):
         c = self.cfg

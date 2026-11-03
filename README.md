@@ -39,6 +39,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
     Abbreviations and dates stay together: `Dr. Smith`, `e.g. Monday` and (in German) `6. November` are never split into two lines or two subtitles. The list per language is under *Settings → Languages*.
   - **Word by word:** one cue per word, e.g. for karaoke effects.
   - **Raw:** the WhisperX segments unchanged.
+- **Flicker-free for DaVinci Resolve** (*Settings → Subtitles → Close gaps*): if the gap to the next subtitle is short, the subtitle stays until the next one starts. The subtitle track of DaVinci then never shows an empty moment in between. Starts stay exact, longer pauses stay empty. Works in every mode, also word by word.
 - **Language per file:** the language is detected per file, or you set it. Each language has its own prompt, filler words, dangling words, replacements and optionally its own model (for example a Turkish fine-tune).
 - **Lyrics mode:** put `song.lyric.txt` next to `song.mp3`, and every line of the song text is aligned to the audio. This uses forced alignment (MMS_FA + uroman) and works for any language.
 - **JSON → SRT:** you can keep the WhisperX result and later rebuild the subtitles with a different layout in seconds.

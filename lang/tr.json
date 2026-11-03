@@ -200,6 +200,7 @@
     "min_duration_hint": "0 = kapalı · önerilen 1 · yalnızca cümle modu",
     "max_cps": "Azami okuma hızı (karakter/sn)",
     "max_cps_hint": "0 = kapalı · önerilen 17 · yalnızca cümle modu",
+    "balance_lines": "Satırları dengele: kelimeleri satırlara eşit dağıt (cümle modu)",
     "line_gap": "Şarkı sözü: sonraki satıra mesafe (sn)",
     "note_subs": "Karakter/satır, satır/blok ve “satırı tut” ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
     "ffmpeg": "ffmpeg",
@@ -811,6 +812,14 @@
       "Duraklama yoksa günlük onu uyarı olarak listeler – metin asla değiştirilmez. Gerekirse Subtitle Edit'te kısaltın.",
       "Yalnızca cümle modunda.",
       "0 = kapalı · önerilen 17 (yaygın kurallar 15–20)"
+    ],
+    "balance_lines": [
+      "Bir altyazının kelimelerini, ilk satırı sınıra kadar doldurmak yerine satırlarına eşit dağıtır:",
+      "",
+      "“bunu hiç beklemiyorduk / ama”  →  “bunu hiç / beklemiyorduk ama”",
+      "",
+      "Tercihen virgülden sonra böler ve satır sonunda bir edat bırakmaz. Aynı kelimeler, aynı satır sayısı – zamanlar değişmez.",
+      "Yalnızca cümle modunda."
     ],
     "line_gap": "Şarkı sözü: “satırı tut” sonu uzattığında iki satır arasındaki en kısa mesafe – iki satır kesintisiz birbirine geçmesin diye.",
     "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular – geçici dosya olmadan doğrudan belleğe.",

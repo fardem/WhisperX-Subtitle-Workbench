@@ -35,6 +35,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
 - **Three subtitle modes:**
   - **Sentences:** full sentences with a character limit and rules for orphans, dangling words, pauses and maximum display time.
     Short subtitles stay on screen for a minimum time, and the reading speed (characters per second) is checked. Only the end of a subtitle moves into the pause after it, and the text never changes.
+    Line balancing spreads the words evenly over the lines (`we did not / see that coming` instead of `we did not see that / coming`), with a break after a comma where possible.
   - **Word by word:** one cue per word, e.g. for karaoke effects.
   - **Raw:** the WhisperX segments unchanged.
 - **Language per file:** the language is detected per file, or you set it. Each language has its own prompt, filler words, dangling words, replacements and optionally its own model (for example a Turkish fine-tune).
@@ -177,13 +178,13 @@ venv\Scripts\python.exe -m pip install torch==2.8.0 torchaudio==2.8.0 torchvisio
 >
 > Only the cu128 build on an RTX 5080 is tested.
 
-**5. Install WhisperX and the rest** with the tested versions from `requirements.txt`:
+**5. Install WhisperX and the rest** with the tested versions:
 
 ```bash
-venv\Scripts\python.exe -m pip install -r requirements.txt
+venv\Scripts\python.exe -m pip install -r requirements.txt -c constraints.txt
 ```
 
-pip keeps the existing `torch 2.8.0+cu128`, because it already satisfies WhisperX's `torch~=2.8.0`.
+`requirements.txt` says *what* gets installed. `constraints.txt` fixes **all** packages, including the ~100 that come along indirectly, to exactly the versions of the tested installation. A new installation therefore matches the tested one, even if a package releases a new version later. pip keeps the existing `torch 2.8.0+cu128`, because it already satisfies WhisperX's `torch~=2.8.0`.
 
 **6. Check the installation:**
 
@@ -378,6 +379,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | `whisper_tool.example.ini` | Settings template; copied to `whisper_tool.ini` on the first start |
 | `Whisper_Tool.bat` | Starter: double-click it or drop files onto it |
 | `requirements.txt` | The tested package versions (install torch first!) |
+| `constraints.txt` | Exact versions of all packages of the tested installation (`pip freeze`), used with `-c` in step 5 |
 | `tests/` | Automatic tests (pytest). They need no GPU and no WhisperX and run on GitHub with every push |
 
 ---

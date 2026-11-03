@@ -120,6 +120,7 @@ class Layout:
     max_duration: float = 0.0
     min_duration: float = 0.0       # sentence mode: subtitle stays at least this long (0 = off)
     max_cps:      float = 0.0       # sentence mode: max. reading speed in characters/s (0 = off)
+    balance:      bool  = False     # sentence mode: distribute the words evenly over the lines
 
 
 def _bool(v: str) -> bool:
@@ -184,6 +185,7 @@ class Config:
         self.max_duration      = g("Layout", "max_duration", 0.0, float)
         self.min_duration      = g("Layout", "min_duration", 0.0, float)
         self.max_cps           = g("Layout", "max_cps", 0.0, float)
+        self.balance_lines     = g("Layout", "balance_lines", False, _bool)
         # Lyrics
         self.line_hold         = g("Lyrics", "line_hold", 0.0, float)
         self.line_gap          = g("Lyrics", "line_gap", 0.05, float)
@@ -236,7 +238,7 @@ class Config:
     def layout(self, max_chars=None, max_lines=None) -> Layout:
         return Layout(max_chars or self.default_chars, max_lines or self.default_lines,
                       self.orphan_limit, self.orphan_fill, self.split_pause, self.max_duration,
-                      self.min_duration, self.max_cps)
+                      self.min_duration, self.max_cps, self.balance_lines)
 
     def rules(self, lang: str) -> LangRules:
         if lang not in self._rules:
@@ -324,6 +326,84 @@ def cues_word(words: list[dict], rules: LangRules) -> list:
     return cues
 
 
+LINE_BREAK_AFTER = (',', ';', ':', '،', '؛', '…') + SENTENCE_END   # not '-': "Ein- / und Ausgang"
+
+
+def balance_lines(words: list[dict], n_lines: int, max_chars: int, is_dangling) -> list[list[dict]]:
+    """
+    Distribute the words of ONE subtitle evenly over n_lines lines – instead of filling
+    the first line to the limit and leaving a lonely word in the last one:
+        "müssen und zwar ohne / Ende"  →  "müssen und / zwar ohne Ende"
+    Same words, same order, same number of lines – so the times of the subtitle stay
+    exactly the same. Every line keeps max_chars. Preferred, in this order:
+      - no article/preposition at the end of a line ("das / neue Haus" is fine,
+        "das neue / Haus" too, but not "… in / der Stadt")
+      - a break after a comma or sentence mark
+      - lines of similar length, the lower one rather longer than the upper one
+    """
+    n = len(words)
+    if n_lines < 2:
+        return [words]
+    if n <= n_lines:
+        return [[w] for w in words]
+    lens = [len(w['word']) for w in words]
+    pre = [0]
+    for x in lens:
+        pre.append(pre[-1] + x)
+
+    def width(a, b):                          # characters of words[a:b] incl. spaces
+        return pre[b] - pre[a] + (b - a - 1)
+
+    def pair(upper, lower):                   # even, and rather bottom-heavy than top-heavy
+        return abs(upper - lower) + 0.5 * max(0, upper - lower)
+
+    def cut(i):                               # line break before words[i]
+        last = words[i - 1]
+        if is_dangling(last):
+            return max_chars * 0.5            # "… in / der Stadt"
+        if last['word'].endswith(LINE_BREAK_AFTER):
+            return -max_chars * 0.4           # natural break after a comma – worth a less even split
+        return 0.0
+
+    # dp[(k, i, j)]: best cost for words[:j] in k lines, the last line being words[i:j]
+    dp, back = {}, {}
+    for j in range(1, n - n_lines + 2):
+        if width(0, j) <= max_chars:
+            dp[(1, 0, j)] = 0.0
+    for k in range(2, n_lines + 1):
+        for (kk, h, i), c in [item for item in dp.items() if item[0][0] == k - 1]:
+            for j in range(i + 1, n - (n_lines - k) + 1):
+                w_ = width(i, j)
+                if w_ > max_chars:
+                    break
+                cost = c + pair(width(h, i), w_) + cut(i)
+                key = (k, i, j)
+                if key not in dp or cost < dp[key]:
+                    dp[key], back[key] = cost, h
+    ends = [(c, key) for key, c in dp.items() if key[0] == n_lines and key[2] == n]
+    if not ends:                              # cannot happen with greedy input – keep it as it is
+        return wrap_greedy(words, max_chars)
+    _, (k, i, j) = min(ends)
+    bounds = [n]
+    while k > 1:
+        bounds.append(i)
+        i, j, k = back[(k, i, j)], i, k - 1
+    bounds.append(0)
+    bounds.reverse()
+    return [words[a:b] for a, b in zip(bounds, bounds[1:])]
+
+
+def wrap_greedy(words: list[dict], max_chars: int) -> list[list[dict]]:
+    lines, line, used = [], [], 0
+    for w in words:
+        if line and used + len(w['word']) > max_chars:
+            lines.append(line)
+            line, used = [], 0
+        line.append(w)
+        used += len(w['word']) + 1
+    return lines + [line] if line else lines
+
+
 def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     """
     Smart split with:
@@ -332,6 +412,7 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     - orphan rule (short words after a comma move to the next segment)
     - dangling word rule (article/preposition at the end of a full subtitle → starts the next one)
     - pause rule (optional)
+    - line balancing (optional): even lines inside a subtitle, times unchanged
     """
     lang = rules.lang
 
@@ -439,6 +520,11 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
             flush_block()
 
     flush_block()
+
+    # ── Line balancing ─────────────────────────────────────────────────────────
+    if layout.balance:
+        segments = [balance_lines([w for ln in seg for w in ln], len(seg), layout.max_chars, is_dangling)
+                    if len(seg) > 1 else seg for seg in segments]
 
     # ── Cues ───────────────────────────────────────────────────────────────────
     cues = []

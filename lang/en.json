@@ -200,6 +200,7 @@
     "min_duration_hint": "0 = off · recommended 1 · sentence mode only",
     "max_cps": "Max. reading speed (chars/s)",
     "max_cps_hint": "0 = off · recommended 17 · sentence mode only",
+    "balance_lines": "Balance lines: spread the words evenly over the lines (sentence mode)",
     "line_gap": "Lyrics: gap to the next line (s)",
     "note_subs": "Chars/line, lines/cue and “hold line” are set in the main window and saved there with “Save as default”.",
     "ffmpeg": "ffmpeg",
@@ -811,6 +812,14 @@
       "If there is no pause, the log lists it as a warning – the tool never changes the text. Shorten it in Subtitle Edit if needed.",
       "Sentence mode only.",
       "0 = off · recommended 17 (common guideline 15–20)"
+    ],
+    "balance_lines": [
+      "Spreads the words of a subtitle evenly over its lines instead of filling the first line to the limit:",
+      "",
+      "“we did not see that / coming”  →  “we did not / see that coming”",
+      "",
+      "Prefers a break after a comma and avoids an article or preposition at the end of a line. Same words, same number of lines – the times do not change.",
+      "Sentence mode only."
     ],
     "line_gap": "Lyrics: minimum gap between two lines when “hold line” extends the end – so that two lines do not merge seamlessly.",
     "ffmpeg": "Path to ffmpeg.exe. ffmpeg reads any audio and video file, converts it to 16 kHz mono and applies the audio filter – directly into memory, without temp files.",

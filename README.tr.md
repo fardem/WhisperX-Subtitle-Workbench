@@ -37,6 +37,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 - **Üç altyazı modu:**
   - **Cümle cümle:** karakter sınırı ile yetim kelimeler, sarkan kelimeler, duraklamalar ve azami ekranda kalma süresi kurallarına göre tam cümleler.
     Kısa altyazılar asgari bir süre ekranda kalır ve okuma hızı (saniye başına karakter) kontrol edilir. Bunun için yalnızca altyazının sonu sonraki duraklamaya uzatılır; metin asla değişmez.
+    Satır dengeleme kelimeleri satırlara eşit dağıtır (`bunu hiç beklemiyorduk / ama` yerine `bunu hiç / beklemiyorduk ama`), mümkünse virgülden sonra bölerek.
   - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
   - **Ham:** WhisperX bölümleri değiştirilmeden.
 - **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).
@@ -179,13 +180,13 @@ venv\Scripts\python.exe -m pip install torch==2.8.0 torchaudio==2.8.0 torchvisio
 >
 > Yalnızca RTX 5080 üzerinde cu128 derlemesi test edilmiştir.
 
-**5. WhisperX'i ve gerisini kurun**, `requirements.txt` içindeki test edilmiş sürümlerle:
+**5. WhisperX'i ve gerisini kurun**, test edilmiş sürümlerle:
 
 ```bash
-venv\Scripts\python.exe -m pip install -r requirements.txt
+venv\Scripts\python.exe -m pip install -r requirements.txt -c constraints.txt
 ```
 
-pip mevcut `torch 2.8.0+cu128` sürümünü korur, çünkü bu sürüm WhisperX'in `torch~=2.8.0` şartını zaten karşılar.
+`requirements.txt` *neyin* kurulacağını söyler. `constraints.txt` ise dolaylı olarak gelen yaklaşık 100 paket dahil **tüm** paketleri, test edilmiş kurulumdaki sürümlere sabitler. Böylece bir paket daha sonra yeni bir sürüm çıkarsa bile yeni bir kurulum test edilmiş olanla aynı olur. pip mevcut `torch 2.8.0+cu128` sürümünü korur, çünkü bu sürüm WhisperX'in `torch~=2.8.0` şartını zaten karşılar.
 
 **6. Kurulumu kontrol edin:**
 
@@ -380,6 +381,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | `whisper_tool.example.ini` | Ayar şablonu; ilk başlatmada `whisper_tool.ini` olarak kopyalanır |
 | `Whisper_Tool.bat` | Başlatıcı: çift tıklayın veya dosyaları üzerine sürükleyin |
 | `requirements.txt` | Test edilmiş paket sürümleri (önce torch'u kurun!) |
+| `constraints.txt` | Test edilmiş kurulumdaki tüm paketlerin tam sürümleri (`pip freeze`), 5. adımda `-c` ile kullanılır |
 | `tests/` | Otomatik testler (pytest). Ekran kartı veya WhisperX gerektirmez, GitHub'da her push'ta çalışır |
 
 ---

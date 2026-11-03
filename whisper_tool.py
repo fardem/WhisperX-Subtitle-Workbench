@@ -1252,8 +1252,12 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self._row(f, 3, "max_duration", self._spin(f, "Layout", "max_duration", f"{c.max_duration:g}", 0, 60, 0.5, "%.1f"))
         self._row(f, 4, "min_duration", self._spin(f, "Layout", "min_duration", f"{c.min_duration:g}", 0, 10, 0.1, "%.1f"))
         self._row(f, 5, "max_cps", self._spin(f, "Layout", "max_cps", f"{c.max_cps:g}", 0, 60, 1))
-        self._row(f, 6, "line_gap", self._spin(f, "Lyrics", "line_gap", f"{c.line_gap:g}", 0, 2, 0.01, "%.2f"))
-        self._note(f, 7, T("set.note_subs"))
+        cb = ttk.Checkbutton(f, text=T("set.balance_lines"),
+                             variable=self._var("Layout", "balance_lines", c.balance_lines, True))
+        cb.grid(row=6, column=0, columnspan=3, sticky="w", pady=5)
+        tip(cb, "balance_lines", self.app.scale)
+        self._row(f, 7, "line_gap", self._spin(f, "Lyrics", "line_gap", f"{c.line_gap:g}", 0, 2, 0.01, "%.2f"))
+        self._note(f, 8, T("set.note_subs"))
 
     def _tab_audio(self, f):
         c = self.cfg

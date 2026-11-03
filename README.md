@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.3.0** · [Changelog](CHANGELOG.md)
+**Version 0.3.1** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word**, with a user interface in English, German and Turkish.
 
@@ -220,7 +220,7 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
 
 ## Updating safely
 
-- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.3.0*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
+- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.3.1*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
 - **The workbench itself:** `git pull`, or copy the new files over the old ones. Your settings are in `whisper_tool.ini`. That file is not part of the repository, so an update never overwrites it. New options get default values automatically.
 - **Python packages:** only update when you need something new. This is the safe way:
 

@@ -192,18 +192,28 @@
     "orphan_limit_hint": "virgülden sonraki kısa kelimeler sonraki altyazıyı başlatır …",
     "orphan_fill": "Yetim: doluluk oranından itibaren (%)",
     "orphan_fill_hint": "… ama yalnızca satır zaten bu kadar doluysa",
-    "split_pause": "Duraklamadan sonra yeni altyazı (sn)",
-    "split_pause_hint": "0 = kapalı · önerilen 1.5",
-    "max_duration": "Azami ekranda kalma süresi (sn)",
-    "max_duration_hint": "0 = kapalı · önerilen 7",
-    "min_duration": "Asgari ekranda kalma süresi (sn)",
-    "min_duration_hint": "0 = kapalı · önerilen 1 · yalnızca cümle modu",
-    "max_cps": "Azami okuma hızı (karakter/sn)",
-    "max_cps_hint": "0 = kapalı · önerilen 17 · yalnızca cümle modu",
-    "balance_lines": "Satırları dengele: kelimeleri satırlara eşit dağıt (cümle modu)",
-    "bridge_gaps": "Boşlukları kapat (sn)",
-    "bridge_gaps_hint": "0 = kapalı · DaVinci Resolve için titremesiz: 2–3 · tüm modlar",
-    "line_gap": "Şarkı sözü: sonraki satıra mesafe (sn)",
+    "split_pause": "Duraklamadan sonra yeni altyazı (saniye)",
+    "max_duration": "Azami ekranda kalma süresi (saniye)",
+    "min_duration": "Asgari ekranda kalma süresi (saniye)",
+    "max_cps": "Azami okuma hızı (karakter / saniye)",
+    "balance_lines": "Satırları dengele: kelimeleri satırlara eşit dağıt",
+    "bridge_gaps": "Boşlukları kapat (saniye)",
+    "grp_split": "Altyazıları bölme",
+    "grp_read": "Okunabilirlik (yalnızca cümle modu)",
+    "grp_flicker": "Titremesiz, örn. DaVinci Resolve için (tüm modlar)",
+    "grp_lyrics": "Şarkı sözleri",
+    "sw_split_pause": "Konuşma duraklaması en az",
+    "sw_split_pause_unit": "saniye ise yeni altyazı başlar",
+    "sw_max_duration": "Bir altyazı en fazla",
+    "sw_max_duration_unit": "saniye ekranda kalır",
+    "sw_min_duration": "Bir altyazı en az",
+    "sw_min_duration_unit": "saniye ekranda kalır",
+    "sw_max_cps": "Okuma hızı en fazla",
+    "sw_max_cps_unit": "karakter / saniye",
+    "sw_bridge_gaps": "Boşlukları kapat – duraklama şundan kısaysa:",
+    "sw_bridge_gaps_unit": "saniye",
+    "bridge_gaps_note": "Altyazı o zaman bir sonraki başlayana kadar ekranda kalır, hiçbir şey titremez. Daha uzun duraklamalar boş kalır. DaVinci Resolve için önerilen: 2 saniye.",
+    "line_gap": "Sonraki satıra mesafe (saniye)",
     "note_subs": "Karakter/satır, satır/blok ve “satırı tut” ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
     "ffmpeg": "ffmpeg",
     "orig_filter": "Orijinal filtre",
@@ -796,25 +806,26 @@
     "split_pause": [
       "Bu uzunlukta bir konuşma duraklamasından sonra yeni bir altyazı başlar – cümlenin ortasında bile. Aksi hâlde uzun bir duraklama boyunca altyazı ekranda kalır.",
       "",
-      "0 = kapalı · önerilen 1,5 sn"
+      "İşaret yoksa: duraklamalar altyazıyı bitirmez. Önerilen: 1,5 saniye."
     ],
     "max_duration": [
       "Hiçbir altyazı bu süreden uzun ekranda kalmaz, sonra yenisi başlar.",
-      "0 = kapalı · önerilen 7 sn (yaygın üst sınır)"
+      "",
+      "İşaret yoksa: üst sınır yok. Önerilen: 7 saniye (yaygın üst sınır)."
     ],
     "min_duration": [
       "Bir altyazı en az bu kadar ekranda kalır; böylece “Teşekkürler.” gibi kısa altyazılar sadece yanıp sönmez.",
       "",
       "Yalnızca bitiş uzatılır – sonraki duraklamaya, asla bir sonraki altyazının içine değil. Başlangıç sesle senkron kalır.",
-      "Yalnızca cümle modunda: kelime kelime ve ham mod tam konuşulduğu kadar kalır.",
-      "0 = kapalı · önerilen 1 sn"
+      "",
+      "İşaret yoksa: altyazı tam konuşulduğu kadar kalır. Önerilen: 1 saniye."
     ],
     "max_cps": [
-      "Okuma hızı: saniye başına karakter (boşluklar dahil). Daha hızlı olacak bir altyazı, sonrasında duraklama varsa daha uzun ekranda kalır.",
+      "Saniye başına karakter olarak okuma hızı (boşluklar dahil). Daha hızlı olacak bir altyazı, sonrasında duraklama varsa daha uzun ekranda kalır.",
       "",
       "Duraklama yoksa günlük onu uyarı olarak listeler – metin asla değiştirilmez. Gerekirse Subtitle Edit'te kısaltın.",
-      "Yalnızca cümle modunda.",
-      "0 = kapalı · önerilen 17 (yaygın kurallar 15–20)"
+      "",
+      "İşaret yoksa: kontrol yok. Önerilen: saniyede 17 karakter (yaygın kurallar: 15–20)."
     ],
     "balance_lines": [
       "Bir altyazının kelimelerini, ilk satırı sınıra kadar doldurmak yerine satırlarına eşit dağıtır:",
@@ -825,13 +836,15 @@
       "Yalnızca cümle modunda."
     ],
     "bridge_gaps": [
-      "Titremesiz altyazılar, örn. DaVinci Resolve'un altyazı izi için: sonraki altyazıya olan boşluk bu değerden kısaysa, altyazı bir sonraki başlayana kadar ekranda kalır. Ekran hiçbir zaman bir anlığına boş kalmaz, bu yüzden hiçbir şey titremez.",
+      "İki altyazı arasında kısa bir an hiçbir şey göstermeyen ve bu yüzden titreyen programlar için – örn. DaVinci Resolve'un altyazı izi.",
       "",
-      "Daha uzun duraklamalar boş kalır – müzik arasında metin olması gerektiği gibi kaybolur.",
+      "İşaretliyse bir altyazı, bir sonraki başlayana kadar ekranda kalır – ama yalnızca aradaki duraklama ayarlanan saniyeden kısaysa. Daha uzun duraklamalar boş kalır, örn. bir müzik arası.",
       "",
-      "Başlangıçlar asla kaymaz: her kelime ve cümle tam konuşulduğu anda görünür. Tüm modlar, kelime kelime (her kelime bir sonrakine kadar kalır) ve şarkı sözleri de dahil.",
+      "2 saniye ile örnek: 0,1 saniyelik duraklama kapatılır, 5 saniyelik duraklama boş kalır.",
       "",
-      "0 = kapalı: her altyazı konuşma bittiğinde biter. “Asgari ekranda kalma süresi” 2–3 sn ile birlikte her cümle en az o kadar kalır."
+      "Başlangıçlar asla kaymaz: her kelime ve cümle tam konuşulduğu anda görünür. Tüm modlar, kelime kelime ve şarkı sözleri de dahil.",
+      "",
+      "DaVinci Resolve için önerilen: 2 saniye. Altyazıyı kendisi tutan oynatıcılar veya eklentiler buna ihtiyaç duymaz."
     ],
     "line_gap": "Şarkı sözü: “satırı tut” sonu uzattığında iki satır arasındaki en kısa mesafe – iki satır kesintisiz birbirine geçmesin diye.",
     "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular – geçici dosya olmadan doğrudan belleğe.",

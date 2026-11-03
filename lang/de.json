@@ -192,18 +192,28 @@
     "orphan_limit_hint": "kurze Wörter nach einem Komma beginnen den nächsten Untertitel …",
     "orphan_fill": "Orphan: ab Füllgrad (%)",
     "orphan_fill_hint": "… aber nur, wenn die Zeile schon so voll ist",
-    "split_pause": "Neuer Untertitel nach Pause (s)",
-    "split_pause_hint": "0 = aus · Empfehlung 1.5",
-    "max_duration": "Max. Standzeit (s)",
-    "max_duration_hint": "0 = aus · Empfehlung 7",
-    "min_duration": "Min. Standzeit (s)",
-    "min_duration_hint": "0 = aus · Empfehlung 1 · nur Satz-Modus",
-    "max_cps": "Max. Lesegeschwindigkeit (Zeichen/s)",
-    "max_cps_hint": "0 = aus · Empfehlung 17 · nur Satz-Modus",
-    "balance_lines": "Zeilen ausgleichen: Wörter gleichmäßig auf die Zeilen verteilen (Satz-Modus)",
-    "bridge_gaps": "Lücken schließen bis (s)",
-    "bridge_gaps_hint": "0 = aus · flackerfrei für DaVinci Resolve: 2–3 · alle Modi",
-    "line_gap": "Lyrics: Abstand zur nächsten Zeile (s)",
+    "split_pause": "Neuer Untertitel nach Pause (Sekunden)",
+    "max_duration": "Max. Standzeit (Sekunden)",
+    "min_duration": "Min. Standzeit (Sekunden)",
+    "max_cps": "Max. Lesegeschwindigkeit (Zeichen pro Sekunde)",
+    "balance_lines": "Zeilen ausgleichen: Wörter gleichmäßig auf die Zeilen verteilen",
+    "bridge_gaps": "Lücken schließen (Sekunden)",
+    "grp_split": "Untertitel aufteilen",
+    "grp_read": "Lesbarkeit (nur Satz-Modus)",
+    "grp_flicker": "Flackerfrei, z.B. für DaVinci Resolve (alle Modi)",
+    "grp_lyrics": "Lyrics",
+    "sw_split_pause": "Neuer Untertitel nach einer Sprechpause von",
+    "sw_split_pause_unit": "Sekunden",
+    "sw_max_duration": "Ein Untertitel steht höchstens",
+    "sw_max_duration_unit": "Sekunden",
+    "sw_min_duration": "Ein Untertitel steht mindestens",
+    "sw_min_duration_unit": "Sekunden",
+    "sw_max_cps": "Lesegeschwindigkeit höchstens",
+    "sw_max_cps_unit": "Zeichen pro Sekunde",
+    "sw_bridge_gaps": "Lücken schließen, wenn die Pause kürzer ist als",
+    "sw_bridge_gaps_unit": "Sekunden",
+    "bridge_gaps_note": "Der Untertitel bleibt dann stehen, bis der nächste beginnt – nichts flackert. Längere Pausen bleiben leer. Empfehlung für DaVinci Resolve: 2 Sekunden.",
+    "line_gap": "Abstand zur nächsten Zeile (Sekunden)",
     "note_subs": "Zeichen/Zeile, Zeilen/Block und „Zeile halten“ stellst du im Hauptfenster ein und speicherst sie dort mit „Als Standard speichern“.",
     "ffmpeg": "ffmpeg",
     "orig_filter": "Ursprünglicher Filter",
@@ -796,25 +806,26 @@
     "split_pause": [
       "Nach einer Sprechpause dieser Länge beginnt ein neuer Untertitel – auch mitten im Satz. Sonst bleibt ein Untertitel während einer langen Pause stehen.",
       "",
-      "0 = aus · Empfehlung 1.5 s"
+      "Ohne Häkchen: Pausen beenden keinen Untertitel. Empfehlung: 1,5 Sekunden."
     ],
     "max_duration": [
       "Kein Untertitel steht länger als diese Zeit, danach beginnt ein neuer.",
-      "0 = aus · Empfehlung 7 s (gängige Obergrenze)"
+      "",
+      "Ohne Häkchen: keine Obergrenze. Empfehlung: 7 Sekunden (gängige Obergrenze)."
     ],
     "min_duration": [
       "Ein Untertitel steht mindestens so lange, damit kurze wie „Danke.“ nicht nur aufblitzen.",
       "",
       "Nur das Ende wird verlängert – in die Pause danach, nie in den nächsten Untertitel hinein. Der Anfang bleibt synchron zur Stimme.",
-      "Nur im Satz-Modus: Wort-für-Wort und Raw bleiben genau so lange, wie gesprochen wird.",
-      "0 = aus · Empfehlung 1 s"
+      "",
+      "Ohne Häkchen: Ein Untertitel steht genau so lange, wie gesprochen wird. Empfehlung: 1 Sekunde."
     ],
     "max_cps": [
-      "Lesegeschwindigkeit: Zeichen pro Sekunde (Leerzeichen zählen mit). Ein Untertitel, der schneller wäre, bleibt länger stehen, wenn danach eine Pause ist.",
+      "Lesegeschwindigkeit in Zeichen pro Sekunde (Leerzeichen zählen mit). Ein Untertitel, der schneller wäre, bleibt länger stehen, wenn danach eine Pause ist.",
       "",
       "Ist keine Pause da, meldet das Protokoll ihn als Warnung – der Text wird nie verändert. Bei Bedarf in Subtitle Edit kürzen.",
-      "Nur im Satz-Modus.",
-      "0 = aus · Empfehlung 17 (übliche Richtlinien 15–20)"
+      "",
+      "Ohne Häkchen: keine Prüfung. Empfehlung: 17 Zeichen pro Sekunde (übliche Richtlinien: 15–20)."
     ],
     "balance_lines": [
       "Verteilt die Wörter eines Untertitels gleichmäßig auf seine Zeilen, statt die erste Zeile bis zum Limit zu füllen:",
@@ -825,13 +836,15 @@
       "Nur im Satz-Modus."
     ],
     "bridge_gaps": [
-      "Flackerfreie Untertitel, z.B. für die Untertitelspur von DaVinci Resolve: Ist die Lücke zum nächsten Untertitel kürzer als dieser Wert, bleibt der Untertitel stehen, bis der nächste beginnt. Der Bildschirm ist nie kurz leer, also flackert nichts.",
+      "Für Programme, die zwischen zwei Untertiteln kurz nichts anzeigen und dadurch flackern – z.B. die Untertitelspur von DaVinci Resolve.",
       "",
-      "Längere Pausen bleiben leer – bei einer Musikpause verschwindet der Text, wie es sein soll.",
+      "Mit Häkchen bleibt ein Untertitel stehen, bis der nächste beginnt – aber nur, wenn die Pause dazwischen kürzer ist als die eingestellten Sekunden. Längere Pausen bleiben leer, z.B. eine Musikpause.",
       "",
-      "Die Anfänge bleiben exakt: Jedes Wort und jeder Satz erscheint genau dann, wenn es gesprochen wird. Alle Modi, auch Wort für Wort (jedes Wort bleibt bis zum nächsten) und Lyrics.",
+      "Beispiel mit 2 Sekunden: Eine Pause von 0,1 Sekunden wird geschlossen, eine Pause von 5 Sekunden bleibt leer.",
       "",
-      "0 = aus: Jeder Untertitel endet, wenn die Sprache endet. Zusammen mit „Min. Standzeit“ auf 2–3 s steht jeder Satz mindestens so lange."
+      "Die Anfänge bleiben exakt: Jedes Wort und jeder Satz erscheint genau dann, wenn es gesprochen wird. Alle Modi, auch Wort für Wort und Lyrics.",
+      "",
+      "Empfehlung für DaVinci Resolve: 2 Sekunden. Player oder Plugins, die den Untertitel selbst halten, brauchen das nicht."
     ],
     "line_gap": "Lyrics: Mindestabstand zwischen zwei Zeilen, wenn „Zeile halten“ das Ende verlängert – damit zwei Zeilen nicht nahtlos ineinander übergehen.",
     "ffmpeg": "Pfad zu ffmpeg.exe. ffmpeg liest jede Audio- und Videodatei, wandelt sie in 16 kHz Mono um und wendet den Audiofilter an – direkt in den Speicher, ohne Temp-Dateien.",

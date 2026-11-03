@@ -192,18 +192,28 @@
     "orphan_limit_hint": "short words after a comma start the next subtitle …",
     "orphan_fill": "Orphans: from fill level (%)",
     "orphan_fill_hint": "… but only if the line is already this full",
-    "split_pause": "New subtitle after pause (s)",
-    "split_pause_hint": "0 = off · recommended 1.5",
-    "max_duration": "Max. display time (s)",
-    "max_duration_hint": "0 = off · recommended 7",
-    "min_duration": "Min. display time (s)",
-    "min_duration_hint": "0 = off · recommended 1 · sentence mode only",
-    "max_cps": "Max. reading speed (chars/s)",
-    "max_cps_hint": "0 = off · recommended 17 · sentence mode only",
-    "balance_lines": "Balance lines: spread the words evenly over the lines (sentence mode)",
-    "bridge_gaps": "Close gaps up to (s)",
-    "bridge_gaps_hint": "0 = off · flicker-free for DaVinci Resolve: 2–3 · all modes",
-    "line_gap": "Lyrics: gap to the next line (s)",
+    "split_pause": "New subtitle after pause (seconds)",
+    "max_duration": "Max. display time (seconds)",
+    "min_duration": "Min. display time (seconds)",
+    "max_cps": "Max. reading speed (characters per second)",
+    "balance_lines": "Balance lines: spread the words evenly over the lines",
+    "bridge_gaps": "Close gaps (seconds)",
+    "grp_split": "Splitting subtitles",
+    "grp_read": "Readability (sentence mode only)",
+    "grp_flicker": "Flicker-free, e.g. for DaVinci Resolve (all modes)",
+    "grp_lyrics": "Lyrics",
+    "sw_split_pause": "New subtitle after a speech pause of",
+    "sw_split_pause_unit": "seconds",
+    "sw_max_duration": "A subtitle stays on screen at most",
+    "sw_max_duration_unit": "seconds",
+    "sw_min_duration": "A subtitle stays on screen at least",
+    "sw_min_duration_unit": "seconds",
+    "sw_max_cps": "Reading speed at most",
+    "sw_max_cps_unit": "characters per second",
+    "sw_bridge_gaps": "Close gaps when the pause is shorter than",
+    "sw_bridge_gaps_unit": "seconds",
+    "bridge_gaps_note": "The subtitle then stays until the next one starts, so nothing flickers. Longer pauses stay empty. Recommended for DaVinci Resolve: 2 seconds.",
+    "line_gap": "Gap to the next line (seconds)",
     "note_subs": "Chars/line, lines/cue and “hold line” are set in the main window and saved there with “Save as default”.",
     "ffmpeg": "ffmpeg",
     "orig_filter": "Original filter",
@@ -796,25 +806,26 @@
     "split_pause": [
       "After a speech pause of this length a new subtitle begins – even in the middle of a sentence. Otherwise a subtitle stays on screen during a long pause.",
       "",
-      "0 = off · recommended 1.5 s"
+      "Without the tick: pauses do not end a subtitle. Recommended: 1.5 seconds."
     ],
     "max_duration": [
       "No subtitle stays longer than this time, then a new one begins.",
-      "0 = off · recommended 7 s (common upper limit)"
+      "",
+      "Without the tick: no upper limit. Recommended: 7 seconds (common upper limit)."
     ],
     "min_duration": [
       "A subtitle stays on screen at least this long, so that short ones like “Thanks.” do not just flash.",
       "",
       "Only the end moves – into the pause after the subtitle, never into the next one. The start stays in sync with the voice.",
-      "Sentence mode only: word by word and raw stay exactly as long as spoken.",
-      "0 = off · recommended 1 s"
+      "",
+      "Without the tick: a subtitle stays exactly as long as it is spoken. Recommended: 1 second."
     ],
     "max_cps": [
-      "Reading speed: characters per second (spaces count). A subtitle that would be faster is kept on screen longer, if there is a pause after it.",
+      "Reading speed in characters per second (spaces count). A subtitle that would be faster stays on screen longer, if there is a pause after it.",
       "",
       "If there is no pause, the log lists it as a warning – the tool never changes the text. Shorten it in Subtitle Edit if needed.",
-      "Sentence mode only.",
-      "0 = off · recommended 17 (common guideline 15–20)"
+      "",
+      "Without the tick: no check. Recommended: 17 characters per second (common guidelines: 15–20)."
     ],
     "balance_lines": [
       "Spreads the words of a subtitle evenly over its lines instead of filling the first line to the limit:",
@@ -825,13 +836,15 @@
       "Sentence mode only."
     ],
     "bridge_gaps": [
-      "Flicker-free subtitles, e.g. for the subtitle track of DaVinci Resolve: if the gap to the next subtitle is shorter than this, the subtitle stays until the next one starts. The screen is never empty for a moment, so nothing flickers.",
+      "For programs that show nothing for a moment between two subtitles and therefore flicker – e.g. the subtitle track of DaVinci Resolve.",
       "",
-      "Longer pauses stay empty – the text disappears during a music break, as it should.",
+      "With the tick, a subtitle stays until the next one starts – but only if the pause between them is shorter than the set number of seconds. Longer pauses stay empty, e.g. a music break.",
       "",
-      "Starts never move: every word and sentence still appears exactly when it is spoken. All modes, also word by word (each word stays until the next one) and lyrics.",
+      "Example with 2 seconds: a pause of 0.1 seconds is closed, a pause of 5 seconds stays empty.",
       "",
-      "0 = off: every subtitle ends when the speech ends. Together with “Min. display time” at 2–3 s, every sentence stays at least that long."
+      "Starts never move: every word and sentence still appears exactly when it is spoken. All modes, also word by word and lyrics.",
+      "",
+      "Recommended for DaVinci Resolve: 2 seconds. Players or plugins that hold the subtitle themselves do not need this."
     ],
     "line_gap": "Lyrics: minimum gap between two lines when “hold line” extends the end – so that two lines do not merge seamlessly.",
     "ffmpeg": "Path to ffmpeg.exe. ffmpeg reads any audio and video file, converts it to 16 kHz mono and applies the audio filter – directly into memory, without temp files.",

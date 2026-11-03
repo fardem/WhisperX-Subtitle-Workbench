@@ -2,11 +2,18 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.3.1] – 2026-11-03
+
+- *Settings → Subtitles* is grouped: *Splitting subtitles*, *Readability (sentence mode only)*, *Flicker-free, e.g. for DaVinci Resolve (all modes)* and *Lyrics*
+- Options that used to be off with "0" now have a tick box: without the tick the number field is grey and shows the recommended value, with the tick it can be edited and counts. In the INI nothing changes (0 = off as before)
+- Clearer texts: every row reads as a sentence with its unit written out ("Close gaps when the pause is shorter than [2] seconds"); the recommendation for DaVinci Resolve is now one number (2 seconds) instead of "2–3"
+- The settings window is a little taller, so the buttons are never cut off
+
 ## [0.3.0] – 2026-11-03
 
-**Updating from 0.2.0:** close the old window first. The new option is off in your `whisper_tool.ini`; for DaVinci Resolve set *Settings → Subtitles → Close gaps* to 2–3. Python packages need no update.
+**Updating from 0.2.0:** close the old window first. The new option is off in your `whisper_tool.ini`; for DaVinci Resolve tick *Settings → Subtitles → Close gaps* (pauses shorter than 2 seconds). Python packages need no update.
 
-- Flicker-free subtitles, e.g. for DaVinci Resolve (`[Layout] bridge_gaps`, *Settings → Subtitles → Close gaps*): if the gap to the next subtitle is shorter than the set value, the subtitle stays until the next one starts – end and next start are exactly the same, so the subtitle track never shows an empty moment. Overlaps are cut. Longer pauses stay empty, starts never move. All modes, including word by word and lyrics. Off by default (recommended for DaVinci: 2–3 s)
+- Flicker-free subtitles, e.g. for DaVinci Resolve (`[Layout] bridge_gaps`, *Settings → Subtitles → Close gaps*): if the gap to the next subtitle is shorter than the set value, the subtitle stays until the next one starts – end and next start are exactly the same, so the subtitle track never shows an empty moment. Overlaps are cut. Longer pauses stay empty, starts never move. All modes, including word by word and lyrics. Off by default (recommended for DaVinci Resolve: 2 seconds)
 
 ## [0.2.0] – 2026-11-03
 

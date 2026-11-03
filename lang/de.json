@@ -201,6 +201,8 @@
     "max_cps": "Max. Lesegeschwindigkeit (Zeichen/s)",
     "max_cps_hint": "0 = aus · Empfehlung 17 · nur Satz-Modus",
     "balance_lines": "Zeilen ausgleichen: Wörter gleichmäßig auf die Zeilen verteilen (Satz-Modus)",
+    "bridge_gaps": "Lücken schließen bis (s)",
+    "bridge_gaps_hint": "0 = aus · flackerfrei für DaVinci Resolve: 2–3 · alle Modi",
     "line_gap": "Lyrics: Abstand zur nächsten Zeile (s)",
     "note_subs": "Zeichen/Zeile, Zeilen/Block und „Zeile halten“ stellst du im Hauptfenster ein und speicherst sie dort mit „Als Standard speichern“.",
     "ffmpeg": "ffmpeg",
@@ -821,6 +823,15 @@
       "",
       "Bricht bevorzugt nach einem Komma und vermeidet Artikel oder Präpositionen am Zeilenende. Gleiche Wörter, gleiche Zeilenzahl – die Zeiten ändern sich nicht.",
       "Nur im Satz-Modus."
+    ],
+    "bridge_gaps": [
+      "Flackerfreie Untertitel, z.B. für die Untertitelspur von DaVinci Resolve: Ist die Lücke zum nächsten Untertitel kürzer als dieser Wert, bleibt der Untertitel stehen, bis der nächste beginnt. Der Bildschirm ist nie kurz leer, also flackert nichts.",
+      "",
+      "Längere Pausen bleiben leer – bei einer Musikpause verschwindet der Text, wie es sein soll.",
+      "",
+      "Die Anfänge bleiben exakt: Jedes Wort und jeder Satz erscheint genau dann, wenn es gesprochen wird. Alle Modi, auch Wort für Wort (jedes Wort bleibt bis zum nächsten) und Lyrics.",
+      "",
+      "0 = aus: Jeder Untertitel endet, wenn die Sprache endet. Zusammen mit „Min. Standzeit“ auf 2–3 s steht jeder Satz mindestens so lange."
     ],
     "line_gap": "Lyrics: Mindestabstand zwischen zwei Zeilen, wenn „Zeile halten“ das Ende verlängert – damit zwei Zeilen nicht nahtlos ineinander übergehen.",
     "ffmpeg": "Pfad zu ffmpeg.exe. ffmpeg liest jede Audio- und Videodatei, wandelt sie in 16 kHz Mono um und wendet den Audiofilter an – direkt in den Speicher, ohne Temp-Dateien.",

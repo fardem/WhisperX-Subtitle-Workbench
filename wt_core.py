@@ -213,6 +213,7 @@ class Config:
         self.min_duration      = g("Layout", "min_duration", 0.0, float)
         self.max_cps           = g("Layout", "max_cps", 0.0, float)
         self.balance_lines     = g("Layout", "balance_lines", False, _bool)
+        self.bridge_gaps       = g("Layout", "bridge_gaps", 0.0, float)
         # Lyrics
         self.line_hold         = g("Lyrics", "line_hold", 0.0, float)
         self.line_gap          = g("Lyrics", "line_gap", 0.05, float)
@@ -632,6 +633,26 @@ def extend_reading_time(cues: list, layout: Layout, duration: float | None = Non
         elif duration:
             target = min(target, duration)
         out.append((start, max(end, target), lines))
+    return out
+
+
+def bridge_gaps(cues: list, max_gap: float) -> list:
+    """
+    Flicker-free subtitles, e.g. for the subtitle track of DaVinci Resolve: if the gap to the
+    next subtitle is shorter than max_gap, the subtitle stays until the next one starts – end
+    and next start are then exactly the same, so the screen is never empty for a moment.
+    Overlaps are cut the same way. Longer pauses stay empty. Starts never move, so every word
+    and sentence still appears exactly when it is spoken. 0 = off.
+    """
+    if max_gap <= 0 or not cues:
+        return cues
+    out = []
+    for i, (start, end, lines) in enumerate(cues):
+        if i + 1 < len(cues):
+            nxt = cues[i + 1][0]
+            if nxt > start and nxt - end < max_gap:      # short gap (or overlap: negative)
+                end = nxt
+        out.append((start, end, lines))
     return out
 
 
@@ -1087,6 +1108,7 @@ class Engine:
             if cfg.gap_check:
                 info["gaps"] = self._report_gaps(audio, result, src)
 
+        cues = bridge_gaps(cues, cfg.bridge_gaps)        # all modes, also lyrics – a setting for the player
         if mode == "sentence":
             info["fast"] = self._report_fast(cues)
         write_srt(out, cues, cfg.encoding)

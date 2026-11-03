@@ -2,6 +2,12 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.3.0] – 2026-11-03
+
+**Updating from 0.2.0:** close the old window first. The new option is off in your `whisper_tool.ini`; for DaVinci Resolve set *Settings → Subtitles → Close gaps* to 2–3. Python packages need no update.
+
+- Flicker-free subtitles, e.g. for DaVinci Resolve (`[Layout] bridge_gaps`, *Settings → Subtitles → Close gaps*): if the gap to the next subtitle is shorter than the set value, the subtitle stays until the next one starts – end and next start are exactly the same, so the subtitle track never shows an empty moment. Overlaps are cut. Longer pauses stay empty, starts never move. All modes, including word by word and lyrics. Off by default (recommended for DaVinci: 2–3 s)
+
 ## [0.2.0] – 2026-11-03
 
 **Updating from 0.1.0:** close the old window first. Your `whisper_tool.ini` stays as it is, so the new options are off. Switch them on under *Settings → Subtitles* (recommended: min. display time 1, reading speed 17, balance lines on). The abbreviation rule works right away. Python packages need no update.

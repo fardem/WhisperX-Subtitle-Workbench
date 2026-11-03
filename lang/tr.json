@@ -201,6 +201,8 @@
     "max_cps": "Azami okuma hızı (karakter/sn)",
     "max_cps_hint": "0 = kapalı · önerilen 17 · yalnızca cümle modu",
     "balance_lines": "Satırları dengele: kelimeleri satırlara eşit dağıt (cümle modu)",
+    "bridge_gaps": "Boşlukları kapat (sn)",
+    "bridge_gaps_hint": "0 = kapalı · DaVinci Resolve için titremesiz: 2–3 · tüm modlar",
     "line_gap": "Şarkı sözü: sonraki satıra mesafe (sn)",
     "note_subs": "Karakter/satır, satır/blok ve “satırı tut” ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
     "ffmpeg": "ffmpeg",
@@ -821,6 +823,15 @@
       "",
       "Tercihen virgülden sonra böler ve satır sonunda bir edat bırakmaz. Aynı kelimeler, aynı satır sayısı – zamanlar değişmez.",
       "Yalnızca cümle modunda."
+    ],
+    "bridge_gaps": [
+      "Titremesiz altyazılar, örn. DaVinci Resolve'un altyazı izi için: sonraki altyazıya olan boşluk bu değerden kısaysa, altyazı bir sonraki başlayana kadar ekranda kalır. Ekran hiçbir zaman bir anlığına boş kalmaz, bu yüzden hiçbir şey titremez.",
+      "",
+      "Daha uzun duraklamalar boş kalır – müzik arasında metin olması gerektiği gibi kaybolur.",
+      "",
+      "Başlangıçlar asla kaymaz: her kelime ve cümle tam konuşulduğu anda görünür. Tüm modlar, kelime kelime (her kelime bir sonrakine kadar kalır) ve şarkı sözleri de dahil.",
+      "",
+      "0 = kapalı: her altyazı konuşma bittiğinde biter. “Asgari ekranda kalma süresi” 2–3 sn ile birlikte her cümle en az o kadar kalır."
     ],
     "line_gap": "Şarkı sözü: “satırı tut” sonu uzattığında iki satır arasındaki en kısa mesafe – iki satır kesintisiz birbirine geçmesin diye.",
     "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular – geçici dosya olmadan doğrudan belleğe.",

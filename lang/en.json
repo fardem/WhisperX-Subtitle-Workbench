@@ -201,6 +201,8 @@
     "max_cps": "Max. reading speed (chars/s)",
     "max_cps_hint": "0 = off · recommended 17 · sentence mode only",
     "balance_lines": "Balance lines: spread the words evenly over the lines (sentence mode)",
+    "bridge_gaps": "Close gaps up to (s)",
+    "bridge_gaps_hint": "0 = off · flicker-free for DaVinci Resolve: 2–3 · all modes",
     "line_gap": "Lyrics: gap to the next line (s)",
     "note_subs": "Chars/line, lines/cue and “hold line” are set in the main window and saved there with “Save as default”.",
     "ffmpeg": "ffmpeg",
@@ -821,6 +823,15 @@
       "",
       "Prefers a break after a comma and avoids an article or preposition at the end of a line. Same words, same number of lines – the times do not change.",
       "Sentence mode only."
+    ],
+    "bridge_gaps": [
+      "Flicker-free subtitles, e.g. for the subtitle track of DaVinci Resolve: if the gap to the next subtitle is shorter than this, the subtitle stays until the next one starts. The screen is never empty for a moment, so nothing flickers.",
+      "",
+      "Longer pauses stay empty – the text disappears during a music break, as it should.",
+      "",
+      "Starts never move: every word and sentence still appears exactly when it is spoken. All modes, also word by word (each word stays until the next one) and lyrics.",
+      "",
+      "0 = off: every subtitle ends when the speech ends. Together with “Min. display time” at 2–3 s, every sentence stays at least that long."
     ],
     "line_gap": "Lyrics: minimum gap between two lines when “hold line” extends the end – so that two lines do not merge seamlessly.",
     "ffmpeg": "Path to ffmpeg.exe. ffmpeg reads any audio and video file, converts it to 16 kHz mono and applies the audio filter – directly into memory, without temp files.",

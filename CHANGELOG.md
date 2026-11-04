@@ -2,6 +2,19 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.4.0] – 2026-11-04
+
+**Updating from 0.3.x:** close the old window first. The settings `split_pause`, `bridge_gaps`, `min_duration` and `max_cps` are gone – they are ignored and can be deleted from your `whisper_tool.ini`. The new values `pause`, `smooth` and `pause_hold` start with their defaults (2 seconds, on, 1 second); adjust them under *Settings → Subtitles → Pauses*. Python packages need no update.
+
+- **One pause rule instead of five settings.** Only the length of a pause counts – in the middle of a sentence or between two sentences. A *segment* is what is shown: a word in *Word by word*, a subtitle in *Sentences*.
+  - A speech pause longer than `pause` seconds is a **real pause**. In *Sentences* mode a new subtitle always begins after it (this replaces *new subtitle after a speech pause*).
+  - With **smooth display** (`smooth`, default on): up to `pause` seconds the segment stays until the next one starts – end and next start are exactly the same, so the subtitle track of DaVinci Resolve never flickers. After a real pause the segment stays `pause_hold` seconds more, then the screen is empty until speech starts again. Starts never move.
+  - Without the tick every segment ends exactly when the speech ends.
+  - The hold time must be shorter than the pause limit, otherwise a real pause would never be visible; the settings dialog and the INI check this.
+  - Applies to *Sentences*, *Word by word* and *Raw*. Lyrics keep their own rules (*hold line*, *gap to the next song line*).
+- *Show at least* and *Leave reading time* are gone – the pause rule keeps a segment on screen until the next one or for the hold time. Subtitles with too much text for their time (more than 17 characters per second) are still listed in the log.
+- *Settings → Subtitles*: *1 · Splitting*, *2 · Pauses*, *3 · Lyrics*; the INI template follows the same order
+
 ## [0.3.2] – 2026-11-03
 
 **Updating from 0.3.1:** nothing to do – the INI format is unchanged. If you used *Close gaps* for lyrics in DaVinci Resolve, set *Gap to the next song line* to 0 instead.

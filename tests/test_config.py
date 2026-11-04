@@ -15,24 +15,23 @@ def not_ffmpeg(warnings):
 def test_example_ini_loads_without_warnings():
     cfg = core.Config(EXAMPLE)
     assert not_ffmpeg(cfg.warnings) == []
-    assert cfg.min_duration == 1.0 and cfg.max_cps == 17.0
+    assert (cfg.pause, cfg.smooth, cfg.pause_hold) == (2.0, True, 1.0)
     lay = cfg.layout()
-    assert (lay.max_chars, lay.max_lines, lay.min_duration, lay.max_cps) == (42, 2, 1.0, 17.0)
+    assert (lay.max_chars, lay.max_lines, lay.pause, lay.max_duration, lay.balance) == (42, 2, 2.0, 7.0, True)
 
 
-def test_old_ini_without_new_keys_keeps_old_behaviour(tmp_path):
+def test_old_ini_without_balance_keeps_old_line_breaks(tmp_path):
     ini = tmp_path / "old.ini"
     ini.write_text("[Layout]\nmax_duration = 7\n", encoding="utf-8")
-    cfg = core.Config(ini)
-    assert cfg.min_duration == 0.0 and cfg.max_cps == 0.0
+    assert core.Config(ini).layout().balance is False
 
 
 def test_invalid_value_gives_default_and_warning(tmp_path):
     ini = tmp_path / "bad.ini"
-    ini.write_text("[Layout]\nmax_cps = viele\n", encoding="utf-8")
+    ini.write_text("[Layout]\npause = viele\n", encoding="utf-8")
     cfg = core.Config(ini)
-    assert cfg.max_cps == 0.0
-    assert any("max_cps" in w for w in cfg.warnings)
+    assert cfg.pause == 2.0
+    assert any("pause" in w for w in cfg.warnings)
 
 
 def test_language_rules_from_ini():
@@ -44,23 +43,23 @@ def test_save_ini_changes_only_the_value(tmp_path):
     ini = tmp_path / "whisper_tool.ini"
     shutil.copy(EXAMPLE, ini)
     before = ini.read_text(encoding="utf-8").splitlines()
-    core.save_ini(ini, {("Layout", "max_cps"): "20"})
+    core.save_ini(ini, {("Layout", "pause_hold"): "0.5"})
     after = ini.read_text(encoding="utf-8").splitlines()
     changed = [(a, b) for a, b in zip(before, after) if a != b]
     assert len(before) == len(after)
-    assert changed == [("max_cps      = 17", "max_cps      = 20")]       # alignment kept
-    assert core.Config(ini).max_cps == 20.0
+    assert changed == [("pause_hold = 1", "pause_hold = 0.5")]          # alignment kept
+    assert core.Config(ini).pause_hold == 0.5
     assert (tmp_path / "whisper_tool.ini.bak").is_file()
 
 
 def test_save_ini_adds_missing_key_to_its_section(tmp_path):
     ini = tmp_path / "t.ini"
     ini.write_text("; my comment\n[Layout]\nmax_duration = 7\n\n[Gaps]\nenabled = 1\n", encoding="utf-8")
-    core.save_ini(ini, {("Layout", "min_duration"): "1"})
+    core.save_ini(ini, {("Layout", "pause"): "3"})
     text = ini.read_text(encoding="utf-8")
     assert "; my comment" in text
-    assert text.index("min_duration = 1") < text.index("[Gaps]")
-    assert core.Config(ini).min_duration == 1.0
+    assert text.index("pause = 3") < text.index("[Gaps]")
+    assert core.Config(ini).pause == 3.0
 
 
 def test_suffix_placeholders():

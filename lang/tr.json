@@ -190,22 +190,10 @@
     "gap_margin_hint": "küçük = daha hassas · varsayılan 8",
     "orphan_limit": "Virgülden sonraki kısa kelimeler (karakter)",
     "orphan_fill": "Virgülden sonraki kısa kelimeler: doluluk (yüzde)",
-    "split_pause": "Konuşma duraklamasından sonra yeni altyazı (saniye)",
     "max_duration": "Uzun cümleleri böl (saniye konuşma)",
-    "min_duration": "En az göster (saniye)",
-    "max_cps": "Okuma süresi (karakter / saniye)",
     "balance_lines": "Satırları dengele: kelimeleri satırlara eşit dağıt",
-    "bridge_gaps": "Bir sonraki altyazıya kadar tut (saniye)",
-    "sw_split_pause": "Konuşma duraklaması en az",
-    "sw_split_pause_unit": "saniye ise yeni altyazı başlar",
     "sw_max_duration": "Uzun cümleleri böl: altyazı başına en fazla",
     "sw_max_duration_unit": "saniye konuşma",
-    "sw_min_duration": "En az göster:",
-    "sw_min_duration_unit": "saniye · yalnızca “Cümle cümle”",
-    "sw_max_cps": "Okuma süresi bırak: en fazla",
-    "sw_max_cps_unit": "karakter / saniye · yalnızca “Cümle cümle”",
-    "sw_bridge_gaps": "… duraklama şundan kısaysa:",
-    "sw_bridge_gaps_unit": "saniye · Cümle cümle, Kelime kelime, Ham",
     "line_gap": "Sonraki şarkı satırına mesafe (saniye)",
     "note_subs": "Satır başına karakter ve altyazı başına satır sayısı ana pencerede ayarlanır ve orada “Varsayılan olarak kaydet” ile kaydedilir.",
     "ffmpeg": "ffmpeg",
@@ -266,8 +254,6 @@
     ],
     "version": "Sürüm",
     "sec_split": "1 · Bölme – hangi kelimeler birlikte bir altyazıya girer (yalnızca “Cümle cümle” modu)",
-    "sec_time": "2 · Gösterim süresi – bir altyazı ne kadar ekranda kalır",
-    "sec_time_info": "Bir altyazı her zaman tam konuşulduğu anda görünür. İşaret yoksa konuşma biter bitmez kaybolur. İşaretler yalnızca bitişi uzatır – sonraki duraklamaya, asla bir sonraki altyazının içine değil.",
     "sec_lyrics": "3 · Şarkı sözleri – şarkı satırları için ayrı kurallar",
     "sec_lyrics_info": "Bir şarkı satırının ne kadar kalacağını ana penceredeki “Şarkı sözü: satırı tut” ile ayarlarsınız. 1 ve 2'deki ayarlar şarkı sözleri için geçerli değildir.",
     "sw_orphan": "Virgülden sonraki kısa kelimeleri sonraki altyazıya taşı",
@@ -275,9 +261,20 @@
     "sw_orphan_limit_unit": "karakter",
     "sw_orphan_fill": "… satır zaten şu kadar doluysa:",
     "sw_orphan_fill_unit": "yüzde",
-    "sw_bridge": "Bir sonraki altyazıya kadar ekranda tut – kesintisiz, titremesiz (örn. DaVinci Resolve için)",
     "sw_line_gap": "Sonraki şarkı satırına mesafe",
-    "sw_line_gap_unit": "saniye · 0 = kesintisiz, örn. DaVinci Resolve için"
+    "sw_line_gap_unit": "saniye · 0 = kesintisiz, örn. DaVinci Resolve için",
+    "sec_pause": "2 · Duraklamalar – Cümle cümle, Kelime kelime, Ham",
+    "sw_pause": "Şundan uzun bir konuşma duraklaması",
+    "sw_pause_unit": "saniye – gerçek bir duraklamadır",
+    "pause_split": "“Cümle cümle” modunda gerçek bir duraklamadan sonra her zaman yeni bir altyazı başlar.",
+    "sw_smooth": "Akıcı göster – titreme yok, örn. DaVinci Resolve için",
+    "smooth_short": "Daha kısa duraklama: bölüm, bir sonraki başlayana kadar ekranda kalır.",
+    "sw_pause_hold": "Gerçek duraklama: bölüm",
+    "sw_pause_hold_unit": "saniye daha kalır, sonra ekran boş olur",
+    "smooth_off": "İşaret yoksa her bölüm konuşma bittiğinde biter.",
+    "pause": "Gerçek duraklama sınırı (saniye)",
+    "pause_hold": "Gerçek duraklamada tutma süresi (saniye)",
+    "err_hold": "Tutma süresi ({hold} saniye), duraklama sınırından ({pause} saniye) kısa olmalıdır – aksi hâlde gerçek bir duraklama hiç görünmez."
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -435,8 +432,8 @@
       "other": "{n} altyazı → {name}"
     },
     "fast_found": {
-      "one": "1 altyazı {cps} karakter/sn'den hızlı – uzatmak için duraklama yok:",
-      "other": "{n} altyazı {cps} karakter/sn'den hızlı – uzatmak için duraklama yok:"
+      "one": "1 altyazı saniyede {cps} karakterden hızlı – okunması zor:",
+      "other": "{n} altyazı saniyede {cps} karakterden hızlı – okunması zor:"
     },
     "fast_item": "{cps} karakter/sn",
     "fast_tip": "İpucu: Araç metni asla değiştirmez – okunması zorsa bu altyazıları Subtitle Edit'te kısaltın.",
@@ -808,33 +805,12 @@
       "Bu uzunluğa kadar olan kelimeler için geçerlidir."
     ],
     "orphan_fill": "… ama yalnızca satır zaten en az bu kadar doluysa (satır başına karakterin yüzdesi olarak). Çok kısa altyazıları önler.",
-    "split_pause": [
-      "Bu uzunlukta bir konuşma duraklamasından sonra yeni bir altyazı başlar – cümlenin ortasında bile.",
-      "",
-      "Bu yalnızca hangi kelimelerin birlikte bir altyazıya gireceğini belirler. Öncekinin ardından ne kadar ekranda kalacağını “2 · Gösterim süresi” altında ayarlarsınız.",
-      "",
-      "Önerilen: 1,5 saniye."
-    ],
     "max_duration": [
       "Uzun cümleler bölünür: bir altyazı en fazla bu kadar saniyelik konuşma içerir, sonra yenisi başlar.",
       "",
       "Bu bir gösterim süresi değildir – bir altyazının ne kadar ekranda kalacağını “2 · Gösterim süresi” altında ayarlarsınız.",
       "",
       "Önerilen: 7 saniye (yaygın üst sınır)."
-    ],
-    "min_duration": [
-      "Bir altyazı en az bu kadar ekranda kalır; böylece “Teşekkürler.” gibi kısa altyazılar sadece yanıp sönmez.",
-      "",
-      "Yalnızca bitiş uzatılır – sonraki duraklamaya, asla bir sonraki altyazının içine değil.",
-      "",
-      "Yalnızca “Cümle cümle” modunda: kelime kelime ve ham mod tam konuşulduğu kadar kalır. Önerilen: 1 saniye."
-    ],
-    "max_cps": [
-      "Okuma süresi: çok metin içeren bir altyazı okunabilmesi için daha uzun kalır – saniye başına karakter olarak ölçülür (boşluklar dahil).",
-      "",
-      "Yalnızca sonraki duraklamaya uzatılır. Duraklama yetmezse günlük altyazıyı uyarı olarak listeler – metin asla değiştirilmez. Gerekirse Subtitle Edit'te kısaltın.",
-      "",
-      "Yalnızca “Cümle cümle” modunda. Önerilen: saniyede 17 karakter (yaygın kurallar: 15–20)."
     ],
     "balance_lines": [
       "Bir altyazının kelimelerini, ilk satırı sınıra kadar doldurmak yerine satırlarına eşit dağıtır:",
@@ -843,17 +819,6 @@
       "",
       "Tercihen virgülden sonra böler ve satır sonunda bir edat bırakmaz. Aynı kelimeler, aynı satır sayısı – zamanlar değişmez.",
       "Yalnızca cümle modunda."
-    ],
-    "bridge_gaps": [
-      "İki altyazı arasında kısa bir an hiçbir şey göstermeyen ve bu yüzden titreyen programlar için – örn. DaVinci Resolve'un altyazı izi.",
-      "",
-      "İşaretliyse bir altyazı, bir sonraki başlayana kadar ekranda kalır – bitiş ve sonraki başlangıç tam olarak aynı olur. Bu yalnızca aradaki duraklama ayarlanan saniyeden kısaysa geçerlidir. Daha uzun duraklamalar boş kalır, örn. bir müzik arası.",
-      "",
-      "2 saniye ile örnek: 0,1 saniyelik duraklama kapatılır, 5 saniyelik duraklama boş kalır.",
-      "",
-      "“En az göster” ve “Okuma süresi” ile birlikte: onlar önce uzatır, bu işaret ardından kalan boşluğu kapatır.",
-      "",
-      "Cümle cümle, kelime kelime ve ham. Şarkı sözlerinin kendi kuralları vardır (3 · Şarkı sözleri). DaVinci Resolve için önerilen: 2 saniye."
     ],
     "line_gap": [
       "Şarkı satırları: “Şarkı sözü: satırı tut” (ana pencere) bitişi uzattığında sonraki satıra mesafe – iki satır görünür şekilde değişsin diye.",
@@ -949,6 +914,23 @@
       "“Windows gibi”: sistem dili için bir dil dosyası varsa onu, yoksa İngilizceyi kullanır.",
       "",
       "Başka diller: lang/en.json'u kopyalayın, çevirin ve lang/<kod>.json olarak kaydedin – listede otomatik olarak görünür."
+    ],
+    "pause": [
+      "Kısa ve gerçek duraklama arasındaki sınır. Yalnızca duraklamanın uzunluğu önemlidir – cümlenin ortasında ya da iki cümle arasında.",
+      "",
+      "Bu uzunluğa kadar: kısa duraklama. Daha uzun: gerçek duraklama, örn. alkış, düşünme veya müzik.",
+      "",
+      "“Cümle cümle” modunda gerçek bir duraklamadan sonra her zaman yeni bir altyazı başlar. Önerilen: 2 saniye."
+    ],
+    "smooth": [
+      "İki altyazı arasında kısa bir an hiçbir şey göstermeyen ve bu yüzden titreyen programlar için – örn. DaVinci Resolve'un altyazı izi.",
+      "",
+      "Kısa duraklama: bölüm, bir sonraki başlayana kadar ekranda kalır – bitiş ve sonraki başlangıç tam olarak aynıdır.",
+      "Gerçek duraklama: bölüm ayarlanan süre kadar daha kalır, sonra yeniden konuşulana kadar ekran boş olur.",
+      "",
+      "Bölüm, gösterilen şeydir: kelime kelime modunda bir kelime, cümle modunda bir altyazı. Başlangıçlar tam kalır – her kelime tam konuşulduğu anda görünür.",
+      "",
+      "İşaret yoksa SRT tam konuşulduğu gibidir, örn. karşılaştırma raporu için. Şarkı sözlerinin kendi kuralları vardır (3 · Şarkı sözleri). Önerilen: tutma süresi 1 saniye."
     ]
   }
 }

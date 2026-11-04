@@ -7,7 +7,8 @@ Core logic for whisper_tool.py (no user interface).
   - audio via ffmpeg directly into memory (optionally filtered, no temp files)
   - transcription + alignment with WhisperX – models are loaded only once
   - lyrics alignment with MMS_FA when <name>.lyric.txt is next to the file
-  - subtitle rules: sentences (orphan, dangling, pauses, reading time), word by word, raw
+  - subtitle rules: sentences (orphan, dangling, long sentences), word by word, raw
+  - pauses: seamless up to X seconds, a short hold after a real pause (smooth display)
 
 Heavy libraries (torch, whisperx, torchaudio, uroman) are only imported
 when they are really needed.
@@ -143,10 +144,8 @@ class Layout:
     max_lines:    int   = 1
     orphan_limit: int   = 4
     orphan_fill:  int   = 80
-    split_pause:  float = 0.0
-    max_duration: float = 0.0
-    min_duration: float = 0.0       # sentence mode: subtitle stays at least this long (0 = off)
-    max_cps:      float = 0.0       # sentence mode: max. reading speed in characters/s (0 = off)
+    pause:        float = 0.0       # a speech pause longer than this is a real pause → new subtitle
+    max_duration: float = 0.0       # split long sentences: at most this many seconds of speech
     balance:      bool  = False     # sentence mode: distribute the words evenly over the lines
 
 
@@ -208,12 +207,12 @@ class Config:
         self.default_lines     = g("Layout", "default_lines", 1, int)
         self.orphan_limit      = g("Layout", "orphan_limit", 4, int)
         self.orphan_fill       = g("Layout", "orphan_min_fill", 80, int)
-        self.split_pause       = g("Layout", "split_pause", 0.0, float)
         self.max_duration      = g("Layout", "max_duration", 0.0, float)
-        self.min_duration      = g("Layout", "min_duration", 0.0, float)
-        self.max_cps           = g("Layout", "max_cps", 0.0, float)
         self.balance_lines     = g("Layout", "balance_lines", False, _bool)
-        self.bridge_gaps       = g("Layout", "bridge_gaps", 0.0, float)
+        # Pauses (speech): a pause longer than "pause" is a real pause
+        self.pause             = g("Layout", "pause", 2.0, float)
+        self.smooth            = g("Layout", "smooth", True, _bool)
+        self.pause_hold        = g("Layout", "pause_hold", 1.0, float)
         # Lyrics
         self.line_hold         = g("Lyrics", "line_hold", 0.0, float)
         self.line_gap          = g("Lyrics", "line_gap", 0.05, float)
@@ -223,6 +222,11 @@ class Config:
         self.gap_margin        = g("Gaps", "margin_db", 8.0, float)
         self.gap_srt           = g("Gaps", "write_srt", True, _bool)
 
+        if self.smooth and self.pause_hold >= self.pause:      # a real pause must stay visible
+            hold = round(self.pause / 2, 2)
+            self.warnings.append(T("core.ini_invalid", entry=f"[Layout] pause_hold={self.pause_hold:g} (≥ pause)",
+                                   default=f"{hold:g}"))
+            self.pause_hold = hold
         if self.default_language != "auto" and self.default_language not in LANGS:
             self.warnings.append(T("core.ini_unknown", entry=f"[Menu] language={self.default_language!r}", default="auto"))
             self.default_language = "auto"
@@ -265,8 +269,8 @@ class Config:
 
     def layout(self, max_chars=None, max_lines=None) -> Layout:
         return Layout(max_chars or self.default_chars, max_lines or self.default_lines,
-                      self.orphan_limit, self.orphan_fill, self.split_pause, self.max_duration,
-                      self.min_duration, self.max_cps, self.balance_lines)
+                      self.orphan_limit, self.orphan_fill, self.pause, self.max_duration,
+                      balance=self.balance_lines)
 
     def rules(self, lang: str) -> LangRules:
         if lang not in self._rules:
@@ -556,10 +560,10 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     for w in clean:
         t = w['word']
 
-        # pause rule: long speech pause → close the block (a word before a pause stays)
+        # pause rule: a real pause (longer than "pause") → close the block (a word before it stays)
         if block or line:
             block_start = (block[0][0] if block else line[0])['start']
-            if layout.split_pause > 0 and w['start'] - last_end >= layout.split_pause:
+            if layout.pause > 0 and w['start'] - last_end > layout.pause:
                 flush_block()
             elif layout.max_duration > 0 and w['end'] - block_start > layout.max_duration:
                 flush_block(w)
@@ -598,11 +602,13 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     return cues
 
 
-# ─── READING TIME (sentence mode only) ────────────────────────────────────────
-# Word by word must stay exactly in sync with the voice (karaoke), raw stays unchanged –
-# so only sentence-mode subtitles are extended.
+# ─── PAUSES (speech) ──────────────────────────────────────────────────────────
+# One rule, only the length of the pause counts – inside a sentence or between two sentences:
+#   pause up to X seconds      → the segment stays until the next one starts (seamless)
+#   pause longer than X        → a real pause: the segment stays "hold" seconds, then the screen is empty
+# Lyrics keep their own rules ("hold line", gap to the next line).
 
-CUE_GAP = 0.08          # seconds kept free before the next subtitle when an end is extended (~2 frames)
+READING_CPS = 17        # characters per second – faster subtitles are listed in the log (sentence mode)
 
 
 def cue_chars(lines) -> int:
@@ -610,61 +616,41 @@ def cue_chars(lines) -> int:
     return sum(len(line) for line in lines)
 
 
-def extend_reading_time(cues: list, layout: Layout, duration: float | None = None) -> list:
+def smooth_cues(cues: list, pause: float, hold: float, duration: float | None = None) -> list:
     """
-    Keep subtitles on screen long enough to read them:
-    needed time = max(min_duration, characters / max_cps).
-    Only the END moves – into the pause after the subtitle, never into the next one and
-    never beyond the end of the audio. The start and the text stay; a subtitle is never
-    shortened. (max_duration is a rule for splitting long sentences, not a display limit.)
+    Flicker-free display, e.g. for the subtitle track of DaVinci Resolve:
+      - pause to the next segment at most `pause` seconds → the end becomes exactly the start of
+        the next one, so the screen is never empty for a moment (overlaps are cut the same way)
+      - longer pause (a real pause) → the segment stays `hold` seconds more, then the screen is
+        empty until the next one – never into the next segment, never beyond the end of the audio
+    Starts never move: every word and sentence still appears exactly when it is spoken.
     """
-    if not cues or (layout.min_duration <= 0 and layout.max_cps <= 0):
-        return cues
-    out = []
-    for i, (start, end, lines) in enumerate(cues):
-        need = layout.min_duration
-        if layout.max_cps > 0:
-            need = max(need, cue_chars(lines) / layout.max_cps)
-        target = start + need
-        if i + 1 < len(cues):
-            target = min(target, cues[i + 1][0] - CUE_GAP)
-        elif duration:
-            target = min(target, duration)
-        out.append((start, max(end, target), lines))
-    return out
-
-
-def bridge_gaps(cues: list, max_gap: float) -> list:
-    """
-    Flicker-free subtitles, e.g. for the subtitle track of DaVinci Resolve: if the gap to the
-    next subtitle is shorter than max_gap, the subtitle stays until the next one starts – end
-    and next start are then exactly the same, so the screen is never empty for a moment.
-    Overlaps are cut the same way. Longer pauses stay empty. Starts never move, so every word
-    and sentence still appears exactly when it is spoken. 0 = off.
-    Speech subtitles only – see bridge_for_mode.
-    """
-    if max_gap <= 0 or not cues:
+    if not cues:
         return cues
     out = []
     for i, (start, end, lines) in enumerate(cues):
         if i + 1 < len(cues):
             nxt = cues[i + 1][0]
-            if nxt > start and nxt - end < max_gap:      # short gap (or overlap: negative)
-                end = nxt
+            if nxt - end <= pause:                    # short pause (or overlap: negative)
+                if nxt > start:
+                    end = nxt
+            else:                                      # real pause
+                end = min(end + hold, nxt)
+        else:
+            end = end + hold if duration is None else max(end, min(end + hold, duration))
         out.append((start, end, lines))
     return out
 
 
-def bridge_for_mode(cues: list, mode: str, max_gap: float) -> list:
-    """Close gaps for speech subtitles (sentences, word by word, raw). Lyrics keep their own
-    rules – "hold line" and the gap to the next line – so one setting never overrides another."""
-    return cues if mode == "lyrics" else bridge_gaps(cues, max_gap)
+def display_cues(cues: list, mode: str, cfg, duration: float | None = None) -> list:
+    """Display rule for speech (sentences, word by word, raw) if "smooth" is on – lyrics keep their own."""
+    if mode == "lyrics" or not cfg.smooth:
+        return cues
+    return smooth_cues(cues, cfg.pause, cfg.pause_hold, duration)
 
 
-def fast_cues(cues: list, max_cps: float) -> list[tuple[float, float, float]]:
-    """→ [(start, end, characters_per_second)] for subtitles that are still faster than max_cps."""
-    if max_cps <= 0:
-        return []
+def fast_cues(cues: list, max_cps: float = READING_CPS) -> list[tuple[float, float, float]]:
+    """→ [(start, end, characters_per_second)] for subtitles that are too fast to read."""
     fast = []
     for start, end, lines in cues:
         cps = cue_chars(lines) / max(end - start, 0.001)
@@ -673,10 +659,9 @@ def fast_cues(cues: list, max_cps: float) -> list[tuple[float, float, float]]:
     return fast
 
 
-def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout,
-               duration: float | None = None) -> tuple[list, str]:
+def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout) -> tuple[list, str]:
     """Returns (cues, actual_mode) – without word timestamps it falls back to raw.
-    duration (audio length in s) limits how far the last subtitle may be extended."""
+    The times are the spoken ones; display_cues then applies the pause rule."""
     if mode == "raw":
         return cues_raw(result, rules), "raw"
     words = collect_words(result)
@@ -684,7 +669,7 @@ def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout,
         return cues_raw(result, rules), "raw"
     if mode == "word":
         return cues_word(words, rules), "word"
-    return extend_reading_time(cues_sentence(words, rules, layout), layout, duration), "sentence"
+    return cues_sentence(words, rules, layout), "sentence"
 
 
 def write_srt(path, cues, encoding="utf-8"):
@@ -1071,6 +1056,7 @@ class Engine:
         cfg = self.cfg
         kind, src, out = resolve_input(path, cfg)
         info = {"kind": kind, "input": src, "output": out}
+        duration = None                       # audio length – known when the audio was loaded
 
         if kind == "json":
             self.log(i18n.line("json", "core.json_rebuild", name=src.name))
@@ -1106,14 +1092,14 @@ class Engine:
                 json_out = src.with_name(src.stem + ".json")
                 json_out.write_text(json.dumps(result, ensure_ascii=False, default=_json_default), encoding="utf-8")
                 self.log(i18n.line("json", "core.json_saved", name=json_out.name))
-            cues, mode = build_cues(result, opts.mode, rules, cfg.layout(opts.max_chars, opts.max_lines),
-                                    duration=audio.shape[0] / SAMPLE_RATE)
+            cues, mode = build_cues(result, opts.mode, rules, cfg.layout(opts.max_chars, opts.max_lines))
+            duration = audio.shape[0] / SAMPLE_RATE
             if mode != opts.mode:
                 self.log(i18n.line("warn", "core.no_word_times", mode=T(f"mode.{mode}")))
             if cfg.gap_check:
                 info["gaps"] = self._report_gaps(audio, result, src)
 
-        cues = bridge_for_mode(cues, mode, cfg.bridge_gaps)   # speech only – lyrics have their own rules
+        cues = display_cues(cues, mode, cfg, duration)      # pause rule – lyrics keep their own
         if mode == "sentence":
             info["fast"] = self._report_fast(cues)
         write_srt(out, cues, cfg.encoding)
@@ -1122,8 +1108,8 @@ class Engine:
         return info
 
     def _report_fast(self, cues) -> int:
-        """Warn about subtitles that stay too fast to read even after extending them."""
-        max_cps = self.cfg.max_cps
+        """Warn about subtitles that are too fast to read (fixed limit, no setting)."""
+        max_cps = READING_CPS
         fast = fast_cues(cues, max_cps)
         if not fast:
             return 0

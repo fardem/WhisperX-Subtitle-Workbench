@@ -1128,11 +1128,9 @@ class SettingsDialog(tk.Toplevel if tk else object):
         ("VAD", "chunk_size"):         (int, 5, 30, "chunk"),
         ("Layout", "orphan_limit"):    (int, 0, 20, "orphan_limit"),
         ("Layout", "orphan_min_fill"): (int, 0, 100, "orphan_fill"),
-        ("Layout", "split_pause"):     (float, 0, 30, "split_pause"),
+        ("Layout", "pause"):           (float, 0.1, 30, "pause"),
+        ("Layout", "pause_hold"):      (float, 0, 30, "pause_hold"),
         ("Layout", "max_duration"):    (float, 0, 60, "max_duration"),
-        ("Layout", "min_duration"):    (float, 0, 10, "min_duration"),
-        ("Layout", "max_cps"):         (float, 0, 60, "max_cps"),
-        ("Layout", "bridge_gaps"):     (float, 0, 30, "bridge_gaps"),
         ("Lyrics", "line_gap"):        (float, 0, 2, "line_gap"),
         ("Menu", "timeout"):           (int, 0, 600, "timeout"),
         ("Gaps", "min_length"):        (float, 0.3, 30, "gap_min"),
@@ -1246,6 +1244,12 @@ class SettingsDialog(tk.Toplevel if tk else object):
         on.trace_add("write", sync)
         sync()
 
+    def _text_row(self, f, r, key, indent=True):
+        """Indented line of text under a tick box – greyed out together with it."""
+        lbl = ttk.Label(f, text=T(f"set.{key}"))
+        lbl.grid(row=r, column=0, columnspan=3, sticky="w", padx=(26 if indent else 0, 0), pady=2)
+        return lbl
+
     def _section(self, f, r, key):
         """Heading + line + explanation. The whole tab is ONE grid, so all number fields line up."""
         if not hasattr(self, "_bold"):
@@ -1322,41 +1326,45 @@ class SettingsDialog(tk.Toplevel if tk else object):
 
     def _tab_subs(self, f):
         """
-        Ordered by the two questions the tool answers one after the other:
-        1 which words go into one subtitle (splitting), 2 how long it stays (display time).
-        Lyrics have their own rules (3).
+        1 which words go into one subtitle (splitting, sentences only),
+        2 pauses: one rule for all speech modes – only the length of the pause counts,
+        3 lyrics with their own rules.
         """
         c, sc = self.cfg, self.app.scale
+        grey = "#77767b"
 
         r = self._section(f, 0, "split")
-        self._switch(f, r, "split_pause", "Layout", "split_pause", c.split_pause, 1.5, 0.5, 30, 0.5, "%.1f")
-        self._switch(f, r + 1, "max_duration", "Layout", "max_duration", c.max_duration, 7, 1, 60, 0.5, "%.1f")
+        self._switch(f, r, "max_duration", "Layout", "max_duration", c.max_duration, 7, 1, 60, 0.5, "%.1f")
         on = tk.BooleanVar(value=c.orphan_limit > 0)            # short words after a comma: tick + 2 numbers
         limit = tk.StringVar(value=str(c.orphan_limit if c.orphan_limit > 0 else 4))
         self.vars[("Layout", "orphan_limit")] = SwitchVar(on, limit)
-        cb = self._switch_head(f, r + 2, "orphan", on)
-        w1 = self._sub_row(f, r + 3, "orphan_limit", limit, 1, 20, 1)
-        w2 = self._sub_row(f, r + 4, "orphan_fill", self._var("Layout", "orphan_min_fill", c.orphan_fill), 0, 100, 5)
+        cb = self._switch_head(f, r + 1, "orphan", on)
+        w1 = self._sub_row(f, r + 2, "orphan_limit", limit, 1, 20, 1)
+        w2 = self._sub_row(f, r + 3, "orphan_fill", self._var("Layout", "orphan_min_fill", c.orphan_fill), 0, 100, 5)
         self._bind_state(on, w1 + w2)
         tip([cb] + w1, "orphan_limit", sc)
         tip(w2, "orphan_fill", sc)
         cb = ttk.Checkbutton(f, text=T("set.balance_lines"),
                              variable=self._var("Layout", "balance_lines", c.balance_lines, True))
-        cb.grid(row=r + 5, column=0, columnspan=3, sticky="w", pady=3)
+        cb.grid(row=r + 4, column=0, columnspan=3, sticky="w", pady=3)
         tip(cb, "balance_lines", sc)
 
-        r = self._section(f, r + 6, "time")
-        self._switch(f, r, "min_duration", "Layout", "min_duration", c.min_duration, 1, 0.1, 10, 0.1, "%.1f")
-        self._switch(f, r + 1, "max_cps", "Layout", "max_cps", c.max_cps, 17, 5, 60, 1)
-        on = tk.BooleanVar(value=c.bridge_gaps > 0)
-        gap = tk.StringVar(value=f"{c.bridge_gaps if c.bridge_gaps > 0 else 2:g}")
-        self.vars[("Layout", "bridge_gaps")] = SwitchVar(on, gap)
-        cb = self._switch_head(f, r + 2, "bridge", on)
-        w = self._sub_row(f, r + 3, "bridge_gaps", gap, 0.5, 30, 0.5, "%.1f")
-        self._bind_state(on, w)
-        tip([cb] + w, "bridge_gaps", sc)
+        r = self._section(f, r + 5, "pause")
+        w = self._sub_row(f, r, "pause", self._var("Layout", "pause", f"{c.pause:g}"), 0.5, 30, 0.5, "%.1f",
+                          indent=False)
+        tip(w, "pause", sc)
+        ttk.Label(f, text=T("set.pause_split"), foreground=grey).grid(row=r + 1, column=0, columnspan=3, sticky="w")
+        smooth = self._var("Layout", "smooth", c.smooth, True)
+        cb = self._switch_head(f, r + 2, "smooth", smooth)
+        w = [self._text_row(f, r + 3, "smooth_short")]
+        w += self._sub_row(f, r + 4, "pause_hold", self._var("Layout", "pause_hold", f"{c.pause_hold:g}"),
+                           0, 30, 0.5, "%.1f")
+        self._bind_state(smooth, w)
+        tip([cb] + w, "smooth", sc)
+        ttk.Label(f, text=T("set.smooth_off"), foreground=grey).grid(row=r + 5, column=0, columnspan=3, sticky="w",
+                                                                    pady=(2, 0))
 
-        r = self._section(f, r + 4, "lyrics")
+        r = self._section(f, r + 6, "lyrics")
         w = self._sub_row(f, r, "line_gap", self._var("Lyrics", "line_gap", f"{c.line_gap:g}"), 0, 2, 0.01, "%.2f",
                           indent=False)
         tip(w, "line_gap", sc)
@@ -1555,6 +1563,14 @@ class SettingsDialog(tk.Toplevel if tk else object):
                         raise ValueError(T("main.err_range", name=name, lo=lo, hi=hi))
                     v = f"{n:g}" if cast is float else str(n)
                 values[key] = v
+            if self.vars[("Layout", "smooth")].get():
+                try:
+                    pause, hold = (float(str(self.vars[("Layout", k)].get()).replace(",", "."))
+                                   for k in ("pause", "pause_hold"))
+                except ValueError:
+                    pause, hold = 1, 0                # an invalid number was already reported above
+                if hold >= pause:
+                    raise ValueError(T("set.err_hold", hold=f"{hold:g}", pause=f"{pause:g}"))
             if values.get(("Whisper", "model"), "x") == "":
                 raise ValueError(T("set.model_empty"))
 

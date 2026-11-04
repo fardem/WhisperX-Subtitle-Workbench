@@ -2,13 +2,13 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.3.2** · [Änderungen](CHANGELOG.md)
+**Version 0.4.0** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
 ![Hauptfenster](docs/images/main-window.png)
 
-Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, Pausen, Mindest- und Höchst-Standzeit sowie Lesegeschwindigkeit. Ein Lücken-Check findet laute Stellen ohne Text. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen.
+Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, lange Sätze und Pausen. Ein Lücken-Check findet laute Stellen ohne Text. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen.
 
 > Die Bildschirmfotos zeigen die englische Oberfläche; unter *Einstellungen → Allgemein* lässt sie sich auf Deutsch umstellen.
 
@@ -35,13 +35,13 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 
 - **Rede → SRT** mit WhisperX (faster-whisper + Wort-Zeitstempel). Die Modelle bleiben zwischen den Dateien geladen, die zweite Datei startet also ohne Ladezeit.
 - **Drei Untertitel-Modi:**
-  - **Satzweise:** ganze Sätze mit Zeichenlimit sowie Regeln für verwaiste Wörter (Orphans), Dangling-Wörter, Pausen und maximale Standzeit.
-    Kurze Untertitel stehen eine Mindestzeit, und die Lesegeschwindigkeit (Zeichen pro Sekunde) wird geprüft. Dafür wird nur das Ende eines Untertitels in die Pause danach verlängert; der Text ändert sich nie.
+  - **Satzweise:** ganze Sätze mit Zeichenlimit sowie Regeln für verwaiste Wörter (Orphans), Dangling-Wörter, Pausen und lange Sätze.
+    Untertitel mit zu viel Text für ihre Zeit (mehr als 17 Zeichen pro Sekunde) meldet das Protokoll.
     Der Zeilenausgleich verteilt die Wörter gleichmäßig auf die Zeilen (`müssen und / zwar ohne Ende` statt `müssen und zwar ohne / Ende`), wenn möglich mit Umbruch nach einem Komma.
     Abkürzungen und Datumsangaben bleiben zusammen: `Dr. Müller`, `z. B. gestern` und `6. November` werden nie auf zwei Zeilen oder zwei Untertitel verteilt. Die Liste je Sprache steht unter *Einstellungen → Sprachen*.
   - **Wort-für-Wort:** ein Untertitel pro Wort, z.B. für Karaoke-Effekte.
   - **Raw:** die WhisperX-Abschnitte unverändert.
-- **Flackerfrei für DaVinci Resolve** (*Einstellungen → Untertitel → Anzeigedauer → Bis zum nächsten Untertitel stehen lassen*): Ist die Pause zum nächsten Untertitel kurz, bleibt der Untertitel stehen, bis der nächste beginnt. Die Untertitelspur von DaVinci zeigt dann zwischendurch nie einen leeren Moment. Die Anfänge bleiben exakt, längere Pausen bleiben leer. Gilt für Satzweise, Wort-für-Wort und Raw; bei Lyrics den *Abstand zur nächsten Liedzeile* auf 0 stellen.
+- **Pausen, flackerfrei für DaVinci Resolve** (*Einstellungen → Untertitel → Pausen*): Es zählt nur die Länge einer Pause. Bis zur eingestellten Grenze (z.B. 2 Sekunden) bleibt ein Segment stehen, bis das nächste beginnt; die Untertitelspur von DaVinci zeigt dann zwischendurch nie einen leeren Moment. Nach einer längeren, echten Pause (Applaus, Musik) bleibt es noch eine kurze Haltezeit stehen, dann ist der Bildschirm leer. Die Anfänge bleiben exakt. Gilt für Satzweise, Wort-für-Wort und Raw; bei Lyrics den *Abstand zur nächsten Liedzeile* auf 0 stellen.
 - **Sprache pro Datei:** Die Sprache wird pro Datei erkannt, oder du legst sie fest. Jede Sprache hat ihren eigenen Prompt, Füllwörter, Dangling-Wörter, Ersetzungen und optional ein eigenes Modell (z.B. ein türkisches Fine-Tune).
 - **Lyrics-Modus:** Liegt `lied.lyric.txt` neben `lied.mp3`, wird jede Zeile des Liedtexts zeitlich auf das Audio ausgerichtet. Das läuft über Forced Alignment (MMS_FA + uroman) und funktioniert für jede Sprache.
 - **JSON → SRT:** Du kannst das WhisperX-Ergebnis behalten und die Untertitel später in Sekunden mit anderem Layout neu bauen.
@@ -222,7 +222,7 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 
 ## Sicher aktualisieren
 
-- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.3.2*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
+- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.4.0*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
 - **Die Workbench selbst:** `git pull`, oder die neuen Dateien über die alten kopieren. Deine Einstellungen stehen in `whisper_tool.ini`. Diese Datei gehört nicht zum Repository, ein Update überschreibt sie also nie. Neue Optionen bekommen automatisch Standardwerte.
 - **Python-Pakete:** Nur aktualisieren, wenn du etwas Neues brauchst. So geht es sicher:
 

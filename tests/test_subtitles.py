@@ -87,7 +87,7 @@ def test_two_dangling_words_move_together():
 def test_dangling_word_stays_before_a_long_pause():
     result = make_result("Ich warte auf das", pauses={})
     result["segments"][0]["words"].append({"word": "Ende.", "start": 5.0, "end": 5.3})
-    cues = sentence(result, layout(split_pause=1.5))
+    cues = sentence(result, layout(pause=1.5))
     assert texts(cues) == ["Ich warte auf das", "Ende."]
 
 
@@ -110,8 +110,8 @@ def test_word_with_punctuation_is_never_moved():
 
 def test_long_pause_starts_new_subtitle():
     result = make_result("Erst das hier und dann das", pauses={4: 2.0})
-    assert texts(sentence(result, layout(split_pause=1.5))) == ["Erst das hier und", "dann das"]
-    assert texts(sentence(result, layout(split_pause=0))) == ["Erst das hier und dann das"]
+    assert texts(sentence(result, layout(pause=1.5))) == ["Erst das hier und", "dann das"]
+    assert texts(sentence(result, layout(pause=0))) == ["Erst das hier und dann das"]
 
 
 def test_max_duration_limits_display_time():

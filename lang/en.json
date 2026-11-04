@@ -266,7 +266,7 @@
     "sec_pause": "2 · Pauses – Sentences, Word by word, Raw",
     "sw_pause": "A speech pause longer than",
     "sw_pause_unit": "seconds is a real pause",
-    "pause_split": "In “Sentences” mode a new subtitle always begins after a real pause.",
+    "pause_split": "After a real pause a new segment always begins, in every mode – “Sentences” and “Raw” are split there.",
     "sw_smooth": "Smooth display – no flicker, e.g. for DaVinci Resolve",
     "smooth_short": "Shorter pause: the segment stays until the next one starts.",
     "sw_pause_hold": "Real pause: the segment stays for another",
@@ -922,7 +922,7 @@
       "",
       "Up to this length: a short pause. Longer: a real pause, e.g. applause, thinking or music.",
       "",
-      "In “Sentences” mode a new subtitle always begins after a real pause. Recommended: 2 seconds."
+      "After a real pause a new segment always begins, in every mode: Sentences and Raw are split there; in Word by word every word is its own segment anyway. Recommended: 2 seconds."
     ],
     "smooth": [
       "For programs that show nothing for a moment between two subtitles and therefore flicker – e.g. the subtitle track of DaVinci Resolve.",

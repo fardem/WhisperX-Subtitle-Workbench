@@ -266,7 +266,7 @@
     "sec_pause": "2 · Duraklamalar – Cümle cümle, Kelime kelime, Ham",
     "sw_pause": "Şundan uzun bir konuşma duraklaması",
     "sw_pause_unit": "saniye – gerçek bir duraklamadır",
-    "pause_split": "“Cümle cümle” modunda gerçek bir duraklamadan sonra her zaman yeni bir altyazı başlar.",
+    "pause_split": "Gerçek bir duraklamadan sonra her modda yeni bir bölüm başlar – “Cümle cümle” ve “Ham” orada bölünür.",
     "sw_smooth": "Akıcı göster – titreme yok, örn. DaVinci Resolve için",
     "smooth_short": "Daha kısa duraklama: bölüm, bir sonraki başlayana kadar ekranda kalır.",
     "sw_pause_hold": "Gerçek duraklama: bölüm",
@@ -920,7 +920,7 @@
       "",
       "Bu uzunluğa kadar: kısa duraklama. Daha uzun: gerçek duraklama, örn. alkış, düşünme veya müzik.",
       "",
-      "“Cümle cümle” modunda gerçek bir duraklamadan sonra her zaman yeni bir altyazı başlar. Önerilen: 2 saniye."
+      "Gerçek bir duraklamadan sonra her modda yeni bir bölüm başlar: Cümle cümle ve Ham orada bölünür; Kelime kelime modunda her kelime zaten ayrı bir bölümdür. Önerilen: 2 saniye."
     ],
     "smooth": [
       "İki altyazı arasında kısa bir an hiçbir şey göstermeyen ve bu yüzden titreyen programlar için – örn. DaVinci Resolve'un altyazı izi.",

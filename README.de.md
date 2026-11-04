@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.4.0** · [Änderungen](CHANGELOG.md)
+**Version 0.4.1** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -40,7 +40,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
     Der Zeilenausgleich verteilt die Wörter gleichmäßig auf die Zeilen (`müssen und / zwar ohne Ende` statt `müssen und zwar ohne / Ende`), wenn möglich mit Umbruch nach einem Komma.
     Abkürzungen und Datumsangaben bleiben zusammen: `Dr. Müller`, `z. B. gestern` und `6. November` werden nie auf zwei Zeilen oder zwei Untertitel verteilt. Die Liste je Sprache steht unter *Einstellungen → Sprachen*.
   - **Wort-für-Wort:** ein Untertitel pro Wort, z.B. für Karaoke-Effekte.
-  - **Raw:** die WhisperX-Abschnitte unverändert.
+  - **Raw:** die WhisperX-Abschnitte unverändert – nur an einer echten Pause geteilt.
 - **Pausen, flackerfrei für DaVinci Resolve** (*Einstellungen → Untertitel → Pausen*): Es zählt nur die Länge einer Pause. Bis zur eingestellten Grenze (z.B. 2 Sekunden) bleibt ein Segment stehen, bis das nächste beginnt; die Untertitelspur von DaVinci zeigt dann zwischendurch nie einen leeren Moment. Nach einer längeren, echten Pause (Applaus, Musik) bleibt es noch eine kurze Haltezeit stehen, dann ist der Bildschirm leer. Die Anfänge bleiben exakt. Gilt für Satzweise, Wort-für-Wort und Raw; bei Lyrics den *Abstand zur nächsten Liedzeile* auf 0 stellen.
 - **Sprache pro Datei:** Die Sprache wird pro Datei erkannt, oder du legst sie fest. Jede Sprache hat ihren eigenen Prompt, Füllwörter, Dangling-Wörter, Ersetzungen und optional ein eigenes Modell (z.B. ein türkisches Fine-Tune).
 - **Lyrics-Modus:** Liegt `lied.lyric.txt` neben `lied.mp3`, wird jede Zeile des Liedtexts zeitlich auf das Audio ausgerichtet. Das läuft über Forced Alignment (MMS_FA + uroman) und funktioniert für jede Sprache.
@@ -222,7 +222,7 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 
 ## Sicher aktualisieren
 
-- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.4.0*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
+- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.4.1*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
 - **Die Workbench selbst:** `git pull`, oder die neuen Dateien über die alten kopieren. Deine Einstellungen stehen in `whisper_tool.ini`. Diese Datei gehört nicht zum Repository, ein Update überschreibt sie also nie. Neue Optionen bekommen automatisch Standardwerte.
 - **Python-Pakete:** Nur aktualisieren, wenn du etwas Neues brauchst. So geht es sicher:
 

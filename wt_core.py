@@ -340,13 +340,28 @@ def collect_words(result: dict) -> list[dict]:
     return words
 
 
-def cues_raw(result: dict, rules: LangRules) -> list:
-    """WhisperX segments unchanged (1 segment = 1 cue)."""
+def cues_raw(result: dict, rules: LangRules, pause: float = 0.0) -> list:
+    """
+    WhisperX segments unchanged (1 segment = 1 cue) – except at a real pause (longer than
+    `pause` seconds) inside a segment: there it is split, so the text does not stay on screen
+    during applause or music. Needs word times; a segment without them stays as it is.
+    """
     cues = []
     for seg in result.get('segments', []):
         text = seg.get('text', '').strip()
-        if text:
-            cues.append((seg.get('start', 0), seg.get('end', 0), [apply_replacements(text, rules.repl_all)]))
+        if not text:
+            continue
+        start, end = seg.get('start', 0), seg.get('end', 0)
+        words = [w for w in fill_missing_times(seg.get('words', []), start, end) if w.get('word', '').strip()]
+        cuts = [i for i in range(1, len(words)) if pause > 0 and words[i]['start'] - words[i - 1]['end'] > pause]
+        if not cuts:
+            cues.append((start, end, [apply_replacements(text, rules.repl_all)]))
+            continue
+        for k, (a, b) in enumerate(zip([0] + cuts, cuts + [len(words)])):
+            part = " ".join(w['word'].strip() for w in words[a:b])
+            cues.append((start if k == 0 else words[a]['start'],
+                         end if b == len(words) else words[b - 1]['end'],
+                         [apply_replacements(part, rules.repl_all)]))
     return cues
 
 
@@ -663,10 +678,10 @@ def build_cues(result: dict, mode: str, rules: LangRules, layout: Layout) -> tup
     """Returns (cues, actual_mode) – without word timestamps it falls back to raw.
     The times are the spoken ones; display_cues then applies the pause rule."""
     if mode == "raw":
-        return cues_raw(result, rules), "raw"
+        return cues_raw(result, rules, layout.pause), "raw"
     words = collect_words(result)
     if not words:
-        return cues_raw(result, rules), "raw"
+        return cues_raw(result, rules, layout.pause), "raw"
     if mode == "word":
         return cues_word(words, rules), "word"
     return cues_sentence(words, rules, layout), "sentence"

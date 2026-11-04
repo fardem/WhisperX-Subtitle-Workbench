@@ -266,7 +266,7 @@
     "sec_pause": "2 · Pausen – Satzweise, Wort-für-Wort, Raw",
     "sw_pause": "Eine Sprechpause länger als",
     "sw_pause_unit": "Sekunden ist eine echte Pause",
-    "pause_split": "Im Modus „Satzweise“ beginnt nach einer echten Pause immer ein neuer Untertitel.",
+    "pause_split": "Nach einer echten Pause beginnt in jedem Modus ein neues Segment – „Satzweise“ und „Raw“ werden dort geteilt.",
     "sw_smooth": "Flüssig anzeigen – kein Flackern, z.B. für DaVinci Resolve",
     "smooth_short": "Kürzere Pause: Das Segment bleibt stehen, bis das nächste beginnt.",
     "sw_pause_hold": "Echte Pause: Das Segment bleibt noch",
@@ -922,7 +922,7 @@
       "",
       "Bis zu dieser Länge: kurze Pause. Länger: echte Pause, z.B. Applaus, Nachdenken oder Musik.",
       "",
-      "Im Modus „Satzweise“ beginnt nach einer echten Pause immer ein neuer Untertitel. Empfehlung: 2 Sekunden."
+      "Nach einer echten Pause beginnt in jedem Modus ein neues Segment: Satzweise und Raw werden dort geteilt, bei Wort-für-Wort ist jedes Wort ohnehin ein eigenes Segment. Empfehlung: 2 Sekunden."
     ],
     "smooth": [
       "Für Programme, die zwischen zwei Untertiteln kurz nichts anzeigen und dadurch flackern – z.B. die Untertitelspur von DaVinci Resolve.",

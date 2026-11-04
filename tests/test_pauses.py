@@ -158,3 +158,43 @@ def test_word_mode_in_the_srt(tmp_path):
 def test_pipeline_smooth_off_is_exactly_as_spoken(tmp_path):
     times, result = run(tmp_path, "word", smooth=0)
     assert times == [pytest.approx(w) for w in [(w["start"], w["end"]) for w in result["segments"][0]["words"]]]
+
+
+# ── raw: WhisperX segments unchanged, except at a real pause inside a segment ─
+
+def raw(result, pause=X):
+    return core.cues_raw(result, RULES, pause)
+
+
+def test_raw_splits_a_segment_at_a_real_pause():
+    result = make_result("Heute zeige ich euch das. Danach Pause.", pauses={5: 4.0})
+    seg = result["segments"][0]
+    cues = raw(result)
+    assert [c[2] for c in cues] == [["Heute zeige ich euch das."], ["Danach Pause."]]
+    assert cues[0][0] == seg["start"] and cues[-1][1] == seg["end"]
+    assert cues[1][0] == seg["words"][5]["start"]
+
+
+def test_raw_keeps_a_segment_without_real_pause():
+    result = make_result("Heute zeige ich euch das.", pauses={3: 1.5})
+    seg = result["segments"][0]
+    assert raw(result) == [(seg["start"], seg["end"], [seg["text"]])]
+
+
+def test_raw_without_word_times_stays_as_it_is():
+    result = {"segments": [{"start": 0.0, "end": 9.0, "text": "Ganz ohne Wort-Zeiten"}]}
+    assert raw(result) == [(0.0, 9.0, ["Ganz ohne Wort-Zeiten"])]
+
+
+def test_raw_parts_get_the_replacements():
+    rules = core.LangRules(lang="de", repl_phrase=core.compile_replacements([("Open AI", "OpenAI")]))
+    result = make_result("Open AI ist da. Danach mehr.", pauses={4: 3.0})
+    assert [c[2][0] for c in core.cues_raw(result, rules, X)] == ["OpenAI ist da.", "Danach mehr."]
+
+
+def test_pipeline_raw_screen_is_empty_during_the_pause(tmp_path):
+    times, result = run(tmp_path, "raw")
+    words = result["segments"][0]["words"]
+    assert len(times) == 2                                                          # split at the 4 s pause
+    assert times[0][1] == pytest.approx(words[4]["end"] + 1.0)                      # "das." + 1 s hold
+    assert times[1][0] == pytest.approx(words[5]["start"])                          # "Danach" exactly on time

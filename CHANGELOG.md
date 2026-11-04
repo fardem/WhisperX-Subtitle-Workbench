@@ -2,6 +2,11 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.4.1] – 2026-11-04
+
+- Fixed: in *Raw* mode a WhisperX segment with a real pause inside stayed on screen during the whole pause (e.g. 4 seconds of applause). A real pause now starts a new segment in every mode: *Sentences* and *Raw* are split there, in *Word by word* every word is its own segment anyway. A segment without word times stays as it is
+- The settings dialog and the INI template say so instead of naming only *Sentences*
+
 ## [0.4.0] – 2026-11-04
 
 **Updating from 0.3.x:** close the old window first. The settings `split_pause`, `bridge_gaps`, `min_duration` and `max_cps` are gone – they are ignored and can be deleted from your `whisper_tool.ini`. The new values `pause`, `smooth` and `pause_hold` start with their defaults (2 seconds, on, 1 second); adjust them under *Settings → Subtitles → Pauses*. Python packages need no update.

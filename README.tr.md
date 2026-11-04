@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.4.0** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.4.1** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -40,7 +40,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
     Satır dengeleme kelimeleri satırlara eşit dağıtır (`bunu hiç beklemiyorduk / ama` yerine `bunu hiç / beklemiyorduk ama`), mümkünse virgülden sonra bölerek.
     Kısaltmalar ve tarihler bir arada kalır: `Dr. Ayşe`, `örn. dün` ve `6. Kasım` asla iki satıra veya iki altyazıya bölünmez. Dile göre liste *Ayarlar → Diller* altındadır.
   - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
-  - **Ham:** WhisperX bölümleri değiştirilmeden.
+  - **Ham:** WhisperX bölümleri değiştirilmeden – yalnızca gerçek bir duraklamada bölünür.
 - **Duraklamalar, DaVinci Resolve için titremesiz** (*Ayarlar → Altyazılar → Duraklamalar*): yalnızca duraklamanın uzunluğu önemlidir. Ayarlanan sınıra kadar (örn. 2 saniye) bir bölüm, bir sonraki başlayana kadar ekranda kalır; DaVinci'nin altyazı izi arada hiç boş an göstermez. Daha uzun, gerçek bir duraklamadan (alkış, müzik) sonra kısa bir tutma süresi kadar kalır, sonra ekran boş olur. Başlangıçlar tam kalır. Cümle cümle, Kelime kelime ve Ham için geçerlidir; şarkı sözlerinde *Sonraki şarkı satırına mesafe* değerini 0 yapın.
 - **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).
 - **Şarkı sözü modu:** `sarki.mp3` dosyasının yanına `sarki.lyric.txt` koyarsanız şarkı metninin her satırı sese göre zamanlanır. Bu, zorlamalı hizalama (MMS_FA + uroman) ile çalışır ve her dilde işler.
@@ -222,7 +222,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ## Güvenli güncelleme
 
-- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.4.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.4.1*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 

@@ -190,22 +190,10 @@
     "gap_margin_hint": "kleiner = empfindlicher · Standard 8",
     "orphan_limit": "Kurze Wörter nach einem Komma (Zeichen)",
     "orphan_fill": "Kurze Wörter nach einem Komma: Füllgrad (Prozent)",
-    "split_pause": "Neuer Untertitel nach Sprechpause (Sekunden)",
     "max_duration": "Lange Sätze teilen (Sekunden Sprache)",
-    "min_duration": "Mindestens anzeigen (Sekunden)",
-    "max_cps": "Lesezeit (Zeichen pro Sekunde)",
     "balance_lines": "Zeilen ausgleichen: Wörter gleichmäßig auf die Zeilen verteilen",
-    "bridge_gaps": "Bis zum nächsten Untertitel stehen lassen (Sekunden)",
-    "sw_split_pause": "Neuer Untertitel nach einer Sprechpause ab",
-    "sw_split_pause_unit": "Sekunden",
     "sw_max_duration": "Lange Sätze teilen: höchstens",
     "sw_max_duration_unit": "Sekunden Sprache pro Untertitel",
-    "sw_min_duration": "Mindestens anzeigen:",
-    "sw_min_duration_unit": "Sekunden · nur „Satzweise“",
-    "sw_max_cps": "Lesezeit lassen: höchstens",
-    "sw_max_cps_unit": "Zeichen pro Sekunde · nur „Satzweise“",
-    "sw_bridge_gaps": "… wenn die Pause kürzer ist als",
-    "sw_bridge_gaps_unit": "Sekunden · Satzweise, Wort-für-Wort, Raw",
     "line_gap": "Abstand zur nächsten Liedzeile (Sekunden)",
     "note_subs": "Zeichen pro Zeile und Zeilen pro Untertitel stellst du im Hauptfenster ein und speicherst sie dort mit „Als Standard speichern“.",
     "ffmpeg": "ffmpeg",
@@ -266,8 +254,6 @@
     ],
     "version": "Version",
     "sec_split": "1 · Aufteilen – welche Wörter zusammen in einen Untertitel kommen (nur Modus „Satzweise“)",
-    "sec_time": "2 · Anzeigedauer – wie lange ein Untertitel stehen bleibt",
-    "sec_time_info": "Ein Untertitel erscheint immer genau, wenn gesprochen wird. Ohne Häkchen verschwindet er, sobald die Sprache endet. Die Häkchen verlängern nur das Ende – in die Pause danach, nie in den nächsten Untertitel hinein.",
     "sec_lyrics": "3 · Lyrics – eigene Regeln für Liedzeilen",
     "sec_lyrics_info": "Wie lange eine Liedzeile stehen bleibt, stellst du im Hauptfenster mit „Lyrics: Zeile halten“ ein. Die Einstellungen unter 1 und 2 gelten für Lyrics nicht.",
     "sw_orphan": "Kurze Wörter nach einem Komma in den nächsten Untertitel schieben",
@@ -275,9 +261,20 @@
     "sw_orphan_limit_unit": "Zeichen",
     "sw_orphan_fill": "… wenn die Zeile schon so voll ist:",
     "sw_orphan_fill_unit": "Prozent",
-    "sw_bridge": "Bis zum nächsten Untertitel stehen lassen – nahtlos, ohne Flackern (z.B. für DaVinci Resolve)",
     "sw_line_gap": "Abstand zur nächsten Liedzeile",
-    "sw_line_gap_unit": "Sekunden · 0 = nahtlos, z.B. für DaVinci Resolve"
+    "sw_line_gap_unit": "Sekunden · 0 = nahtlos, z.B. für DaVinci Resolve",
+    "sec_pause": "2 · Pausen – Satzweise, Wort-für-Wort, Raw",
+    "sw_pause": "Eine Sprechpause länger als",
+    "sw_pause_unit": "Sekunden ist eine echte Pause",
+    "pause_split": "Im Modus „Satzweise“ beginnt nach einer echten Pause immer ein neuer Untertitel.",
+    "sw_smooth": "Flüssig anzeigen – kein Flackern, z.B. für DaVinci Resolve",
+    "smooth_short": "Kürzere Pause: Das Segment bleibt stehen, bis das nächste beginnt.",
+    "sw_pause_hold": "Echte Pause: Das Segment bleibt noch",
+    "sw_pause_hold_unit": "Sekunden stehen, dann ist der Bildschirm leer",
+    "smooth_off": "Ohne Häkchen endet jedes Segment, wenn die Sprache endet.",
+    "pause": "Echte Pause ab (Sekunden)",
+    "pause_hold": "Haltezeit bei echter Pause (Sekunden)",
+    "err_hold": "Die Haltezeit ({hold} Sekunden) muss kürzer sein als die Pausengrenze ({pause} Sekunden) – sonst wäre eine echte Pause nie zu sehen."
   },
   "cmpdlg": {
     "title": "Text vergleichen",
@@ -435,8 +432,8 @@
       "other": "{n} Untertitel → {name}"
     },
     "fast_found": {
-      "one": "1 Untertitel schneller als {cps} Zeichen/s – keine Pause zum Verlängern:",
-      "other": "{n} Untertitel schneller als {cps} Zeichen/s – keine Pause zum Verlängern:"
+      "one": "1 Untertitel schneller als {cps} Zeichen pro Sekunde – schwer zu lesen:",
+      "other": "{n} Untertitel schneller als {cps} Zeichen pro Sekunde – schwer zu lesen:"
     },
     "fast_item": "{cps} Zeichen/s",
     "fast_tip": "Tipp: Das Tool ändert nie den Text – diese Untertitel in Subtitle Edit kürzen, wenn sie schwer lesbar sind.",
@@ -810,33 +807,12 @@
       "Gilt für Wörter bis zu dieser Länge."
     ],
     "orphan_fill": "… aber nur, wenn die Zeile schon mindestens so voll ist (in Prozent der Zeichen pro Zeile). Verhindert sehr kurze Untertitel.",
-    "split_pause": [
-      "Nach einer Sprechpause dieser Länge beginnt ein neuer Untertitel – auch mitten im Satz.",
-      "",
-      "Das legt nur fest, welche Wörter zusammen in einen Untertitel kommen. Wie lange der vorherige danach noch stehen bleibt, stellst du unter „2 · Anzeigedauer“ ein.",
-      "",
-      "Empfehlung: 1,5 Sekunden."
-    ],
     "max_duration": [
       "Lange Sätze werden geteilt: Ein Untertitel enthält höchstens so viele Sekunden Sprache, danach beginnt ein neuer.",
       "",
       "Das ist keine Anzeigedauer – wie lange ein Untertitel stehen bleibt, stellst du unter „2 · Anzeigedauer“ ein.",
       "",
       "Empfehlung: 7 Sekunden (gängige Obergrenze)."
-    ],
-    "min_duration": [
-      "Ein Untertitel steht mindestens so lange, damit kurze wie „Danke.“ nicht nur aufblitzen.",
-      "",
-      "Nur das Ende wird verlängert – in die Pause danach, nie in den nächsten Untertitel hinein.",
-      "",
-      "Nur im Modus „Satzweise“: Wort-für-Wort und Raw bleiben genau so lange, wie gesprochen wird. Empfehlung: 1 Sekunde."
-    ],
-    "max_cps": [
-      "Lesezeit: Ein Untertitel mit viel Text bleibt länger stehen, damit man ihn lesen kann – gemessen in Zeichen pro Sekunde (Leerzeichen zählen mit).",
-      "",
-      "Verlängert wird nur in die Pause danach. Reicht die Pause nicht, meldet das Protokoll den Untertitel als Warnung – der Text wird nie verändert. Bei Bedarf in Subtitle Edit kürzen.",
-      "",
-      "Nur im Modus „Satzweise“. Empfehlung: 17 Zeichen pro Sekunde (übliche Richtlinien: 15–20)."
     ],
     "balance_lines": [
       "Verteilt die Wörter eines Untertitels gleichmäßig auf seine Zeilen, statt die erste Zeile bis zum Limit zu füllen:",
@@ -845,17 +821,6 @@
       "",
       "Bricht bevorzugt nach einem Komma und vermeidet Artikel oder Präpositionen am Zeilenende. Gleiche Wörter, gleiche Zeilenzahl – die Zeiten ändern sich nicht.",
       "Nur im Satz-Modus."
-    ],
-    "bridge_gaps": [
-      "Für Programme, die zwischen zwei Untertiteln kurz nichts anzeigen und dadurch flackern – z.B. die Untertitelspur von DaVinci Resolve.",
-      "",
-      "Mit Häkchen bleibt ein Untertitel stehen, bis der nächste beginnt – Ende und nächster Anfang sind dann genau gleich. Das gilt nur, wenn die Pause dazwischen kürzer ist als die eingestellten Sekunden. Längere Pausen bleiben leer, z.B. eine Musikpause.",
-      "",
-      "Beispiel mit 2 Sekunden: Eine Pause von 0,1 Sekunden wird geschlossen, eine Pause von 5 Sekunden bleibt leer.",
-      "",
-      "Zusammen mit „Mindestens anzeigen“ und „Lesezeit“: Die verlängern zuerst, dieses Häkchen schließt danach die restliche Lücke.",
-      "",
-      "Satzweise, Wort-für-Wort und Raw. Lyrics haben eigene Regeln (3 · Lyrics). Empfehlung für DaVinci Resolve: 2 Sekunden."
     ],
     "line_gap": [
       "Liedzeilen: Abstand zur nächsten Zeile, wenn „Lyrics: Zeile halten“ (Hauptfenster) das Ende verlängert – damit zwei Zeilen sichtbar wechseln.",
@@ -951,6 +916,23 @@
       "„wie Windows“: nimmt die Sprache des Systems, wenn es dafür eine Sprachdatei gibt, sonst Englisch.",
       "",
       "Weitere Sprachen: lang/en.json kopieren, übersetzen und als lang/<code>.json speichern – sie erscheint dann automatisch in dieser Liste."
+    ],
+    "pause": [
+      "Die Grenze zwischen kurzer und echter Pause. Es zählt nur die Länge der Pause – ob mitten im Satz oder zwischen zwei Sätzen.",
+      "",
+      "Bis zu dieser Länge: kurze Pause. Länger: echte Pause, z.B. Applaus, Nachdenken oder Musik.",
+      "",
+      "Im Modus „Satzweise“ beginnt nach einer echten Pause immer ein neuer Untertitel. Empfehlung: 2 Sekunden."
+    ],
+    "smooth": [
+      "Für Programme, die zwischen zwei Untertiteln kurz nichts anzeigen und dadurch flackern – z.B. die Untertitelspur von DaVinci Resolve.",
+      "",
+      "Kurze Pause: Das Segment bleibt stehen, bis das nächste beginnt – Ende und nächster Anfang sind genau gleich.",
+      "Echte Pause: Das Segment bleibt noch die eingestellte Zeit stehen, dann ist der Bildschirm leer, bis wieder gesprochen wird.",
+      "",
+      "Ein Segment ist, was angezeigt wird: bei Wort-für-Wort ein Wort, bei Satzweise ein Untertitel. Die Anfänge bleiben exakt – jedes Wort erscheint genau, wenn es gesprochen wird.",
+      "",
+      "Ohne Häkchen ist die SRT genau wie gesprochen, z.B. für den Vergleichsbericht. Lyrics haben eigene Regeln (3 · Lyrics). Empfehlung: Haltezeit 1 Sekunde."
     ]
   }
 }

@@ -2,13 +2,13 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.3.2** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.4.0** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
 ![Ana pencere](docs/images/main-window.png)
 
-Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, duraklamalar, asgari ve azami ekranda kalma süresi ile okuma hızı. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla.
+Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, uzun cümleler ve duraklamalar. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla.
 
 > Ekran görüntüleri İngilizce arayüzü gösterir; *Ayarlar → Genel* altında Türkçeye geçebilirsiniz.
 
@@ -35,13 +35,13 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 
 - **Konuşma → SRT**, WhisperX ile (faster-whisper + kelime zaman damgaları). Modeller dosyalar arasında yüklü kalır, bu yüzden ikinci dosya yükleme süresi olmadan başlar.
 - **Üç altyazı modu:**
-  - **Cümle cümle:** karakter sınırı ile yetim kelimeler, sarkan kelimeler, duraklamalar ve azami ekranda kalma süresi kurallarına göre tam cümleler.
-    Kısa altyazılar asgari bir süre ekranda kalır ve okuma hızı (saniye başına karakter) kontrol edilir. Bunun için yalnızca altyazının sonu sonraki duraklamaya uzatılır; metin asla değişmez.
+  - **Cümle cümle:** karakter sınırı ile yetim kelimeler, sarkan kelimeler, duraklamalar ve uzun cümle kurallarına göre tam cümleler.
+    Süresine göre çok fazla metin içeren altyazıları (saniyede 17 karakterden fazla) günlük listeler.
     Satır dengeleme kelimeleri satırlara eşit dağıtır (`bunu hiç beklemiyorduk / ama` yerine `bunu hiç / beklemiyorduk ama`), mümkünse virgülden sonra bölerek.
     Kısaltmalar ve tarihler bir arada kalır: `Dr. Ayşe`, `örn. dün` ve `6. Kasım` asla iki satıra veya iki altyazıya bölünmez. Dile göre liste *Ayarlar → Diller* altındadır.
   - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
   - **Ham:** WhisperX bölümleri değiştirilmeden.
-- **DaVinci Resolve için titremesiz** (*Ayarlar → Altyazılar → Gösterim süresi → Bir sonraki altyazıya kadar ekranda tut*): sonraki altyazıya olan duraklama kısaysa, altyazı bir sonraki başlayana kadar ekranda kalır. DaVinci'nin altyazı izi arada hiç boş an göstermez. Başlangıçlar tam kalır, uzun duraklamalar boş kalır. Cümle cümle, Kelime kelime ve Ham için geçerlidir; şarkı sözlerinde *Sonraki şarkı satırına mesafe* değerini 0 yapın.
+- **Duraklamalar, DaVinci Resolve için titremesiz** (*Ayarlar → Altyazılar → Duraklamalar*): yalnızca duraklamanın uzunluğu önemlidir. Ayarlanan sınıra kadar (örn. 2 saniye) bir bölüm, bir sonraki başlayana kadar ekranda kalır; DaVinci'nin altyazı izi arada hiç boş an göstermez. Daha uzun, gerçek bir duraklamadan (alkış, müzik) sonra kısa bir tutma süresi kadar kalır, sonra ekran boş olur. Başlangıçlar tam kalır. Cümle cümle, Kelime kelime ve Ham için geçerlidir; şarkı sözlerinde *Sonraki şarkı satırına mesafe* değerini 0 yapın.
 - **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).
 - **Şarkı sözü modu:** `sarki.mp3` dosyasının yanına `sarki.lyric.txt` koyarsanız şarkı metninin her satırı sese göre zamanlanır. Bu, zorlamalı hizalama (MMS_FA + uroman) ile çalışır ve her dilde işler.
 - **JSON → SRT:** WhisperX sonucunu saklayabilir ve altyazıları daha sonra saniyeler içinde farklı bir düzenle yeniden oluşturabilirsiniz.
@@ -222,7 +222,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ## Güvenli güncelleme
 
-- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.3.2*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.4.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 

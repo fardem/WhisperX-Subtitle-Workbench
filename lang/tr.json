@@ -298,11 +298,14 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · DaVinci Resolve'dan gelen işler",
-    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Pencereyi eklenti açarsa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle.",
+    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Pencereyi eklenti açarsa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle. Eklenti penceresinde seçtiğiniz dil ve mod her ikisinden önce gelir.",
     "sw_resolve_countdown": "DaVinci Resolve'dan gelen işleri otomatik başlat:",
     "sw_resolve_countdown_unit": "saniye sonra",
     "resolve_countdown": "DaVinci işleri için geri sayım",
-    "resolve_countdown_off": "İşaret yoksa Başlat'a kendiniz basın."
+    "resolve_countdown_off": "İşaret yoksa Başlat'a kendiniz basın.",
+    "resolve_auto_hand_over": "Yazıya dökme bitince otomatik olarak DaVinci'ye aktar",
+    "resolve_extra_tracks": "Boşlukları ve okunamayacak kadar hızlı altyazıları da aktar, her biri kendi altyazı izinde",
+    "resolve_close_after": "Aktarımdan sonra Workbench'i kapat (aksi halde simge durumuna küçülür ve modeller yüklü kalır)"
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -638,7 +641,10 @@
     "cleanup": {
       "one": "1 eski DaVinci Resolve iş klasörü kaldırıldı",
       "other": "{n} eski DaVinci Resolve iş klasörü kaldırıldı"
-    }
+    },
+    "fast_cue": "çok hızlı: saniyede {cps} karakter",
+    "log_job_options": "DaVinci Resolve'dan dil ve mod: {lang} · {mode}",
+    "as_window": "bu penceredeki gibi"
   },
   "plugin": {
     "title": "WhisperX Altyazılar",
@@ -672,10 +678,7 @@
     "err_add_job": "Resolve render işini oluşturmadı.",
     "err_start_render": "Resolve render işini başlatmadı.",
     "err_write": "{path} yazılamıyor: {why}",
-    "waiting": [
-      "Workbench bekleniyor … {time}",
-      "Orada yazıya dökün ve “DaVinci'ye aktar” düğmesine basın."
-    ],
+    "waiting": "Workbench bekleniyor … {time}",
     "launch_failed": [
       "Workbench başlatılamadı. Kendiniz başlatın ve bu dosyayı penceresine sürükleyin:",
       "{path}",
@@ -701,7 +704,30 @@
     "file_missing": "Dosya bulunamadı: {path}",
     "ask_lang": "Altyazıların dili (iz adı için, örn. DE, EN, TR):",
     "no_lang": "Dil girilmedi – hiçbir şey içe aktarılmadı.",
-    "error": "Hata: {why} (ayrıntılar: Workspace → Console)"
+    "error": "Hata: {why} (ayrıntılar: Workspace → Console)",
+    "label_lang": "Dil",
+    "label_mode": "Mod",
+    "opt_workbench": "Workbench'teki gibi",
+    "lang_auto": "Otomatik",
+    "lang_de": "Almanca",
+    "lang_en": "İngilizce",
+    "lang_tr": "Türkçe",
+    "lang_ar": "Arapça",
+    "mode_sentence": "Cümle cümle",
+    "mode_word": "Kelime kelime",
+    "mode_raw": "Ham",
+    "waiting_do": "Orada yazıya dökün ve “DaVinci'ye aktar” düğmesine basın.",
+    "wb_queued": "Workbench: iş devralındı, başlamayı bekliyor.",
+    "wb_countdown": "Workbench: {n} sn sonra otomatik başlıyor.",
+    "wb_loading": "Workbench: ses ve model yükleniyor …",
+    "wb_asr": "Workbench: transkripsiyon %{pct}",
+    "wb_align": "Workbench: kelime zaman damgaları %{pct}",
+    "wb_done": "Workbench: bitti – orada “DaVinci'ye aktar” düğmesine basın.",
+    "wb_error": "Workbench: hata – Workbench'in günlüğüne bakın.",
+    "wb_cancelled": "Workbench: iptal edildi.",
+    "track_gaps": "WhisperX boşluklar",
+    "track_fast": "WhisperX çok hızlı",
+    "placed_extra": "+ {n}, {track} numaralı “{name}” altyazı izinde – kontrol edin, sonra izi silin."
   },
   "tip": {
     "files": [
@@ -1057,6 +1083,9 @@
     ],
     "resolve_install": "Eklentiyi DaVinci Resolve'un betik klasörüne kopyalar (…\\Fusion\\Scripts\\Utility). Bu Workbench'in klasörü, arayüz dili ve eklentinin tüm metinleri içine yazılır – ayarlanacak bir şey yok. Workbench'i taşıdıktan veya dili değiştirdikten sonra yeniden kurun.",
     "resolve_countdown": "DaVinci Resolve'dan gelen bir işin otomatik olarak yazıya dökülmesine kadar geçen saniye. Pencereye bir tıklama geri sayımı durdurur.",
-    "resolve_hand_over": "Altyazıları zaman çizelgesinde yazıya dökülen aralığın konumuna kaydırır ve DaVinci Resolve'da bekleyen eklentiye verir. SRT bunun için diskten yeniden okunur – bu arada yapılan değişiklikler de geçerlidir."
+    "resolve_hand_over": "Altyazıları zaman çizelgesinde yazıya dökülen aralığın konumuna kaydırır ve DaVinci Resolve'da bekleyen eklentiye verir. SRT bunun için diskten yeniden okunur – bu arada yapılan değişiklikler de geçerlidir.",
+    "resolve_auto_hand_over": "“DaVinci'ye aktar” düğmesine basmanız gerekmez: iş yazıya dökülür dökülmez altyazılar bekleyen eklentiye gider. Altyazıları zaten Resolve'da kontrol ediyorsanız kullanışlıdır.",
+    "resolve_extra_tracks": "Resolve'da iki ek altyazı izi: “WhisperX boşluklar” metinsiz yüksek sesli yerleri (boşluk kontrolü), “WhisperX çok hızlı” saniyede 17 karakterden fazla olan altyazıları işaretler (yalnızca cümle cümle). Kontrol içindir – sonra izleri silin. Gösterilecek bir şey yoksa iz eklenmez.",
+    "resolve_close_after": "İşaret yoksa Workbench aktarımdan sonra simge durumuna küçülür ve modellerini tutar – sonraki iş yükleme süresi olmadan başlar. İşaretliyse kapanır."
   }
 }

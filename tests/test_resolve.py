@@ -5,6 +5,7 @@ import re
 import time
 
 import pytest
+from pathlib import Path
 
 import wt_core as core
 import wt_i18n as i18n
@@ -131,9 +132,9 @@ def test_kv_parser_is_tolerant():
 
 def test_done_file_is_written_atomically(tmp_path):
     path = tmp_path / "done.txt"
-    wr.write_kv(path, {"srt": r"C:\WhisperX\temp\resolve\letzte\A_DE.srt", "lang": "DE", "note": "two\nlines"})
+    wr.write_kv(path, {"srt": r"C:\WhisperX\resolve_temp\A_DE.srt", "lang": "DE", "note": "two\nlines"})
     assert sorted(p.name for p in tmp_path.iterdir()) == ["done.txt"]          # no .tmp left over
-    assert wr.read_kv(path) == {"srt": r"C:\WhisperX\temp\resolve\letzte\A_DE.srt", "lang": "DE",
+    assert wr.read_kv(path) == {"srt": r"C:\WhisperX\resolve_temp\A_DE.srt", "lang": "DE",
                                 "note": "two lines"}
 
 
@@ -232,6 +233,27 @@ def test_hand_over_without_subtitles(tmp_path):
         wr.hand_over(job, job.folder / "missing.srt", "de", last_dir=tmp_path / "letzte")
 
 
+def test_last_srt_lies_next_to_the_job_folders(tmp_path):
+    root = tmp_path / "resolve_temp"
+    job = make_job(root / "20261105-1")                        # a job that is still waiting
+    (root / "notes.txt").write_text("x", encoding="utf-8")
+    wr.write_last_srt(root, "Erste_DE.srt", "a")
+    wr.write_last_srt(root, "Zweite_DE.srt", "b")
+    assert sorted(p.name for p in root.iterdir()) == ["20261105-1", "Zweite_DE.srt", "notes.txt"]
+    assert job.alive()
+
+
+def test_folder_of_version_0_5_0_is_removed(tmp_path):
+    legacy = tmp_path / "temp" / "resolve"
+    make_job(legacy / "job")
+    wr.write_last_srt(legacy / "letzte", "A_DE.srt", "x")
+    assert wr.remove_legacy_dir(legacy) and not (tmp_path / "temp").exists()
+    legacy.mkdir(parents=True)
+    (tmp_path / "temp" / "mine.txt").write_text("x", encoding="utf-8")   # temp/ holds something else
+    assert wr.remove_legacy_dir(legacy) and (tmp_path / "temp" / "mine.txt").is_file()
+    assert wr.remove_legacy_dir(legacy) is False
+
+
 def test_cleanup_removes_only_finished_or_old_jobs(tmp_path):
     root = tmp_path / "resolve"
     make_job(root / "active")
@@ -244,9 +266,9 @@ def test_cleanup_removes_only_finished_or_old_jobs(tmp_path):
     old = time.time() - 4 * 86400
     for p in (root / "old").iterdir():
         os.utime(p, (old, old))
-    wr.write_last_srt(root / wr.LAST_DIR_NAME, "A_DE.srt", "x")
+    wr.write_last_srt(root, "A_DE.srt", "x")
     assert wr.cleanup_jobs(root) == 4
-    assert sorted(p.name for p in root.iterdir()) == ["active", wr.LAST_DIR_NAME]
+    assert sorted(p.name for p in root.iterdir()) == ["A_DE.srt", "active"]
 
 
 # ─── plugin installation ──────────────────────────────────────────────────────
@@ -287,7 +309,7 @@ def test_install_and_detect_plugin(tmp_path):
     info = wr.installed_plugin(path)
     assert (info["version"], info["workbench"], info["lang"]) == ("0.5.0", str(wb), "tr")
     assert not path.read_bytes().startswith(b"\xef\xbb\xbf")                # Lua cannot read a BOM
-    assert (wb / "temp" / "resolve" / wr.LAST_DIR_NAME).is_dir()
+    assert (wb / "resolve_temp").is_dir()
     assert "Yazıya dök" in path.read_text(encoding="utf-8")                  # all languages are in it
 
 
@@ -326,3 +348,46 @@ def test_ini_resolve_section(tmp_path):
     assert core.Config(ini).resolve_countdown == 10
     ini.write_text("[Resolve]\ncountdown = -3\n", encoding="utf-8")
     assert core.Config(ini).resolve_countdown == 0
+
+
+def test_language_and_mode_of_the_plugin(tmp_path):
+    make_job(tmp_path / "a", language="tr", mode="word")
+    make_job(tmp_path / "b")
+    a, b = wr.find_job(tmp_path / "a" / "audio.wav"), wr.find_job(tmp_path / "b" / "audio.wav")
+    assert (a.language, a.mode) == ("tr", "word") and (b.language, b.mode) == ("", "")
+
+
+def test_progress_file(tmp_path):
+    job = make_job(tmp_path / "job")
+    assert wr.write_progress(job, "running", stage="asr", pct=45)
+    assert wr.read_kv(job.folder / wr.PROGRESS_FILE) == {"state": "running", "stage": "asr", "pct": "45"}
+    for p in job.folder.iterdir():
+        p.unlink()
+    job.folder.rmdir()
+    assert wr.write_progress(job, "done") is False               # the plugin removed the job meanwhile
+
+
+def test_read_srt_cues():
+    cues = wr.read_srt_cues(srt(("00:00:01,000", "00:00:02,500", "Hallo"), ("00:00:03,000", "00:00:04,000", "a\nb")))
+    assert cues == [(1.0, 2.5, ["Hallo"]), (3.0, 4.0, ["a", "b"])]
+
+
+def test_hand_over_with_gap_and_fast_tracks(tmp_path):
+    job = make_job(tmp_path / "job", whole=False, in_frame=90250)                    # offset 10 s
+    src = job.folder / "audio.srt"
+    src.write_text(srt(("00:00:01,000", "00:00:03,000", "Hallo"),
+                       ("00:00:04,000", "00:00:04,500", "Viel zu viel Text für so wenig Zeit")), encoding="utf-8")
+    res = wr.hand_over(job, src, "de", last_dir=tmp_path / "out", gaps=[(5.0, 7.0, -3.0)],
+                       gap_label=lambda s, e, rel: f"gap {e - s:.1f}", fast_cps=17,
+                       fast_label=lambda cps: f"{cps:.0f} cps")
+    done = wr.read_kv(job.done_path)
+    gaps, fast = Path(done["gaps"]), Path(done["fast"])
+    assert gaps.parent == job.folder and gaps.name == "Interview_Mueller_DE_gaps.srt"
+    assert gaps.read_text(encoding="utf-8") == "1\n00:00:15,000 --> 00:00:17,000\ngap 2.0\n\n"
+    assert fast.read_text(encoding="utf-8") == "1\n00:00:14,000 --> 00:00:14,500\n70 cps\n\n"
+    assert (res.gaps, res.fast, done["gaps_n"], done["fast_n"]) == (1, 1, "1", "1")
+    assert gaps.name in done["files"] and fast.name in done["files"]
+    plain = make_job(tmp_path / "plain")
+    (plain.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:01,200", "zu schnell hier")), encoding="utf-8")
+    wr.hand_over(plain, plain.folder / "audio.srt", "de", last_dir=tmp_path / "out")
+    assert "gaps" not in wr.read_kv(plain.done_path) and "fast" not in wr.read_kv(plain.done_path)

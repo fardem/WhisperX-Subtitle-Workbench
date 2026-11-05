@@ -6,7 +6,7 @@ Workspace -> Scripts -> WhisperX_Subtitles. Installed by the Workbench
 the interface language and all texts into the WX-CONFIG block below.
 
   Transcribe    renders the main mix of the timeline (In/Out if set, otherwise the whole
-                timeline) as WAV into <Workbench>\temp\resolve\<JobID>\audio.wav, writes
+                timeline) as WAV into <Workbench>\resolve_temp\<JobID>\audio.wav, writes
                 job.txt next to it and starts the Workbench with the WAV. When the Workbench
                 hands the result over (done.txt), the SRT goes onto a subtitle track.
   Import SRT    puts any SRT onto a subtitle track the same way (e.g. a translation ..._EN.srt).
@@ -33,7 +33,7 @@ check the job status by Error/CompletionPercentage, remove left-over jobs of its
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.5.0",
+  version   = "0.6.0",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -96,8 +96,9 @@ local function join(...)
 end
 M.join = join
 
-local TEMP = WX.workbench and join(WX.workbench, "temp", "resolve") or nil
-local LAST = TEMP and join(TEMP, "letzte") or nil
+-- <Workbench>\resolve_temp\ holds the job folders and the SRT of the last hand-over
+local TEMP = WX.workbench and join(WX.workbench, "resolve_temp") or nil
+local LAST = TEMP
 M.TEMP, M.LAST = TEMP, LAST
 
 local function round(x)
@@ -738,6 +739,7 @@ local function write_job_file(project, wav_name)
     { "fps", info.fps_text }, { "drop_frame", info.drop }, { "start_frame", info.start },
     { "start_tc", info.start_tc }, { "range", job.whole and "all" or "inout" }, { "in_frame", job.a },
     { "out_frame", job.b }, { "end_frame", info.last }, { "resolve", api(resolve, "GetVersionString") or "" },
+    { "language", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
     { "created", os.date("%Y-%m-%d %H:%M:%S") },
   }
   local ok, err = write_kv(join(job.dir, "job.txt"), "WhisperX Subtitle Workbench - DaVinci Resolve job", rows)
@@ -841,8 +843,7 @@ local function activate_only(tl, target)
 end
 M.activate_only = activate_only
 
-local function track_name(tl, lang, target)
-  local base = "WhisperX " .. lang
+local function track_name(tl, base, target)
   local used = {}
   local n = tonumber(api(tl, "GetTrackCount", "subtitle")) or 0
   for i = 1, n do
@@ -894,7 +895,7 @@ M.first_cue_in_file = first_cue_in_file
 
 -- SRT -> media pool bin "WhisperX" -> track by the rule -> activate -> append -> check -> name.
 -- -> ok, message, warning
-local function place_srt(project, tl, srt, lang, first)
+local function place_srt(project, tl, srt, base, first)
   local mp = api(project, "GetMediaPool")
   local prev = api(mp, "GetCurrentFolder")
   local bin = whisperx_bin(mp)
@@ -973,10 +974,10 @@ local function place_srt(project, tl, srt, lang, first)
     log("Position not checked (first subtitle unknown)")
   end
 
-  local name = track_name(tl, lang, target)
+  local name = track_name(tl, base, target)
   log("SetTrackName ST" .. target, name, "->", tostring(api(tl, "SetTrackName", "subtitle", target, name)),
       "| now:", tostring(api(tl, "GetTrackName", "subtitle", target)))
-  return true, T("placed", { n = added, track = target, name = name }), warning
+  return true, T("placed", { n = added, track = target, name = name }), warning, target, name, added
 end
 M.place_srt = place_srt
 
@@ -1037,12 +1038,61 @@ local function show(id, visible)
   end
 end
 
-local function hint(text)
-  set_text("Hint", text or "")
-  show("Hint", text ~= nil)
+-- UIManager lays a window out for a different size than it draws, and widgets that were
+-- hidden at the first layout pile up until the layout is calculated again: recalculate
+-- now and once more on the next tick, after the event loop has drawn the change.
+local function relayout()
   if win then
     pcall(function() win:RecalcLayout() end)
   end
+  S.relayout = true
+end
+
+-- After an import (or a question about it) the window comes to the front and stays there
+-- until OK / close. Resolve owns the window, so it stays above Resolve while you work.
+local function to_front(done)
+  if not win then
+    return
+  end
+  pcall(function() win:Show() end)
+  pcall(function() win:Raise() end)
+  pcall(function() win:ActivateWindow() end)
+  if done then
+    set_text("Close", T("btn_ok"))
+  end
+  relayout()
+  log("Window brought to the front")
+end
+
+-- Where the job stands in the Workbench (progress.txt in the job folder, written by the Workbench).
+local function progress_text(p)
+  if type(p) ~= "table" or not p.state then
+    return T("waiting_do")
+  end
+  local pct = tonumber(p.pct) or 0
+  if p.state == "countdown" then
+    return T("wb_countdown", { n = p.n or "?" })
+  elseif p.state == "running" then
+    if p.stage == "asr" then
+      return T("wb_asr", { pct = pct })
+    elseif p.stage == "align" then
+      return T("wb_align", { pct = pct })
+    end
+    return T("wb_loading")
+  elseif p.state == "done" then
+    return T("wb_done")
+  elseif p.state == "error" then
+    return T("wb_error")
+  elseif p.state == "cancelled" then
+    return T("wb_cancelled")
+  end
+  return T("wb_queued")
+end
+M.progress_text = progress_text
+
+local function waiting_text(seconds, progress)
+  return T("waiting", { time = fmt_dur(seconds) }) .. "\n" .. progress_text(progress)
+      .. "\n\n" .. T("hint_changes")
 end
 
 local function buttons()
@@ -1052,36 +1102,35 @@ local function buttons()
   local idle = S.state == "idle"
   itm.Transcribe.Enabled = idle and S.can_transcribe == true
   itm.ImportSrt.Enabled = idle and S.can_import == true
+  if itm.Lang and itm.Mode then
+    itm.Lang.Enabled = idle
+    itm.Mode.Enabled = idle
+  end
   itm.Cancel.Enabled = S.state == "rendering" or S.state == "waiting" or S.state == "asking"
 end
 
 local function hide_question()
-  for _, id in ipairs({ "Question", "Answer", "Yes", "No" }) do
+  for _, id in ipairs({ "Answer", "Yes", "No" }) do
     show(id, false)
   end
-  if win then
-    pcall(function() win:RecalcLayout() end)
-  end
+  relayout()
 end
 
--- Question in the window (no blocking dialog): cb(yes, text) is called on Yes/No.
+-- Question in the window (no blocking dialog): the status line asks, cb(yes, text) is
+-- called on Yes/No.
 local function ask(question, yes_text, no_text, cb, input)
   S.ask_cb, S.ask_from = cb, S.state
   S.state = "asking"
-  set_text("Question", question)
+  status(question)
   set_text("Yes", yes_text)
   set_text("No", no_text)
-  show("Question", true)
   show("Yes", true)
   show("No", true)
   show("Answer", input ~= nil)
   if input ~= nil then
     set_text("Answer", input)
   end
-  if win then
-    pcall(function() win:RecalcLayout() end)
-  end
-  log("Question:", question)
+  relayout()
   buttons()
 end
 M.ask = ask
@@ -1125,13 +1174,59 @@ local function refresh_info()
       .. T(whole and "range_all" or "range_inout", { dur = dur }))
 end
 
+-- ─── Remembered between runs (resolve_temp\plugin.txt) ───────────────────────
+
+local SETTINGS = TEMP and join(TEMP, "plugin.txt") or nil
+
+local function choices()
+  return {
+    lang = { { "", T("opt_workbench") }, { "auto", T("lang_auto") }, { "de", T("lang_de") }, { "en", T("lang_en") },
+             { "tr", T("lang_tr") }, { "ar", T("lang_ar") } },
+    mode = { { "", T("opt_workbench") }, { "sentence", T("mode_sentence") }, { "word", T("mode_word") },
+             { "raw", T("mode_raw") } },
+  }
+end
+
+local function index_of(list, code)
+  for i, item in ipairs(list) do
+    if item[1] == code then
+      return i
+    end
+  end
+  return 1
+end
+
+-- Window position and size as saved; nothing unusable (off screen, too small).
+local function saved_geometry(v)
+  local x, y, w, h = tostring(v.geometry or ""):match("^(-?%d+),(-?%d+),(%d+),(%d+)$")
+  x, y, w, h = tonumber(x), tonumber(y), tonumber(w), tonumber(h)
+  if x and w >= 560 and h >= 400 and w <= 4000 and h <= 3000 and x > -200 and y > -200 and x < 8000 and y < 5000 then
+    return { x, y, w, h }
+  end
+  return nil
+end
+M.saved_geometry = saved_geometry
+
+local function save_settings()
+  if not SETTINGS or not HAS_IO then
+    return
+  end
+  local rows = { { "lang", S.choice_lang or "" }, { "mode", S.choice_mode or "" } }
+  local ok, g = pcall(function() return itm.WhisperXWin.Geometry end)
+  if ok and type(g) == "table" and tonumber(g[3]) and tonumber(g[4]) then
+    rows[#rows + 1] = { "geometry", string.format("%d,%d,%d,%d", g[1], g[2], g[3], g[4]) }
+  end
+  make_dir(TEMP)
+  local saved = write_kv(SETTINGS, "WhisperX plugin window", rows)
+  log("Window settings saved ->", tostring(saved))
+end
+
 -- ─── Steps ───────────────────────────────────────────────────────────────────
 
 local function end_job(marker, extra)
   delete_job_files(marker, extra)
   S.job, S.done = nil, nil
   S.state = "idle"
-  hint(nil)
   buttons()
 end
 
@@ -1155,12 +1250,12 @@ local function after_render(project)
   log("Step 6 - job file written:", join(S.job.dir, "job.txt"))
   S.state = "waiting"
   S.wait_started = os.time()
-  hint(T("hint_changes"))
   buttons()
   if launch_workbench(path) then
-    status(T("waiting", { time = "0:00" }))
+    status(waiting_text(0))
   else
-    status(T("launch_failed", { path = path }))
+    S.launch_failed = path
+    status(T("launch_failed", { path = path }) .. "\n\n" .. T("hint_changes"))
   end
 end
 
@@ -1205,13 +1300,29 @@ local function import_now(project, tl)
     log("OpenPage edit ->", tostring(api(resolve, "OpenPage", "edit")))
   end
   log("SaveProject before the import ->", tostring(api(pm, "SaveProject")))
-  local ok, msg, warning = place_srt(project, tl, done.srt, done.lang or "XX", tonumber(done.first))
+  local ok, msg, warning, main = place_srt(project, tl, done.srt, "WhisperX " .. (done.lang or "XX"),
+                                           tonumber(done.first))
+  if ok then
+    -- gaps and too fast subtitles, each on its own track (to check, then delete the track)
+    local names = { gaps = T("track_gaps"), fast = T("track_fast") }
+    for _, key in ipairs({ "gaps", "fast" }) do
+      if done[key] and done[key] ~= "" then
+        local eok, emsg, _, etrack, ename, en = place_srt(project, tl, done[key], names[key], nil)
+        log("Extra track", key, "->", tostring(eok), emsg)
+        if eok then
+          msg = msg .. "\n" .. T("placed_extra", { n = en, track = etrack, name = ename })
+        end
+      end
+    end
+    activate_only(tl, main)                           -- the transcript stays the visible track
+  end
   end_job(nil, done.files)
   if ok then
     status(msg .. (warning and ("\n" .. warning) or ""))
   else
     status(msg .. "\n" .. T("srt_kept", { path = done.srt }))
   end
+  to_front(true)
 end
 
 local function check_done()
@@ -1220,14 +1331,15 @@ local function check_done()
     log("job.txt is gone:", job.dir)
     S.job = nil
     S.state = "idle"
-    hint(nil)
     buttons()
     status(T("job_gone"))
     return
   end
   local done = read_kv(join(job.dir, "done.txt"))
   if not done then
-    status(T("waiting", { time = fmt_dur(os.time() - (S.wait_started or os.time())) }), true)
+    if not S.launch_failed then
+      status(waiting_text(os.time() - (S.wait_started or os.time()), read_kv(join(job.dir, "progress.txt"))), true)
+    end
     return
   end
   if not done.srt or done.srt == "" then
@@ -1249,6 +1361,7 @@ local function check_done()
   if not tl then
     end_job(nil, done.files)
     status(T("timeline_gone", { name = job.info.name, path = done.srt }))
+    to_front(true)
     return
   end
   if cur == nil or api(cur, "GetUniqueId") ~= job.info.id then
@@ -1264,8 +1377,10 @@ local function check_done()
         else
           end_job(nil, done.files)
           status(T("import_skipped", { path = done.srt }))
+          to_front(true)
         end
       end)
+    to_front(false)
     return
   end
   import_now(project, tl)
@@ -1276,6 +1391,10 @@ local function tick()
     return
   end
   S.ticking = true
+  if S.relayout then                                  -- second layout pass, see relayout()
+    S.relayout = false
+    pcall(function() win:RecalcLayout() end)
+  end
   local ok, err = pcall(function()
     if S.state == "idle" then
       refresh_info()
@@ -1314,8 +1433,9 @@ function M.transcribe()
     return status(T("playing"))
   end
   S.state = "busy"
+  S.launch_failed = nil
+  set_text("Close", T("btn_close"))
   buttons()
-  hint(nil)
   status(T("starting"))
   local ok, err = pcall(start_render, project, tl)
   if ok then
@@ -1344,7 +1464,7 @@ local function manual_import(path, lang)
     log("OpenPage edit ->", tostring(api(resolve, "OpenPage", "edit")))
   end
   log("Import SRT:", path, "| language:", lang)
-  local ok, msg, warning = place_srt(project, tl, path, lang, first_cue_in_file(path))
+  local ok, msg, warning = place_srt(project, tl, path, "WhisperX " .. lang, first_cue_in_file(path))
   S.state = "idle"
   buttons()
   status(msg .. (warning and ("\n" .. warning) or ""))
@@ -1380,6 +1500,7 @@ function M.import_click()
   if S.state ~= "idle" then
     return
   end
+  set_text("Close", T("btn_close"))
   choose_srt(function(path)
     if not file_exists(path) then
       return status(T("file_missing", { path = path }))
@@ -1423,7 +1544,7 @@ function M.cancel()
     end_job("cancel.txt", S.done and S.done.files)
   end
   S.state = "idle"
-  hint(nil)
+  set_text("Close", T("btn_close"))
   buttons()
   status(T("cancelled"))
 end
@@ -1432,6 +1553,7 @@ function M.close()
   if S.job or S.state == "rendering" or S.state == "waiting" then
     M.cancel()
   end
+  save_settings()
   if disp then
     disp:ExitLoop()
   end
@@ -1462,23 +1584,34 @@ function M.main()
   end
   ui = fu.UIManager
   disp = bmd.UIDispatcher(ui)
+  local saved = SETTINGS and read_kv(SETTINGS) or {}
+  local list = choices()
+  S.choice_lang = list.lang[index_of(list.lang, saved.lang)][1]
+  S.choice_mode = list.mode[index_of(list.mode, saved.mode)][1]
   win = disp:AddWindow({
     ID = "WhisperXWin",
     WindowTitle = T("title") .. " " .. WX.version,
-    Geometry = { 260, 180, 600, 380 },
+    Geometry = saved_geometry(saved) or { 260, 180, 640, 460 },
+    MinimumSize = { 560, 420 },
     ui:VGroup{
       ID = "Root",
       Spacing = 8,
-      ui:Label{ ID = "Info", Text = "", WordWrap = true, Weight = 0 },
+      ui:Label{ ID = "Info", Text = "", WordWrap = true, Weight = 0, MinimumSize = { 500, 34 } },
+      ui:HGroup{                                        -- chosen here, they win over the Workbench window
+        Weight = 0,
+        ui:Label{ ID = "LangLabel", Text = T("label_lang"), Weight = 0 },
+        ui:ComboBox{ ID = "Lang", Weight = 1 },
+        ui:Label{ ID = "ModeLabel", Text = T("label_mode"), Weight = 0 },
+        ui:ComboBox{ ID = "Mode", Weight = 1 },
+      },
       ui:HGroup{
         Weight = 0,
         ui:Button{ ID = "Transcribe", Text = T("btn_transcribe") },
         ui:Button{ ID = "ImportSrt", Text = T("btn_import") },
       },
-      ui:Label{ ID = "Status", Text = "", WordWrap = true, Weight = 1, Alignment = { AlignLeft = true, AlignTop = true } },
-      ui:Label{ ID = "Hint", Text = "", WordWrap = true, Weight = 0, Hidden = true,
-                StyleSheet = "QLabel { color: #e5c07b; }" },
-      ui:Label{ ID = "Question", Text = "", WordWrap = true, Weight = 0, Hidden = true },
+      -- one label for status, hints and questions: labels shown later lay out badly
+      ui:Label{ ID = "Status", Text = "", WordWrap = true, Weight = 1, MinimumSize = { 500, 150 },
+                Alignment = { AlignLeft = true, AlignTop = true } },
       ui:HGroup{
         Weight = 0,
         ui:LineEdit{ ID = "Answer", Text = "", Hidden = true },
@@ -1495,6 +1628,19 @@ function M.main()
     },
   })
   itm = win:GetItems()
+  for _, key in ipairs({ "lang", "mode" }) do
+    local id = key == "lang" and "Lang" or "Mode"
+    for _, item in ipairs(list[key]) do
+      pcall(function() itm[id]:AddItem(item[2]) end)
+    end
+    pcall(function() itm[id].CurrentIndex = index_of(list[key], S["choice_" .. key]) - 1 end)
+    win.On[id].CurrentIndexChanged = function()
+      local ok, i = pcall(function() return itm[id].CurrentIndex end)
+      local item = list[key][(ok and tonumber(i) or 0) + 1]
+      S["choice_" .. key] = item and item[1] or ""
+      log("Chosen", key, "->", S["choice_" .. key] == "" and "as in the Workbench" or S["choice_" .. key])
+    end
+  end
 
   win.On.WhisperXWin.Close = guarded(M.close)
   win.On.Close.Clicked = guarded(M.close)
@@ -1536,6 +1682,7 @@ function M.main()
   buttons()
   timer:Start()
   win:Show()
+  relayout()                                          -- the first layout is made for a wrong size
   disp:RunLoop()
   timer:Stop()
   win:Hide()

@@ -298,11 +298,14 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · Jobs aus DaVinci Resolve",
-    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Öffnet das Plugin das Fenster, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon geöffneten Fenster mit den dort eingestellten.",
+    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Öffnet das Plugin das Fenster, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon geöffneten Fenster mit den dort eingestellten. Sprache und Modus, die du im Plugin-Fenster wählst, gehen beidem vor.",
     "sw_resolve_countdown": "Jobs aus DaVinci Resolve automatisch starten nach",
     "sw_resolve_countdown_unit": "Sekunden",
     "resolve_countdown": "Countdown für DaVinci-Jobs",
-    "resolve_countdown_off": "Ohne Haken startest du selbst mit „Start“."
+    "resolve_countdown_off": "Ohne Haken startest du selbst mit „Start“.",
+    "resolve_auto_hand_over": "Nach dem Transkribieren automatisch an DaVinci übergeben",
+    "resolve_extra_tracks": "Lücken und zu schnelle Untertitel mit übergeben, jeweils auf eine eigene Untertitelspur",
+    "resolve_close_after": "Workbench nach der Übergabe schließen (sonst wird sie minimiert und die Modelle bleiben geladen)"
   },
   "cmpdlg": {
     "title": "Text vergleichen",
@@ -638,7 +641,10 @@
     "cleanup": {
       "one": "1 alter DaVinci-Resolve-Job-Ordner entfernt",
       "other": "{n} alte DaVinci-Resolve-Job-Ordner entfernt"
-    }
+    },
+    "fast_cue": "zu schnell: {cps} Zeichen/s",
+    "log_job_options": "Sprache und Modus aus DaVinci Resolve: {lang} · {mode}",
+    "as_window": "wie in diesem Fenster"
   },
   "plugin": {
     "title": "WhisperX Untertitel",
@@ -672,10 +678,7 @@
     "err_add_job": "Resolve hat den Render-Job nicht angelegt.",
     "err_start_render": "Resolve hat den Render-Job nicht gestartet.",
     "err_write": "{path} kann nicht geschrieben werden: {why}",
-    "waiting": [
-      "Warte auf die Workbench … {time}",
-      "Dort transkribieren und „An DaVinci übergeben“ drücken."
-    ],
+    "waiting": "Warte auf die Workbench … {time}",
     "launch_failed": [
       "Die Workbench konnte nicht gestartet werden. Starte sie selbst und ziehe diese Datei in ihr Fenster:",
       "{path}",
@@ -701,7 +704,30 @@
     "file_missing": "Datei nicht gefunden: {path}",
     "ask_lang": "Sprache der Untertitel (für den Spurnamen, z. B. DE, EN, TR):",
     "no_lang": "Keine Sprache angegeben – es wurde nichts importiert.",
-    "error": "Fehler: {why} (Details unter Workspace → Console)"
+    "error": "Fehler: {why} (Details unter Workspace → Console)",
+    "label_lang": "Sprache",
+    "label_mode": "Modus",
+    "opt_workbench": "wie in der Workbench",
+    "lang_auto": "Automatisch",
+    "lang_de": "Deutsch",
+    "lang_en": "Englisch",
+    "lang_tr": "Türkisch",
+    "lang_ar": "Arabisch",
+    "mode_sentence": "Satzweise",
+    "mode_word": "Wort für Wort",
+    "mode_raw": "Raw",
+    "waiting_do": "Dort transkribieren und „An DaVinci übergeben“ drücken.",
+    "wb_queued": "Workbench: Job übernommen, wartet auf den Start.",
+    "wb_countdown": "Workbench: automatischer Start in {n} s.",
+    "wb_loading": "Workbench: Ton und Modell werden geladen …",
+    "wb_asr": "Workbench: Transkription {pct} %",
+    "wb_align": "Workbench: Wort-Zeitstempel {pct} %",
+    "wb_done": "Workbench: fertig – dort „An DaVinci übergeben“ drücken.",
+    "wb_error": "Workbench: Fehler – siehe Protokoll der Workbench.",
+    "wb_cancelled": "Workbench: abgebrochen.",
+    "track_gaps": "WhisperX Lücken",
+    "track_fast": "WhisperX zu schnell",
+    "placed_extra": "+ {n} auf Untertitelspur {track} „{name}“ – zum Prüfen, danach die Spur löschen."
   },
   "tip": {
     "files": [
@@ -1059,6 +1085,9 @@
     ],
     "resolve_install": "Kopiert das Plugin in den Script-Ordner von DaVinci Resolve (…\\Fusion\\Scripts\\Utility). Der Ordner dieser Workbench, die Oberflächensprache und alle Texte des Plugins werden fest eingetragen – es gibt nichts einzustellen. Nach dem Verschieben der Workbench oder einem Sprachwechsel neu installieren.",
     "resolve_countdown": "Sekunden, bis ein Job aus DaVinci Resolve automatisch transkribiert wird. Ein Klick ins Fenster hält den Countdown an.",
-    "resolve_hand_over": "Verschiebt die Untertitel an die Stelle des transkribierten Bereichs in der Timeline und übergibt sie an das wartende Plugin in DaVinci Resolve. Die SRT wird dafür neu von der Festplatte gelesen – Änderungen in der Zwischenzeit zählen."
+    "resolve_hand_over": "Verschiebt die Untertitel an die Stelle des transkribierten Bereichs in der Timeline und übergibt sie an das wartende Plugin in DaVinci Resolve. Die SRT wird dafür neu von der Festplatte gelesen – Änderungen in der Zwischenzeit zählen.",
+    "resolve_auto_hand_over": "„An DaVinci übergeben“ musst du nicht mehr drücken: Sobald der Job transkribiert ist, gehen die Untertitel an das wartende Plugin. Sinnvoll, wenn du die Untertitel ohnehin in Resolve prüfst.",
+    "resolve_extra_tracks": "Zwei zusätzliche Untertitelspuren in Resolve: „WhisperX Lücken“ markiert laute Stellen ohne Text (Lücken-Check), „WhisperX zu schnell“ markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (nur Satzweise). Sie sind zum Prüfen da – danach die Spuren löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu.",
+    "resolve_close_after": "Ohne Haken minimiert sich die Workbench nach der Übergabe und behält ihre Modelle – der nächste Job startet ohne Ladezeit. Mit Haken schließt sie sich."
   }
 }

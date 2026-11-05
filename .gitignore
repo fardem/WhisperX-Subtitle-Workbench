@@ -25,7 +25,8 @@ whisper_tool_error.log
 # Models downloaded into the folder
 models/
 
-# Job folders of the DaVinci Resolve plugin (rendered audio, last SRT)
+# Job folders of the DaVinci Resolve plugin (rendered audio, last SRT); temp/ was used by 0.5.0
+resolve_temp/
 temp/
 
 # Tests

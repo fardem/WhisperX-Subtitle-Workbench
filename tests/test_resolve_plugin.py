@@ -26,12 +26,12 @@ TEMPLATE = (ROOT / "resolve" / wr.PLUGIN_FILE).read_text(encoding="utf-8")
 class Harness:
     def __init__(self, tmp_path: Path, lang="de", template=None):
         self.wb = tmp_path / "Workbench"
-        (self.wb / "venv").mkdir(parents=True)
+        (self.wb / "venv").mkdir(parents=True, exist_ok=True)
         (self.wb / "whisper_tool.py").write_text("# fake", encoding="utf-8")
         self.python = self.wb / "venv" / "pythonw"
         self.python.write_text("", encoding="utf-8")
-        self.last = self.wb / "temp" / "resolve" / wr.LAST_DIR_NAME
-        self.last.mkdir(parents=True)
+        self.last = self.wb / wr.TEMP_DIR.name
+        self.last.mkdir(parents=True, exist_ok=True)
         self.texts = wr.plugin_texts()
         self.lang = lang
         self.code = template if template is not None else wr.build_plugin(
@@ -108,8 +108,7 @@ class Harness:
         return [tuple(c.values())[1:] for c in self.mock.calls.values() if c[1] == name]
 
     def job_dirs(self):
-        root = self.wb / "temp" / "resolve"
-        return [d for d in root.iterdir() if d.is_dir() and d.name != wr.LAST_DIR_NAME]
+        return [d for d in self.last.iterdir() if d.is_dir()]
 
     def tracks(self):
         tl = self.mock.timeline
@@ -119,7 +118,7 @@ class Harness:
                         "starts": [it.start for it in t["items"].values()]})
         return out
 
-    def workbench_hands_over(self, lang="de", cues=((1.0, 2.5, "Hallo"), (4.0, 6.0, "Welt"))):
+    def workbench_hands_over(self, lang="de", cues=((1.0, 2.5, "Hallo"), (4.0, 6.0, "Welt")), **extra):
         """What the Workbench does: transcribe (fake SRT next to the WAV) and hand over."""
         (job_dir,) = self.job_dirs()
         wav = job_dir / "audio.wav"
@@ -129,7 +128,7 @@ class Harness:
         srt.write_text("".join(f"{i}\n{_t(a)} --> {_t(b)}\n{txt}\n\n" for i, (a, b, txt) in enumerate(cues, 1)),
                        encoding="utf-8")
         (job_dir / "audio.gaps.srt").write_text("1\n00:00:00,000 --> 00:00:01,000\nx\n\n", encoding="utf-8")
-        return job, wr.hand_over(job, srt, lang, last_dir=self.last)
+        return job, wr.hand_over(job, srt, lang, last_dir=self.last, **extra)
 
 
 def _t(sec):
@@ -170,7 +169,7 @@ def test_full_round_trip_with_in_out(tmp_path):
         h.tick()                                    # render finished → job.txt, Workbench started
         assert h.mock.page == "edit"                # page restored
         assert len(h.commands) == 1 and "whisper_tool.py" in h.commands[0] and "audio.wav" in h.commands[0]
-        assert h.T("hint_changes") == h.text("Hint")
+        assert h.T("hint_changes") in h.text("Status")
         job, res = h.workbench_hands_over()
         result["job"], result["res"] = job, res
         h.tick()                                    # done.txt → import
@@ -273,8 +272,8 @@ def test_end_frame_changed_asks_first(tmp_path):
         h.mock.timeline.last = h.mock.timeline.last + 100
         h.workbench_hands_over()
         h.tick()
-        seen["question"] = h.text("Question")
-        seen["hidden"] = h.mock["items"].Question.Hidden
+        seen["question"] = h.text("Status")
+        seen["hidden"] = h.mock["items"].Yes.Hidden
         assert h.tracks() == []                     # nothing imported before the answer
         h.click("Yes")
 
@@ -438,7 +437,7 @@ def test_left_over_jobs_and_presets_of_the_plugin_are_removed(tmp_path):
     h = Harness(tmp_path)
 
     def steps(h):
-        old = h.wb / "temp" / "resolve" / "old"
+        old = h.wb / wr.TEMP_DIR.name / "old"
         h.mock.renders = _lua_tables(h.lua, [
             {"id": "foreign", "settings": {"TargetDir": "D:/Renders"}, "name": "film.mov", "pct": 0,
              "status": "Ready", "error": "", "ticks_left": 0},
@@ -534,3 +533,130 @@ def test_import_waits_while_the_timeline_plays(tmp_path):
     h.run(steps, timelines=[timeline()])
     assert seen["status"] == h.T("playing") and seen["tracks"] == []
     assert h.tracks()[0]["name"] == "WhisperX DE"
+
+
+def test_window_comes_to_the_front_with_ok_after_the_import(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        seen["close_waiting"] = h.text("Close")
+        h.workbench_hands_over()
+        h.tick()
+        seen["close_done"] = h.text("Close")
+        h.click("Transcribe")                       # a new job: the button is "Close" again
+        seen["close_new"] = h.text("Close")
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert seen["close_waiting"] == h.T("btn_close") and seen["close_done"] == h.T("btn_ok")
+    assert seen["close_new"] == h.T("btn_close")
+    assert h.calls("Raise") and h.calls("ActivateWindow")
+
+
+def test_layout_is_calculated_again_after_showing(tmp_path):
+    h = Harness(tmp_path)
+
+    def steps(h):
+        n = len(h.calls("RecalcLayout"))
+        h.tick()                                    # the second pass after the event loop drew the window
+        assert len(h.calls("RecalcLayout")) == n + 1 >= 2
+
+    h.run(steps, timelines=[timeline()])
+
+
+def test_progress_of_the_workbench_is_shown_while_waiting(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        seen["plain"] = h.text("Status")
+        (job_dir,) = h.job_dirs()
+        wr.write_progress(wr.find_job(job_dir / "audio.wav"), "running", stage="asr", pct=45)
+        h.tick()
+        seen["asr"] = h.text("Status")
+        wr.write_progress(wr.find_job(job_dir / "audio.wav"), "countdown", n=7)
+        h.tick()
+        seen["countdown"] = h.text("Status")
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert h.T("waiting_do") in seen["plain"] and h.T("hint_changes") in seen["plain"]
+    assert h.T("wb_asr", pct=45) in seen["asr"] and h.T("wb_countdown", n=7) in seen["countdown"]
+
+
+def test_gaps_and_fast_subtitles_get_own_tracks_and_the_transcript_stays_active(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        h.workbench_hands_over(cues=((1.0, 2.5, "Hallo"), (4.0, 4.5, "Viel zu viel Text für so wenig Zeit")),
+                               gaps=[(8.0, 9.5, -4.0)], fast_cps=17)
+        h.tick()
+        seen["status"] = h.text("Status")
+
+    h.run(steps, timelines=[timeline()])
+    t = h.tracks()
+    assert [x["name"] for x in t] == ["WhisperX DE", h.T("track_gaps"), h.T("track_fast")]
+    assert [x["enabled"] for x in t] == [True, False, False]
+    assert t[1]["starts"] == [90000 + 8 * 25] and t[2]["starts"] == [90000 + 4 * 25]      # no In point: no offset
+    assert h.T("placed_extra", n=1, track=2, name=h.T("track_gaps")) in seen["status"]
+    assert h.job_dirs() == []                           # the extra SRTs are deleted with the job folder
+
+
+def test_language_and_mode_chosen_in_the_plugin_go_into_the_job(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        assert list(h.mock["items"].Lang.entries.values())[0] == h.T("opt_workbench")
+        h.mock.choose("Lang", 4)                       # Turkish
+        h.mock.choose("Mode", 2)                       # word by word
+        h.click("Transcribe")
+        h.tick(2)
+        (job_dir,) = h.job_dirs()
+        seen["job"] = wr.find_job(job_dir / "audio.wav")
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert (seen["job"].language, seen["job"].mode) == ("tr", "word")
+
+
+def test_window_position_and_choices_are_remembered(tmp_path):
+    h = Harness(tmp_path)
+
+    def first(h):
+        h.mock.choose("Mode", 3)                       # raw
+        h.mock.move_to = None
+        h.mock["items"].WhisperXWin.Geometry = h.lua.table_from([300, 200, 700, 500])
+        h.mock.close_window()
+
+    h.run(first, timelines=[timeline()])
+    saved = wr.read_kv(h.last / "plugin.txt")
+    assert (saved["mode"], saved["geometry"]) == ("raw", "300,200,700,500")
+
+    h2 = Harness(tmp_path)
+    seen = {}
+
+    def second(h):
+        seen["geometry"] = list(h.mock.window_spec.Geometry.values())
+        seen["mode"] = h.mock["items"].Mode.CurrentIndex
+
+    h2.run(second, timelines=[timeline()])
+    assert seen == {"geometry": [300, 200, 700, 500], "mode": 3}
+
+
+def test_unusable_saved_geometry_is_ignored(tmp_path):
+    h = Harness(tmp_path)
+    g = h.lua.globals()
+    g.WX_TEST = True
+    m = h.lua.execute(h.code)
+    for bad in ("", "1,2,3", "0,0,100,100", "-5000,0,700,500", "0,0,99999,500"):
+        assert m.saved_geometry(h.lua.table_from({"geometry": bad})) is None
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})).values()) == [10, 20, 640, 460]

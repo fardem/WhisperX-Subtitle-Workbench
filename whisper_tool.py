@@ -42,6 +42,7 @@ import threading
 import time
 import traceback
 from collections import deque
+from dataclasses import replace
 from pathlib import Path
 
 HERE        = Path(__file__).resolve().parent
@@ -493,9 +494,13 @@ class App(BaseTk):
         self.b_start.grid(row=0, column=0)
         self.b_cancel = ttk.Button(bf, text=T("main.cancel"), command=self.cancel, state="disabled")
         self.b_cancel.grid(row=0, column=1, padx=8)
-        # only visible with a job from DaVinci Resolve in the list, active once it is transcribed
-        self.b_resolve = ttk.Button(bf, text=T("resolve.hand_over"), command=self._hand_over, state="disabled")
-        self.b_resolve.grid(row=0, column=2, padx=(0, 8))
+        # only visible with a job from DaVinci Resolve in the list, blue and active once it is
+        # transcribed (a tk button: the native Windows theme ignores colors of ttk buttons)
+        self.b_resolve = tk.Button(bf, text=T("resolve.hand_over"), command=self._hand_over, state="disabled",
+                                   font=bold, relief="flat", bd=0, padx=14, pady=4, cursor="hand2",
+                                   fg="white", activeforeground="white", disabledforeground="#8c8c8c")
+        self._resolve_bg = (self.b_resolve.cget("background"), "#1a66d2", "#1557b0")   # off, on, pressed
+        self.b_resolve.grid(row=0, column=2, padx=(0, 8), sticky="ns")
         self.b_resolve.grid_remove()
         self.l_status = ttk.Label(bf, text=T("main.ready"))
         self.l_status.grid(row=0, column=3, sticky="w", padx=8)
@@ -588,6 +593,12 @@ class App(BaseTk):
                 rng = T("resolve.range_all" if job.whole else "resolve.range_inout", dur=fmt_clock(job.duration()))
                 self._append_log(i18n.line("info", "resolve.log_job", timeline=job.timeline, range=rng,
                                            fps=job.fps_text or f"{job.fps:g}") + "\n")
+                if job.language or job.mode:          # chosen in the plugin, wins over the main window
+                    self._append_log(i18n.line(
+                        "info", "resolve.log_job_options",
+                        lang=label_of(self.lang_choices, job.language) if job.language else T("resolve.as_window"),
+                        mode=label_of(self.mode_choices, job.mode) if job.mode else T("resolve.as_window")) + "\n")
+                self._resolve_progress(iid, "queued")
         if new and self._running():
             for iid in new:
                 self.extra.put(iid)
@@ -704,6 +715,9 @@ class App(BaseTk):
             self.tree.item(iid, tags=(tag or state,))
             if self.items[iid].get("job"):
                 self._update_resolve_ui()
+                p = {"done": "done", "error": "error", "cancel": "cancelled", "wait": "queued"}.get(state)
+                if p:
+                    self._resolve_progress(iid, p)
 
     # ── Processing ─────────────────────────────────────────────────────────────
 
@@ -840,10 +854,15 @@ class App(BaseTk):
             self.q.put(("current", iid, n, total))
             self.q.put(("log", f"\n━━ [{n}/{total}] {item['path'].name} ━━\n"))
             t = time.perf_counter()
+            job_opts = opts
+            if job is not None:                       # language/mode chosen in the plugin win
+                job_opts = replace(opts,
+                                   language=job.language if job.language in ("auto",) + core.LANGS else opts.language,
+                                   mode=job.mode if job.mode in core.MODES else opts.mode)
             try:
-                info = self.engine.process(item["path"], opts)
-                # suffix with {model} → actual name; the language goes with a hand-over to DaVinci Resolve
-                self.q.put(("out", iid, info["output"], info.get("language")))
+                info = self.engine.process(item["path"], job_opts)
+                # suffix with {model} → actual name; language, mode and gaps go with a hand-over to DaVinci
+                self.q.put(("out", iid, info))
                 lang = f" · {info['language']}" if info.get("language", "-") != "-" else ""
                 gaps = info.get("gaps", 0)
                 self.q.put(("state", iid, "done",
@@ -875,9 +894,14 @@ class App(BaseTk):
                 self._append_log(msg[1])
             elif kind == "state":
                 self._set_state(*msg[1:])
+                it = self.items.get(msg[1])
+                if msg[2] == "done" and it and it.get("job") and self.cfg.resolve_auto and not it.get("handed"):
+                    self.after(300, lambda i=msg[1]: self._hand_over([i]))
             elif kind == "current":
                 iid, n, total = msg[1:]
                 self.current = (n, total, self.items[iid]["kind"])
+                self.current_iid = iid
+                self._resolve_progress(iid, "running", stage="", pct=0)
                 self._set_state(iid, "running", T("status.running"))
                 self.tree.see(iid)
                 self.pb.stop()
@@ -891,6 +915,8 @@ class App(BaseTk):
                 stage, pct = msg[1:]
                 value = pct * 0.7 if stage == "asr" else 70 + pct * 0.3
                 self.pb.config(mode="determinate", value=value)
+                if getattr(self, "current_iid", None):
+                    self._resolve_progress(self.current_iid, "running", stage=stage, pct=int(pct))
                 if self.current:
                     step = T("main.step_asr" if stage == "asr" else "main.step_align")
                     self.l_status.config(text=T("main.file_n", n=self.current[0], total=self.current[1])
@@ -903,8 +929,9 @@ class App(BaseTk):
                 self._show_check(*msg[1:])
             elif kind == "out":
                 if msg[1] in self.items:
-                    self.items[msg[1]]["out"] = msg[2]
-                    self.items[msg[1]]["lang"] = msg[3]
+                    info, it = msg[2], self.items[msg[1]]
+                    it.update(out=info["output"], lang=info.get("language"), mode=info.get("mode"),
+                              gap_list=info.get("gap_list") or [])
             elif kind == "dnd":
                 ok, text, parent = msg[1:]
                 (messagebox.showinfo if ok else messagebox.showerror)(
@@ -1027,7 +1054,9 @@ class App(BaseTk):
         else:
             self.b_resolve.grid_remove()
         ready = any(it["state"] == "done" for it in jobs)
-        self.b_resolve.state(["!disabled"] if ready else ["disabled"])
+        off, on, pressed = self._resolve_bg
+        self.b_resolve.configure(state="normal" if ready else "disabled", background=on if ready else off,
+                                 activebackground=pressed if ready else off)
 
     def _resolve_arrived(self, iids):
         """A job from the DaVinci Resolve plugin: own countdown, then the options of the last DaVinci job."""
@@ -1093,14 +1122,22 @@ class App(BaseTk):
         self._update_mode_fields()
         return True
 
-    def _hand_over(self):
+    def _hand_over(self, iids=None):
         """
-        "Hand over to DaVinci": the selected transcribed jobs – or all that were not handed over yet.
-        The SRT is shifted to the position of the range in the timeline and lands in temp/resolve/letzte/.
+        "Hand over to DaVinci": the given jobs (automatic hand-over), else the selected transcribed
+        jobs – or all that were not handed over yet. The SRT is shifted to the position of the range
+        in the timeline and lands in resolve_temp/; gaps and too fast subtitles go along for own
+        tracks if switched on. Afterwards the window gets out of the way – minimized (the models
+        stay loaded) or closed – and the plugin in DaVinci Resolve comes to the front with the result.
         """
         done = [i for i, it in self.items.items() if it.get("job") and it["state"] == "done"]
         sel = [i for i in self.tree.selection() if i in done]
-        targets = sel or [i for i in done if not self.items[i].get("handed")] or done
+        if iids is not None:
+            targets = [i for i in iids if i in done and not self.items[i].get("handed")]
+        else:
+            targets = sel or [i for i in done if not self.items[i].get("handed")] or done
+        extra = self.cfg.resolve_extra
+        handed = 0
         for iid in targets:
             it = self.items[iid]
             lang = it.get("lang")
@@ -1108,7 +1145,12 @@ class App(BaseTk):
                 lang = key_of(self.lang_choices, self.v_lang.get())
                 lang = "" if lang == "auto" else lang
             try:
-                res = wt_resolve.hand_over(it["job"], it["out"], lang, encoding=self.cfg.encoding)
+                res = wt_resolve.hand_over(
+                    it["job"], it["out"], lang, encoding=self.cfg.encoding,
+                    gaps=it.get("gap_list") if extra else None,
+                    gap_label=lambda s, e, rel: T("core.gap_cue", len=i18n.secs(e - s), db=f"{rel:+.0f}"),
+                    fast_cps=core.READING_CPS if extra and it.get("mode") == "sentence" else None,
+                    fast_label=lambda cps: T("resolve.fast_cue", cps=f"{cps:.0f}"))
             except (wt_resolve.ResolveError, OSError) as e:
                 self._append_log(f"{i18n.tag('error')}{e}\n")
                 messagebox.showerror(T("resolve.hand_over_title"), str(e), parent=self)
@@ -1119,10 +1161,24 @@ class App(BaseTk):
                                        offset=i18n.secs(res.offset, 3)) + "\n")
             self.l_status.config(text=T("resolve.log_handed", name=res.srt.name, n=res.cues, lang=res.lang,
                                         offset=i18n.secs(res.offset, 3)))
+            handed += 1
+        if handed and self.cfg.resolve_close and not self._running():
+            self.after(400, self._close_now)
+        elif handed:
+            self.after(150, self.iconify)
+
+    def _close_now(self):
+        """After a hand-over, if switched on: close without asking (nothing is running)."""
+        if self._running():
+            self.iconify()
+            return
+        self.destroy()
+        os._exit(0)
 
     def _cleanup_resolve_jobs(self):
         """Background: remove job folders of the plugin that were cancelled, imported or left behind."""
         try:
+            wt_resolve.remove_legacy_dir()          # temp/resolve/ of 0.5.0
             n = wt_resolve.cleanup_jobs()
         except Exception:
             return
@@ -1151,6 +1207,10 @@ class App(BaseTk):
             return
         self.l_status.config(text=T("resolve.countdown" if self.countdown_resolve else "main.countdown",
                                     n=self.countdown))
+        if self.countdown_resolve:                   # the plugin shows the countdown too
+            for i, it in self.items.items():
+                if it.get("job") and it["state"] == "wait":
+                    self._resolve_progress(i, "countdown", n=self.countdown)
         self.countdown -= 1
         self.after(1000, lambda: self._tick(run))
 
@@ -1159,6 +1219,20 @@ class App(BaseTk):
             self.countdown = None
             if not silent:
                 self.l_status.config(text=T("main.countdown_stopped"))
+            for i, it in self.items.items():
+                if it.get("job") and it["state"] == "wait":
+                    self._resolve_progress(i, "queued")
+
+    def _resolve_progress(self, iid, state, **values):
+        """Tell the waiting plugin where a DaVinci job stands (progress.txt in its job folder)."""
+        it = self.items.get(iid)
+        job = it.get("job") if it else None
+        if job is None or it.get("handed") or not wt_resolve:
+            return
+        key = (state, tuple(sorted(values.items())))
+        if it.get("progress") != key:
+            it["progress"] = key
+            wt_resolve.write_progress(job, state, **values)
 
     # ── Log ────────────────────────────────────────────────────────────────────
 
@@ -1640,6 +1714,11 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self._switch(f, r, "resolve_countdown", "Resolve", "countdown", c.resolve_countdown, 10, 1, 600, 1)
         ttk.Label(f, text=T("set.resolve_countdown_off"), foreground="#77767b").grid(
             row=r + 1, column=0, columnspan=3, sticky="w", pady=(2, 0))
+        for i, (key, value) in enumerate((("auto_hand_over", c.resolve_auto), ("extra_tracks", c.resolve_extra),
+                                          ("close_after", c.resolve_close))):
+            cb = ttk.Checkbutton(f, text=T(f"set.resolve_{key}"), variable=self._var("Resolve", key, value, True))
+            cb.grid(row=r + 2 + i, column=0, columnspan=3, sticky="w", pady=(8 if i == 0 else 3, 0))
+            tip(cb, f"resolve_{key}", sc)
 
     def _plugin_state(self) -> str:
         info = wt_resolve.installed_plugin()

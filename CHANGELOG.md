@@ -2,6 +2,28 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.6.0] – 2026-11-05
+
+**Updating from 0.5.x:** close the workbench, update, then install the plugin again under *Settings → DaVinci Resolve*. The new options in `[Resolve]` start with their defaults (automatic hand-over off, extra tracks on, minimize after the hand-over).
+
+- **Plugin window:**
+  - shows where the job stands in the workbench: waiting for the start, the countdown, loading, transcription and word timestamps in percent, done, error (the workbench writes `progress.txt` into the job folder)
+  - **Language** and **Mode** can be chosen in the plugin; “as in the Workbench” keeps the options of the workbench window. A choice here wins over the workbench for this job
+  - remembers its position, its size and the two choices (`resolve_temp\plugin.txt`)
+- **Gaps and too fast subtitles as own subtitle tracks** (*Settings → DaVinci Resolve*, on by default): “WhisperX gaps” marks loud passages without text from the gap check, “WhisperX too fast” marks subtitles with more than 17 characters per second (mode *Sentences*). They are for checking in Resolve – delete the tracks afterwards. The transcript track stays the active one; nothing is added when there is nothing to show
+- **Hand over by itself** (*Settings → DaVinci Resolve*, off by default): as soon as the job is transcribed, the subtitles go to the waiting plugin
+- **After the hand-over** the workbench is minimized (the models stay loaded) or – with the new tick – closed. While other files are still running it is always minimized
+
+## [0.5.1] – 2026-11-05
+
+**Updating from 0.5.0:** close the workbench, update, then install the plugin again under *Settings → DaVinci Resolve* (the tab shows “please update”). The old folder `temp\resolve\` is removed on the next start.
+
+- **DaVinci Resolve plugin window:**
+  - it no longer starts cut off or squeezed: the layout is calculated again after the window appears, the window has a minimum size, and the hint about timeline changes and the questions are part of the status text instead of lines that are shown later (they overlapped the buttons)
+  - after the import the window comes to the front with the result and stays there until *OK* (the *Close* button says *OK* then)
+- **Workbench:** **→ Hand over to DaVinci** is blue and bold once the job is transcribed. After the hand-over the window minimizes itself; it stays open, so the models stay loaded for the next job
+- One folder level instead of three: job folders and the SRT of the last hand-over are in `resolve_temp\` (before: `temp\resolve\` and `temp\resolve\letzte\`). Only one SRT lies there; job folders next to it are not touched
+
 ## [0.5.0] – 2026-11-05
 
 **Updating from 0.4.x:** close the old window first. Python packages need no update, and your `whisper_tool.ini` needs no change: without the new section `[Resolve]` its defaults apply (countdown 10 seconds), the tool adds it when needed. To work with DaVinci Resolve, install the plugin under *Settings → DaVinci Resolve*.

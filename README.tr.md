@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.5.0** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.6.0** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -224,7 +224,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ## Güvenli güncelleme
 
-- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.5.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.6.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 
@@ -327,15 +327,16 @@ Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini deği�
 
 ### İş akışı
 
-1. Zaman çizelgesini Resolve'da açın. Yalnızca bir bölüm yazıya dökülecekse In ve Out koyun, yoksa tüm zaman çizelgesi kullanılır. Eklentiyi başlatın ve **Yazıya dök** düğmesine basın.
-2. Eklenti, zaman çizelgesinin ana miksini WAV olarak Workbench'in `temp\resolve\<iş>\` klasörüne render eder. Ardından render işi silinir; sayfa, Deliver ayarları ve In/Out işaretleri eskisi gibidir – bir hatadan veya *İptal*'den sonra da. Sonra Workbench'i WAV ile başlatır; zaten açık olan bir Workbench dosyayı devralır, modelleri yüklü kalır.
-3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Pencereyi eklenti açtıysa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız.
-4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın. SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `temp\resolve\letzte\<ZamanÇizelgesi>_<DİL>.srt` olarak kaydedilir. Bu klasörde her zaman yalnızca son aktarımın SRT'si bulunur.
-5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir.
+1. Zaman çizelgesini Resolve'da açın. Yalnızca bir bölüm yazıya dökülecekse In ve Out koyun, yoksa tüm zaman çizelgesi kullanılır. Eklentiyi başlatın, gerekirse bu iş için **Dil** ve **Mod** seçin (“Workbench'teki gibi” Workbench penceresinin seçeneklerini kullanır) ve **Yazıya dök** düğmesine basın. Eklenti penceresi konumunu, boyutunu ve iki seçimi hatırlar.
+2. Eklenti, zaman çizelgesinin ana miksini WAV olarak Workbench'in `resolve_temp\<iş>\` klasörüne render eder. Ardından render işi silinir; sayfa, Deliver ayarları ve In/Out işaretleri eskisi gibidir – bir hatadan veya *İptal*'den sonra da. Sonra Workbench'i WAV ile başlatır; zaten açık olan bir Workbench dosyayı devralır, modelleri yüklü kalır.
+3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Pencereyi eklenti açtıysa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız. Bu sırada eklenti penceresi işin nerede olduğunu gösterir: geri sayım, yüzde olarak transkripsiyon, bitti.
+4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın (iş bitince mavi olur). SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `resolve_temp\<ZamanÇizelgesi>_<DİL>.srt` olarak kaydedilir; bu klasörde her zaman yalnızca son aktarımın SRT'si bulunur. Ardından Workbench kendini simge durumuna küçültür – açık kalır, modelleri bir sonraki iş için yüklü kalır. *Ayarlar → DaVinci Resolve* altında iş yazıya dökülür dökülmez otomatik aktarımı ve küçültmek yerine kapatmayı açabilirsiniz.
+5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir; eklenti penceresi sonuçla öne gelir ve *Tamam*'a basana kadar orada kalır.
+6. Açıksa (varsayılan) iki ek altyazı izi kontrole yardım eder: **WhisperX boşluklar** boşluk kontrolünden metinsiz yüksek sesli yerleri, **WhisperX çok hızlı** saniyede 17 karakterden fazla olan altyazıları işaretler (*Cümle cümle* modu). Resolve'da bunlar arasında gezinin, sonra iki izi silin. Transkript izi etkin iz olarak kalır.
 
 ![Workbench'te aktarılmaya hazır bir DaVinci Resolve işi](docs/images/resolve-job.png)
 
-Eklentideki **SRT içe aktar …** herhangi bir SRT'yi, örneğin bir çeviriyi, aynı şekilde bir altyazı izine yerleştirir. İz adı için dil dosya adından alınır (`…_EN.srt`), yoksa eklenti sorar. Dosya penceresi `temp\resolve\letzte\` klasöründe açılır.
+Eklentideki **SRT içe aktar …** herhangi bir SRT'yi, örneğin bir çeviriyi, aynı şekilde bir altyazı izine yerleştirir. İz adı için dil dosya adından alınır (`…_EN.srt`), yoksa eklenti sorar. Dosya penceresi `resolve_temp\` klasöründe açılır.
 
 Eklenti beklerken Resolve kullanılabilir kalır. Yazıya dökülen aralıkta zaman çizelgesinde yapılan değişiklikler altyazıların artık uymamasına yol açabilir; zaman çizelgesinin sonu değiştiyse eklenti içe aktarmadan önce sorar. Her adım *Workspace → Console* altında kaydedilir (`[WhisperX]` ile başlayan satırlar) – bir şey çalışmazsa bu çıktı yardımcı olur.
 
@@ -345,7 +346,7 @@ Eklenti beklerken Resolve kullanılabilir kalır. Yazıya dökülen aralıkta za
 - Resolve bir SRT'yi yalnızca **etkin** altyazı izine yerleştirir ve aynı anda yalnızca biri etkin olabilir. Bu yüzden eklenti diğer altyazı izlerini devre dışı bırakır; sonrasında yeni iz etkin olandır. Boş ama kilitli bir iz atlanır.
 - Altyazılar zaman çizelgesinin başına göre, yani In noktası kadar kaydırılarak yerleştirilir. Başlangıç zaman kodunun (örn. 01:00:00:00) da eklenmesi gerekip gerekmediği hâlâ test ediliyor; eklenti ilk altyazının konumunu beklenen kareyle karşılaştırır ve farkı bildirir.
 - *Yazıya dök*'ten önce ve içe aktarma sırasında oynatmayı durdurun – oynatma sırasında sayfa değişirse Resolve takılabilir.
-- Medya havuzundaki öğe `letzte\` içindeki SRT'yi gösterir; bir sonraki aktarım o dosyayı değiştirdikten sonra öğe çevrimdışıdır. Zaman çizelgesindeki altyazılar projenin bir parçasıdır.
+- Medya havuzundaki öğe `resolve_temp\` içindeki SRT'yi gösterir; bir sonraki aktarım o dosyayı değiştirdikten sonra öğe çevrimdışıdır. Zaman çizelgesindeki altyazılar projenin bir parçasıdır.
 - `resolve/tools/probe_subtitles.lua`, yeni bir Resolve sürümünün SRT'yi nasıl yerleştirdiğini kontrol eder – bir Resolve güncellemesinden sonra çalıştırın.
 
 ---
@@ -438,7 +439,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | `requirements.txt` | Test edilmiş paket sürümleri (önce torch'u kurun!) |
 | `constraints.txt` | Test edilmiş kurulumdaki tüm paketlerin tam sürümleri (`pip freeze`), 5. adımda `-c` ile kullanılır |
 | `tests/` | Otomatik testler (pytest). Ekran kartı veya WhisperX gerektirmez, GitHub'da her push'ta çalışır. Resolve eklentisinin testleri taklit bir Resolve'a karşı çalışır ve `lupa` paketini gerektirir; o yoksa atlanır |
-| `temp/` | Eklentinin iş klasörleri ve `temp/resolve/letzte/` (depoda değil) |
+| `resolve_temp/` | Eklentinin iş klasörleri ve son aktarımın SRT'si (depoda değil) |
 
 ---
 

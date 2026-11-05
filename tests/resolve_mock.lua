@@ -407,6 +407,10 @@ local function widget(kind)
   return function(self, spec)
     spec = spec or {}
     spec.kind = kind
+    if kind == "ComboBox" then
+      spec.entries, spec.CurrentIndex = {}, 0
+      function spec:AddItem(text) self.entries[#self.entries + 1] = text end
+    end
     return spec
   end
 end
@@ -433,11 +437,15 @@ local disp = { On = auto_table() }
 function disp:AddWindow(spec)
   local items = {}
   for _, child in ipairs(spec) do collect(child, items) end
+  items[spec.ID] = { Geometry = MOCK.move_to or spec.Geometry }  -- the window itself is an item too
+  MOCK.window_spec = spec
   local win = { On = auto_table(), spec = spec, shown = false }
   function win:GetItems() return items end
   function win:Show() win.shown = true end
   function win:Hide() win.shown = false end
-  function win:RecalcLayout() end
+  function win:RecalcLayout() record("RecalcLayout") end
+  function win:Raise() record("Raise") end
+  function win:ActivateWindow() record("ActivateWindow") end
   MOCK.win, MOCK.items = win, items
   return win
 end
@@ -464,6 +472,11 @@ function MOCK.tick()
   assert(done, "no timer handler")
 end
 function MOCK.text(id) return MOCK.items[id].Text end
+function MOCK.choose(id, index)
+  MOCK.items[id].CurrentIndex = index
+  local h = MOCK.win.On[id] and MOCK.win.On[id].CurrentIndexChanged
+  if h then h({}) end
+end
 function MOCK.close_window() MOCK.win.On.WhisperXWin.Close({}) end
 
 function MOCK.setup(opts)

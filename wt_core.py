@@ -221,8 +221,12 @@ class Config:
         self.gap_min           = g("Gaps", "min_length", 1.0, float)
         self.gap_margin        = g("Gaps", "margin_db", 8.0, float)
         self.gap_srt           = g("Gaps", "write_srt", True, _bool)
-        # DaVinci Resolve: own countdown for jobs of the plugin (0 = off), options of the last job (JSON)
+        # DaVinci Resolve: own countdown for jobs of the plugin (0 = off), hand over by itself,
+        # gaps and fast subtitles as own tracks, close instead of minimize, options of the last job (JSON)
         self.resolve_countdown = max(g("Resolve", "countdown", 10, int), 0)
+        self.resolve_auto      = g("Resolve", "auto_hand_over", False, _bool)
+        self.resolve_extra     = g("Resolve", "extra_tracks", True, _bool)
+        self.resolve_close     = g("Resolve", "close_after", False, _bool)
         self.resolve_last      = g("Resolve", "last_options", "")
 
         if self.smooth and self.pause_hold >= self.pause:      # a real pause must stay visible
@@ -1115,7 +1119,8 @@ class Engine:
             if mode != opts.mode:
                 self.log(i18n.line("warn", "core.no_word_times", mode=T(f"mode.{mode}")))
             if cfg.gap_check:
-                info["gaps"] = self._report_gaps(audio, result, src)
+                info["gap_list"] = self._report_gaps(audio, result, src)    # also for DaVinci Resolve
+                info["gaps"] = len(info["gap_list"])
 
         cues = display_cues(cues, mode, cfg, duration)      # pause rule – lyrics keep their own
         if mode == "sentence":
@@ -1140,14 +1145,14 @@ class Engine:
         self.log(tag + T("core.fast_tip"))
         return len(fast)
 
-    def _report_gaps(self, audio, result, src: Path) -> int:
+    def _report_gaps(self, audio, result, src: Path) -> list:
         cfg = self.cfg
         gaps = find_gaps(audio, result, cfg.gap_min, cfg.gap_margin)
         gap_file = src.with_name(src.stem + T("core.gap_suffix"))
         if not gaps:
             self.log(i18n.tag("gap") + "✓ " + T("core.gap_none"))
             gap_file.unlink(missing_ok=True)          # remove the list of an earlier run
-            return 0
+            return []
         total = sum(e - s for s, e, _ in gaps)
         tag = i18n.tag("gap")
         self.log(tag + Tn("core.gap_found", len(gaps), total=i18n.secs(total, 0)))
@@ -1160,7 +1165,7 @@ class Engine:
             write_gap_srt(gap_file, gaps, cfg.encoding)
             self.log(tag + T("core.gap_file", name=gap_file.name))
         self.log(tag + T("core.gap_tip"))
-        return len(gaps)
+        return gaps
 
 
 def _json_default(o):

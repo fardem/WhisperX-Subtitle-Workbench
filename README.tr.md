@@ -4,11 +4,11 @@
 
 **Sürüm 0.5.0** · [Değişiklikler](CHANGELOG.md)
 
-**Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
+**Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
 ![Ana pencere](docs/images/main-window.png)
 
-Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, uzun cümleler ve duraklamalar. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla.
+Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, uzun cümleler ve duraklamalar. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla. DaVinci Resolve eklentisiyle bir zaman çizelgesini doğrudan Resolve içinden yazıya dökersiniz; altyazılar bir altyazı izine yerleşir.
 
 > Ekran görüntüleri İngilizce arayüzü gösterir; *Ayarlar → Genel* altında Türkçeye geçebilirsiniz.
 
@@ -57,7 +57,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 - **Sistem kontrolü** her başlatmada: Python'u, tüm paketleri sürümleriyle, ffmpeg'i, modelleri ve ekran kartını listeler ve hangi işlevin çalışmayacağını söyler.
 - **Kolaylıklar:**
   - BAT dosyasına veya pencereye sürükle-bırak. İkinci bir başlatma, dosyalarını zaten açık olan pencereye aktarır.
-  - Bir geri sayım işlemi otomatik olarak başlatır.
+  - Bir geri sayım işlemi otomatik olarak başlatır; DaVinci Resolve'dan gelen işlerin kendi geri sayımı vardır.
   - Tanınan satırlar günlükte canlı görünür.
   - İpuçları her seçeneği açıklar.
   - Ayarlar penceresi yalnızca değişen değerleri yazar ve INI'deki açıklamaları korur.
@@ -260,6 +260,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 | yanında `<name>.lyric.txt` olan bir medya dosyası | şarkı sözü hizalama (her satıra bir şarkı satırı, UTF-8) | `<name>.lyric.srt` |
 | bir WhisperX `.json` dosyası (“JSON'u sakla” ile kaydedilmiş) | yalnızca altyazıları yeniden oluşturur | `<name>.srt` |
 | bir klasör | içindeki tüm medya dosyaları | |
+| bir DaVinci Resolve işinin WAV dosyası – eklenti aracı bununla başlatır | yazıya dökme, ardından **→ DaVinci'ye aktar** | altyazılar Resolve'da bir altyazı izinde |
 
 - **Başlat** seçili dosyaları işler. Seçim yoksa henüz bitmemiş tüm dosyaları işler. Hepsi bittiyse hepsini yeniden işler, örn. farklı bir düzenle.
 - **Dil:**
@@ -320,6 +321,8 @@ Bir eklenti, Workbench'i **DaVinci Resolve Studio** ile bağlar: Resolve zaman �
 
 Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini değiştirdikten sonra eklentiyi yeniden kurun; sekme, kurulu eklentinin güncel olup olmadığını gösterir.
 
+![Ayarlar – DaVinci Resolve](docs/images/settings-resolve.png)
+
 > Workbench'in yolu yalnızca düz ASCII karakterler içerebilir, örn. `C:\WhisperX-Subtitle-Workbench` – ü, ş, ğ gibi harfler olmadan. Resolve'un Lua'sı Windows'ta başka yollardaki dosyaları açamaz; kurulum bu durumda kurmak yerine bunu bildirir.
 
 ### İş akışı
@@ -329,6 +332,8 @@ Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini deği�
 3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Pencereyi eklenti açtıysa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız.
 4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın. SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `temp\resolve\letzte\<ZamanÇizelgesi>_<DİL>.srt` olarak kaydedilir. Bu klasörde her zaman yalnızca son aktarımın SRT'si bulunur.
 5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir.
+
+![Workbench'te aktarılmaya hazır bir DaVinci Resolve işi](docs/images/resolve-job.png)
 
 Eklentideki **SRT içe aktar …** herhangi bir SRT'yi, örneğin bir çeviriyi, aynı şekilde bir altyazı izine yerleştirir. İz adı için dil dosya adından alınır (`…_EN.srt`), yoksa eklenti sorar. Dosya penceresi `temp\resolve\letzte\` klasöründe açılır.
 
@@ -350,6 +355,10 @@ Eklenti beklerken Resolve kullanılabilir kalır. Yazıya dökülen aralıkta za
 - **Ana pencere:** dil, mod, düzen, ses filtresi ve prompt. *Varsayılan olarak kaydet* bunları INI'ye yazar.
 - **Ayarlar …** yedi sekmeden oluşur: Whisper, Konuşma algılama, Altyazılar, Ses ve çıktı, Diller, DaVinci Resolve ve Genel. *Kaydet* yalnızca değişen değerleri `whisper_tool.ini` dosyasına yazar, önce bir `.bak` yedeği oluşturur ve tüm açıklamaları korur.
 - `whisper_tool.ini` elle de düzenlenebilir. Her değerin açıklaması vardır; şablon `whisper_tool.example.ini` dosyasıdır.
+
+*Ayarlar → Altyazılar*, aracın sırayla yanıtladığı sorulara göre düzenlenmiştir: **1 · Bölme** – hangi kelimeler birlikte bir altyazıya girer, **2 · Duraklamalar** – bir bölüm ekranda ne kadar kalır, **3 · Şarkı sözleri** – şarkı satırları için ayrı kurallar.
+
+![Ayarlar – Altyazılar](docs/images/settings-subtitles.png)
 
 Değişiklikler pencereyi kapatmadan bir sonraki başlatmada geçerli olur. Modeller yalnızca bir model parametresi değiştiğinde yeniden yüklenir.
 

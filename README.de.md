@@ -4,11 +4,11 @@
 
 **Version 0.5.0** · [Änderungen](CHANGELOG.md)
 
-Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
+Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
 ![Hauptfenster](docs/images/main-window.png)
 
-Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, lange Sätze und Pausen. Ein Lücken-Check findet laute Stellen ohne Text. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen.
+Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, lange Sätze und Pausen. Ein Lücken-Check findet laute Stellen ohne Text. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen. Mit dem Plugin für DaVinci Resolve transkribierst du eine Timeline direkt aus Resolve heraus, und die Untertitel landen auf einer Untertitelspur.
 
 > Die Bildschirmfotos zeigen die englische Oberfläche; unter *Einstellungen → Allgemein* lässt sie sich auf Deutsch umstellen.
 
@@ -57,7 +57,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 - **Systemprüfung** bei jedem Start: Sie listet Python, alle Pakete samt Versionen, ffmpeg, die Modelle und die Grafikkarte auf und sagt dir, welche Funktion ausfallen würde.
 - **Komfort:**
   - Drag & Drop auf die BAT-Datei oder ins Fenster. Ein zweiter Start reicht seine Dateien an das schon offene Fenster weiter.
-  - Ein Countdown startet die Verarbeitung automatisch.
+  - Ein Countdown startet die Verarbeitung automatisch; Jobs aus DaVinci Resolve haben einen eigenen.
   - Erkannte Zeilen erscheinen live im Protokoll.
   - Tooltips erklären jede Option.
   - Der Einstellungsdialog schreibt nur geänderte Werte und lässt die Kommentare in der INI stehen.
@@ -260,6 +260,7 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 | eine Mediendatei mit `<name>.lyric.txt` daneben | Lyrics-Alignment (eine Liedzeile pro Zeile, UTF-8) | `<name>.lyric.srt` |
 | eine WhisperX-`.json` (gespeichert mit „JSON behalten“) | baut nur die Untertitel neu | `<name>.srt` |
 | einen Ordner | alle Mediendateien darin | |
+| die WAV eines DaVinci-Resolve-Jobs – das Plugin startet das Tool damit | Transkription, dann **→ An DaVinci übergeben** | die Untertitel auf einer Untertitelspur in Resolve |
 
 - **Start** verarbeitet die markierten Dateien. Ist nichts markiert, verarbeitet es alle Dateien, die noch nicht fertig sind. Ist alles fertig, verarbeitet es alle nochmal, z.B. mit anderem Layout.
 - **Sprache:**
@@ -320,6 +321,8 @@ Ein Plugin verbindet die Workbench mit **DaVinci Resolve Studio**: Resolve rende
 
 Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach einem Wechsel der Oberflächensprache das Plugin neu installieren; der Reiter zeigt, ob das installierte Plugin aktuell ist.
 
+![Einstellungen – DaVinci Resolve](docs/images/settings-resolve.png)
+
 > Der Pfad der Workbench darf nur einfache ASCII-Zeichen enthalten, z.B. `C:\WhisperX-Subtitle-Workbench` – keine Umlaute. Unter Windows kann das Lua von Resolve keine Dateien unter anderen Pfaden öffnen; der Installer meldet das, statt zu installieren.
 
 ### Ablauf
@@ -329,6 +332,8 @@ Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach ein
 3. In der Workbench steht der Job als „*Timeline* · DaVinci Resolve“ in der Liste. Er hat einen eigenen Countdown (*Einstellungen → DaVinci Resolve*, Vorgabe 10 Sekunden). Hat das Plugin das Fenster geöffnet, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon offenen Fenster mit den dort eingestellten. Ohne Countdown startest du selbst mit *Start*.
 4. Ist der Job fertig, die Untertitel prüfen und **→ An DaVinci übergeben** drücken. Die SRT wird an die Stelle des Bereichs in der Timeline verschoben und als `temp\resolve\letzte\<Timeline>_<SPRACHE>.srt` gespeichert. Dieser Ordner enthält immer nur die SRT der letzten Übergabe.
 5. Das Plugin wartet in Resolve, wechselt zurück zur Timeline des Jobs, importiert die SRT in den Media-Pool-Bin *WhisperX* und legt sie auf die **erste leere Untertitelspur** (ST1, ST2, …) – oder auf eine neue. Die Spur heißt `WhisperX DE` (`WhisperX DE 2`, wenn es den Namen schon gibt) und bleibt die aktive Untertitelspur. Danach werden WAV und Job-Ordner gelöscht.
+
+![Ein DaVinci-Resolve-Job in der Workbench, bereit zur Übergabe](docs/images/resolve-job.png)
 
 **SRT importieren …** im Plugin legt eine beliebige SRT genauso auf eine Untertitelspur, z.B. eine Übersetzung. Die Sprache für den Spurnamen kommt aus dem Dateinamen (`…_EN.srt`), sonst fragt das Plugin nach. Der Dateidialog startet in `temp\resolve\letzte\`.
 
@@ -350,6 +355,10 @@ Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timelin
 - **Hauptfenster:** Sprache, Modus, Layout, Audiofilter und Prompt. *Als Standard speichern* legt sie in der INI ab.
 - **Einstellungen …** hat sieben Reiter: Whisper, Spracherkennung, Untertitel, Audio & Ausgabe, Sprachen, DaVinci Resolve und Allgemein. *Speichern* schreibt nur die geänderten Werte in `whisper_tool.ini`, legt vorher eine `.bak`-Sicherung an und lässt alle Kommentare stehen.
 - `whisper_tool.ini` kannst du auch von Hand bearbeiten. Jeder Wert ist kommentiert; die Vorlage ist `whisper_tool.example.ini`.
+
+*Einstellungen → Untertitel* ist nach den Fragen geordnet, die das Tool nacheinander beantwortet: **1 · Aufteilen** – welche Wörter zusammen in einen Untertitel kommen, **2 · Pausen** – wie lange ein Segment stehen bleibt, **3 · Lyrics** – eigene Regeln für Liedzeilen.
+
+![Einstellungen – Untertitel](docs/images/settings-subtitles.png)
 
 Änderungen gelten beim nächsten Start, ohne das Fenster zu schließen. Die Modelle werden nur neu geladen, wenn sich ein Modell-Parameter ändert.
 

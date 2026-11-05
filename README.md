@@ -4,11 +4,11 @@
 
 **Version 0.5.0** · [Changelog](CHANGELOG.md)
 
-A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word**, with a user interface in English, German and Turkish.
+A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word** – with a **plugin for DaVinci Resolve** and a user interface in English, German and Turkish.
 
 ![Main window](docs/images/main-window.png)
 
-You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, long sentences and pauses. A gap check finds loud passages that got no text. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio.
+You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, long sentences and pauses. A gap check finds loud passages that got no text. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio. The DaVinci Resolve plugin transcribes a timeline from inside Resolve and puts the subtitles onto a subtitle track.
 
 ---
 
@@ -55,7 +55,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
 - **System check** on every start: it lists Python, all packages with versions, ffmpeg, the models and the graphics card, and tells you which feature would fail.
 - **Comfort:**
   - Drag & drop onto the BAT file or into the window. A second start hands its files to the open window.
-  - A countdown starts processing automatically.
+  - A countdown starts processing automatically; jobs from DaVinci Resolve have their own.
   - Recognized lines appear live in the log.
   - Tooltips explain every option.
   - A settings dialog writes only the changed values and keeps the comments in the INI.
@@ -258,6 +258,7 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
 | a media file with `<name>.lyric.txt` next to it | lyrics alignment (one song line per line, UTF-8) | `<name>.lyric.srt` |
 | a WhisperX `.json` (saved with “Keep JSON”) | rebuilds the subtitles only | `<name>.srt` |
 | a folder | all media files in it | |
+| the WAV of a DaVinci Resolve job – the plugin starts the tool with it | transcription, then **→ Hand over to DaVinci** | the subtitles on a subtitle track in Resolve |
 
 - **Start** processes the selected files. If nothing is selected, it processes all files that are not done yet. If everything is done, it processes all files again, e.g. with another layout.
 - **Language:**
@@ -318,6 +319,8 @@ A plugin connects the workbench with **DaVinci Resolve Studio**: Resolve renders
 
 Install the plugin again after an update of the workbench, after moving its folder and after changing the interface language; the tab shows whether the installed plugin is up to date.
 
+![Settings – DaVinci Resolve](docs/images/settings-resolve.png)
+
 > The path of the workbench may only contain plain ASCII characters, e.g. `C:\WhisperX-Subtitle-Workbench` – no umlauts. On Windows, Resolve's Lua cannot open files under other paths; the installer says so instead of installing.
 
 ### Workflow
@@ -327,6 +330,8 @@ Install the plugin again after an update of the workbench, after moving its fold
 3. In the workbench the job appears as “*Timeline* · DaVinci Resolve”. It has its own countdown (*Settings → DaVinci Resolve*, 10 seconds by default). When the plugin opened the window, the job is transcribed with the options of the last DaVinci job; in a window that was already open, with the options shown there. Without the countdown, press *Start* yourself.
 4. When the job is done, check the subtitles and press **→ Hand over to DaVinci**. The SRT is moved to the position of the range in the timeline and saved as `temp\resolve\letzte\<Timeline>_<LANG>.srt`. This folder always holds only the SRT of the last hand-over.
 5. The plugin, still waiting in Resolve, switches back to the timeline of the job, imports the SRT into the media pool bin *WhisperX* and puts it onto the **first empty subtitle track** (ST1, ST2, …) – or onto a new one. The track is named `WhisperX DE` (`WhisperX DE 2` if the name exists) and stays the active subtitle track. Then the WAV and the job folder are deleted.
+
+![A DaVinci Resolve job in the workbench, ready to hand over](docs/images/resolve-job.png)
 
 **Import SRT …** in the plugin puts any SRT onto a subtitle track the same way, e.g. a translation. The language for the track name comes from the file name (`…_EN.srt`), otherwise the plugin asks. The file dialog starts in `temp\resolve\letzte\`.
 
@@ -348,6 +353,10 @@ While the plugin waits, Resolve stays usable. Changes to the timeline in the tra
 - **Main window:** language, mode, layout, audio filter and prompt. *Save as default* stores them in the INI.
 - **Settings …** has seven tabs: Whisper, Speech detection, Subtitles, Audio & output, Languages, DaVinci Resolve and General. *Save* writes only the changed values to `whisper_tool.ini`, creates a `.bak` backup first and keeps all comments.
 - `whisper_tool.ini` can also be edited by hand. Every value is commented; the template is `whisper_tool.example.ini`.
+
+*Settings → Subtitles* is ordered by the questions the tool answers one after the other: **1 · Splitting** – which words go together into one subtitle, **2 · Pauses** – how long a segment stays on screen, **3 · Lyrics** – own rules for song lines.
+
+![Settings – Subtitles](docs/images/settings-subtitles.png)
 
 Changes take effect on the next start, without closing the window. The models are reloaded only when a model parameter changes.
 

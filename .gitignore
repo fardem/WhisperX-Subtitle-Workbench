@@ -25,5 +25,8 @@ whisper_tool_error.log
 # Models downloaded into the folder
 models/
 
+# Job folders of the DaVinci Resolve plugin (rendered audio, last SRT)
+temp/
+
 # Tests
 .pytest_cache/

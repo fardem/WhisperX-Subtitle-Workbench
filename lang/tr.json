@@ -274,7 +274,35 @@
     "smooth_off": "İşaret yoksa her bölüm konuşma bittiğinde biter.",
     "pause": "Gerçek duraklama sınırı (saniye)",
     "pause_hold": "Gerçek duraklamada tutma süresi (saniye)",
-    "err_hold": "Tutma süresi ({hold} saniye), duraklama sınırından ({pause} saniye) kısa olmalıdır – aksi hâlde gerçek bir duraklama hiç görünmez."
+    "err_hold": "Tutma süresi ({hold} saniye), duraklama sınırından ({pause} saniye) kısa olmalıdır – aksi hâlde gerçek bir duraklama hiç görünmez.",
+    "tab_resolve": "DaVinci Resolve",
+    "sec_resolve_plugin": "1 · Eklenti",
+    "sec_resolve_plugin_info": "Eklenti DaVinci Resolve'da Workspace → Scripts → WhisperX_Subtitles altında görünür (her sayfada). Oradaki “Yazıya dök”, zaman çizelgesinin sesini render edip bu pencereye verir; “DaVinci'ye aktar” altyazıları bir altyazı izine geri gönderir.",
+    "resolve_status": "Eklenti",
+    "resolve_not_installed": "kurulu değil",
+    "resolve_installed": "kurulu – sürüm {version}",
+    "resolve_outdated": "kurulu – sürüm {version}, lütfen güncelleyin",
+    "resolve_other": "başka bir klasör için kurulu ({path}) – lütfen güncelleyin",
+    "resolve_install": "Eklentiyi kur / güncelle",
+    "resolve_target": "Klasör",
+    "resolve_installed_msg": [
+      "Eklenti kuruldu:",
+      "{path}",
+      "",
+      "DaVinci Resolve'da: Workspace → Scripts → WhisperX_Subtitles. Orada görünmüyorsa DaVinci Resolve'u bir kez yeniden başlatın.",
+      "",
+      "Arayüz dilini değiştirdikten sonra yeniden kurun – metinler eklentiye yazılır."
+    ],
+    "resolve_install_failed": [
+      "Eklenti kurulamadı:",
+      "{err}"
+    ],
+    "sec_resolve_jobs": "2 · DaVinci Resolve'dan gelen işler",
+    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Pencereyi eklenti açarsa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle.",
+    "sw_resolve_countdown": "DaVinci Resolve'dan gelen işleri otomatik başlat:",
+    "sw_resolve_countdown_unit": "saniye sonra",
+    "resolve_countdown": "DaVinci işleri için geri sayım",
+    "resolve_countdown_off": "İşaret yoksa Başlat'a kendiniz basın."
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -579,6 +607,101 @@
     "sum_wer": "hata oranı A {wer}",
     "sum_time": "zaman A↔B ⌀ {typ}, {offset}",
     "footer": "{app} {version} ile oluşturuldu · {date}"
+  },
+  "resolve": {
+    "kind": "DaVinci",
+    "item": "{timeline} · DaVinci Resolve",
+    "hand_over": "→ DaVinci'ye aktar",
+    "hand_over_title": "DaVinci'ye aktar",
+    "status_handed": {
+      "one": "→ DaVinci ✓ · 1 altyazı",
+      "other": "→ DaVinci ✓ · {n} altyazı"
+    },
+    "status_cancelled": "DaVinci'de iptal edildi",
+    "log_job": "DaVinci Resolve işi: zaman çizelgesi “{timeline}”, {range}, {fps} fps",
+    "range_all": "tüm zaman çizelgesi ({dur})",
+    "range_inout": "In – Out ({dur})",
+    "log_handed": "DaVinci Resolve'a aktarıldı: {name} – {n} altyazı, dil {lang}, kaydırma {offset}",
+    "countdown": "DaVinci Resolve işi: {n} sn sonra otomatik başlıyor – durdurmak için pencereye tıklayın",
+    "waiting_start": "DaVinci Resolve işi – seçenekleri kontrol edip Başlat'a basın",
+    "ready_hand_over": "Bitti – şimdi “DaVinci'ye aktar” düğmesine basın",
+    "last_options": "Son DaVinci Resolve işinin seçenekleri geri yüklendi",
+    "err_gone": "DaVinci Resolve işi artık yok – Resolve'da iptal edildi ya da zaten içe aktarıldı.",
+    "err_no_srt": "Altyazı dosyası bulunamadı: {path}",
+    "err_no_cues": "Altyazı dosyasında hiç altyazı yok: {path}",
+    "err_ascii": [
+      "Bu yol A–Z dışında karakterler içeriyor (örneğin ü, ş, ğ): {path}",
+      "",
+      "DaVinci Resolve'un Lua'sı oradaki dosyaları açamaz. Workbench'i C:\\WhisperX-Subtitle-Workbench gibi bir klasöre taşıyıp eklentiyi yeniden kurun."
+    ],
+    "err_python": "Python bulunamadı: {path}",
+    "cleanup": {
+      "one": "1 eski DaVinci Resolve iş klasörü kaldırıldı",
+      "other": "{n} eski DaVinci Resolve iş klasörü kaldırıldı"
+    }
+  },
+  "plugin": {
+    "title": "WhisperX Altyazılar",
+    "btn_transcribe": "Yazıya dök",
+    "btn_import": "SRT içe aktar …",
+    "btn_cancel": "İptal",
+    "btn_close": "Kapat",
+    "btn_yes": "Evet",
+    "btn_no": "Hayır",
+    "btn_ok": "Tamam",
+    "btn_import_anyway": "Yine de içe aktar",
+    "ready": "Hazır. “Yazıya dök”, zaman çizelgesinin sesini render edip Workbench'e verir. Sonuç ilk boş altyazı izine yerleşir.",
+    "not_installed": "Bu eklenti henüz kurulmadı. Workbench'ten kurun: Ayarlar → DaVinci Resolve → Eklentiyi kur / güncelle.",
+    "no_io": "DaVinci Resolve'un bu sürümü betiklerin dosya okuyup yazmasına izin vermiyor. “Yazıya dök” için DaVinci Resolve Studio gerekir; “SRT içe aktar …” yine de çalışır.",
+    "no_workbench": "Workbench şurada bulunamadı: {path}. Eklentiyi Workbench'ten yeniden kurun (Ayarlar → DaVinci Resolve).",
+    "no_project": "Açık proje yok.",
+    "no_timeline": "Açık zaman çizelgesi yok.",
+    "timeline": "Zaman çizelgesi: {name}",
+    "range_all": "Aralık: tüm zaman çizelgesi ({dur})",
+    "range_inout": "Aralık: In – Out ({dur})",
+    "playing": "Lütfen önce oynatmayı durdurun.",
+    "starting": "Ses hazırlanıyor …",
+    "busy_render": "DaVinci Resolve şu anda başka bir işi render ediyor. Bitmesini bekleyip yeniden deneyin.",
+    "rendering": "Ses render ediliyor … {pct}",
+    "render_failed": "Ses render edilemedi: {why}",
+    "render_incomplete": "render işi %{pct} noktasında durdu",
+    "render_no_wav": "Resolve başarılı olduğunu bildiriyor, ancak ses dosyası yok ya da boş: {path}",
+    "err_setting": "Resolve “{key}” render ayarını kabul etmedi.",
+    "err_wav": "Resolve WAV render biçimini kabul etmedi.",
+    "err_folder": "İş klasörü oluşturulamadı: {path}",
+    "err_add_job": "Resolve render işini oluşturmadı.",
+    "err_start_render": "Resolve render işini başlatmadı.",
+    "err_write": "{path} yazılamıyor: {why}",
+    "waiting": [
+      "Workbench bekleniyor … {time}",
+      "Orada yazıya dökün ve “DaVinci'ye aktar” düğmesine basın."
+    ],
+    "launch_failed": [
+      "Workbench başlatılamadı. Kendiniz başlatın ve bu dosyayı penceresine sürükleyin:",
+      "{path}",
+      "Bu pencere beklemeye devam ediyor."
+    ],
+    "hint_changes": "Yazıya dökülen aralıkta zaman çizelgesinde yapılan değişiklikler, altyazıların artık uymamasına yol açabilir.",
+    "job_gone": "İş klasörü kaldırıldı – içe aktarılacak bir şey yok.",
+    "end_changed": "Ses render edildiğinden beri zaman çizelgesi değişti (bitiş karesi {old} → {new}). Altyazılar artık uymayabilir. Yine de içe aktarılsın mı?",
+    "import_skipped": "İçe aktarılmadı. SRT burada kalıyor: {path}",
+    "importing": "Altyazılar içe aktarılıyor …",
+    "import_failed": "İçe aktarma başarısız ({why}).",
+    "not_active": "{track} numaralı altyazı izi etkinleştirilemedi – hiçbir şey içe aktarılmadı.",
+    "not_placed": "Resolve {track} numaralı altyazı izine hiçbir şey yerleştirmedi. İz kilitli mi? Ayrıntılar: Workspace → Console.",
+    "placed": "Bitti: {n} altyazı, {track} numaralı “{name}” altyazı izinde.",
+    "position_off": "Konumu kontrol edin: ilk altyazı {actual}. karede, beklenen {expected}. kareydi (fark {diff} kare = {sec} sn).",
+    "position_start_tc": "Fark tam olarak zaman çizelgesinin başlangıç zaman kodu kadar – lütfen bildirin (Workspace → Console).",
+    "srt_kept": "SRT burada kalıyor: {path}",
+    "timeline_gone": "“{name}” zaman çizelgesi artık yok. SRT burada kalıyor: {path} – doğru zaman çizelgesini açıp “SRT içe aktar …” kullanın.",
+    "cancelled": "İptal edildi. İş klasörü kaldırıldı.",
+    "choose_srt": "SRT dosyası seçin",
+    "ask_path": "SRT dosyasının yolu:",
+    "no_file": "Dosya seçilmedi.",
+    "file_missing": "Dosya bulunamadı: {path}",
+    "ask_lang": "Altyazıların dili (iz adı için, örn. DE, EN, TR):",
+    "no_lang": "Dil girilmedi – hiçbir şey içe aktarılmadı.",
+    "error": "Hata: {why} (ayrıntılar: Workspace → Console)"
   },
   "tip": {
     "files": [
@@ -931,6 +1054,9 @@
       "Bölüm, gösterilen şeydir: kelime kelime modunda bir kelime, cümle modunda bir altyazı. Başlangıçlar tam kalır – her kelime tam konuşulduğu anda görünür.",
       "",
       "İşaret yoksa SRT tam konuşulduğu gibidir, örn. karşılaştırma raporu için. Şarkı sözlerinin kendi kuralları vardır (3 · Şarkı sözleri). Önerilen: tutma süresi 1 saniye."
-    ]
+    ],
+    "resolve_install": "Eklentiyi DaVinci Resolve'un betik klasörüne kopyalar (…\\Fusion\\Scripts\\Utility). Bu Workbench'in klasörü, arayüz dili ve eklentinin tüm metinleri içine yazılır – ayarlanacak bir şey yok. Workbench'i taşıdıktan veya dili değiştirdikten sonra yeniden kurun.",
+    "resolve_countdown": "DaVinci Resolve'dan gelen bir işin otomatik olarak yazıya dökülmesine kadar geçen saniye. Pencereye bir tıklama geri sayımı durdurur.",
+    "resolve_hand_over": "Altyazıları zaman çizelgesinde yazıya dökülen aralığın konumuna kaydırır ve DaVinci Resolve'da bekleyen eklentiye verir. SRT bunun için diskten yeniden okunur – bu arada yapılan değişiklikler de geçerlidir."
   }
 }

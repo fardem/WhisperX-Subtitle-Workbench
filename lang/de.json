@@ -274,7 +274,35 @@
     "smooth_off": "Ohne Häkchen endet jedes Segment, wenn die Sprache endet.",
     "pause": "Echte Pause ab (Sekunden)",
     "pause_hold": "Haltezeit bei echter Pause (Sekunden)",
-    "err_hold": "Die Haltezeit ({hold} Sekunden) muss kürzer sein als die Pausengrenze ({pause} Sekunden) – sonst wäre eine echte Pause nie zu sehen."
+    "err_hold": "Die Haltezeit ({hold} Sekunden) muss kürzer sein als die Pausengrenze ({pause} Sekunden) – sonst wäre eine echte Pause nie zu sehen.",
+    "tab_resolve": "DaVinci Resolve",
+    "sec_resolve_plugin": "1 · Plugin",
+    "sec_resolve_plugin_info": "Das Plugin erscheint in DaVinci Resolve unter Workspace → Scripts → WhisperX_Subtitles (auf jeder Seite). „Transkribieren“ rendert dort den Ton der Timeline und übergibt ihn an dieses Fenster; „An DaVinci übergeben“ schickt die Untertitel zurück auf eine Untertitelspur.",
+    "resolve_status": "Plugin",
+    "resolve_not_installed": "nicht installiert",
+    "resolve_installed": "installiert – Version {version}",
+    "resolve_outdated": "installiert – Version {version}, bitte aktualisieren",
+    "resolve_other": "für einen anderen Ordner installiert ({path}) – bitte aktualisieren",
+    "resolve_install": "Plugin installieren / aktualisieren",
+    "resolve_target": "Ordner",
+    "resolve_installed_msg": [
+      "Das Plugin wurde installiert:",
+      "{path}",
+      "",
+      "In DaVinci Resolve: Workspace → Scripts → WhisperX_Subtitles. Fehlt es dort, DaVinci Resolve einmal neu starten.",
+      "",
+      "Nach einem Wechsel der Oberflächensprache neu installieren – die Texte stehen fest im Plugin."
+    ],
+    "resolve_install_failed": [
+      "Das Plugin konnte nicht installiert werden:",
+      "{err}"
+    ],
+    "sec_resolve_jobs": "2 · Jobs aus DaVinci Resolve",
+    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Öffnet das Plugin das Fenster, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon geöffneten Fenster mit den dort eingestellten.",
+    "sw_resolve_countdown": "Jobs aus DaVinci Resolve automatisch starten nach",
+    "sw_resolve_countdown_unit": "Sekunden",
+    "resolve_countdown": "Countdown für DaVinci-Jobs",
+    "resolve_countdown_off": "Ohne Haken startest du selbst mit „Start“."
   },
   "cmpdlg": {
     "title": "Text vergleichen",
@@ -579,6 +607,101 @@
     "sum_wer": "Fehlerquote A {wer}",
     "sum_time": "Zeit A↔B ⌀ {typ}, {offset}",
     "footer": "Erstellt mit {app} {version} · {date}"
+  },
+  "resolve": {
+    "kind": "DaVinci",
+    "item": "{timeline} · DaVinci Resolve",
+    "hand_over": "→ An DaVinci übergeben",
+    "hand_over_title": "An DaVinci übergeben",
+    "status_handed": {
+      "one": "→ DaVinci ✓ · 1 Untertitel",
+      "other": "→ DaVinci ✓ · {n} Untertitel"
+    },
+    "status_cancelled": "in DaVinci abgebrochen",
+    "log_job": "DaVinci-Resolve-Job: Timeline „{timeline}“, {range}, {fps} fps",
+    "range_all": "ganze Timeline ({dur})",
+    "range_inout": "In bis Out ({dur})",
+    "log_handed": "An DaVinci Resolve übergeben: {name} – {n} Untertitel, Sprache {lang}, verschoben um {offset}",
+    "countdown": "DaVinci-Resolve-Job: automatischer Start in {n} s – Klick ins Fenster hält an",
+    "waiting_start": "DaVinci-Resolve-Job – Einstellungen prüfen und Start drücken",
+    "ready_hand_over": "Fertig – jetzt „An DaVinci übergeben“ drücken",
+    "last_options": "Einstellungen des letzten DaVinci-Resolve-Jobs übernommen",
+    "err_gone": "Den DaVinci-Resolve-Job gibt es nicht mehr – er wurde in Resolve abgebrochen oder schon importiert.",
+    "err_no_srt": "Untertiteldatei nicht gefunden: {path}",
+    "err_no_cues": "Die Untertiteldatei enthält keine Untertitel: {path}",
+    "err_ascii": [
+      "Dieser Pfad enthält Zeichen außerhalb von A–Z (zum Beispiel Umlaute): {path}",
+      "",
+      "Das Lua von DaVinci Resolve kann dort keine Dateien öffnen. Verschiebe die Workbench in einen Ordner wie C:\\WhisperX-Subtitle-Workbench und installiere das Plugin neu."
+    ],
+    "err_python": "Python nicht gefunden: {path}",
+    "cleanup": {
+      "one": "1 alter DaVinci-Resolve-Job-Ordner entfernt",
+      "other": "{n} alte DaVinci-Resolve-Job-Ordner entfernt"
+    }
+  },
+  "plugin": {
+    "title": "WhisperX Untertitel",
+    "btn_transcribe": "Transkribieren",
+    "btn_import": "SRT importieren …",
+    "btn_cancel": "Abbrechen",
+    "btn_close": "Schließen",
+    "btn_yes": "Ja",
+    "btn_no": "Nein",
+    "btn_ok": "OK",
+    "btn_import_anyway": "Trotzdem importieren",
+    "ready": "Bereit. „Transkribieren“ rendert den Ton der Timeline und übergibt ihn an die Workbench. Das Ergebnis kommt auf die erste leere Untertitelspur.",
+    "not_installed": "Dieses Plugin ist noch nicht eingerichtet. Installiere es aus der Workbench: Einstellungen → DaVinci Resolve → Plugin installieren / aktualisieren.",
+    "no_io": "Diese Ausgabe von DaVinci Resolve erlaubt Scripts keinen Dateizugriff. „Transkribieren“ braucht DaVinci Resolve Studio; „SRT importieren …“ funktioniert trotzdem.",
+    "no_workbench": "Workbench nicht gefunden in {path}. Installiere das Plugin neu aus der Workbench (Einstellungen → DaVinci Resolve).",
+    "no_project": "Kein Projekt geöffnet.",
+    "no_timeline": "Keine Timeline geöffnet.",
+    "timeline": "Timeline: {name}",
+    "range_all": "Bereich: ganze Timeline ({dur})",
+    "range_inout": "Bereich: In bis Out ({dur})",
+    "playing": "Bitte zuerst die Wiedergabe anhalten.",
+    "starting": "Ton wird vorbereitet …",
+    "busy_render": "DaVinci Resolve rendert gerade einen anderen Job. Warte, bis er fertig ist, und versuche es dann noch einmal.",
+    "rendering": "Ton wird gerendert … {pct}",
+    "render_failed": "Der Ton konnte nicht gerendert werden: {why}",
+    "render_incomplete": "der Render-Job ist bei {pct} % stehen geblieben",
+    "render_no_wav": "Resolve meldet Erfolg, aber die Audiodatei fehlt oder ist leer: {path}",
+    "err_setting": "Resolve hat die Render-Einstellung „{key}“ nicht angenommen.",
+    "err_wav": "Resolve hat WAV als Render-Format nicht angenommen.",
+    "err_folder": "Der Job-Ordner konnte nicht angelegt werden: {path}",
+    "err_add_job": "Resolve hat den Render-Job nicht angelegt.",
+    "err_start_render": "Resolve hat den Render-Job nicht gestartet.",
+    "err_write": "{path} kann nicht geschrieben werden: {why}",
+    "waiting": [
+      "Warte auf die Workbench … {time}",
+      "Dort transkribieren und „An DaVinci übergeben“ drücken."
+    ],
+    "launch_failed": [
+      "Die Workbench konnte nicht gestartet werden. Starte sie selbst und ziehe diese Datei in ihr Fenster:",
+      "{path}",
+      "Dieses Fenster wartet weiter."
+    ],
+    "hint_changes": "Änderungen an der Timeline im transkribierten Bereich können dazu führen, dass die Untertitel nicht mehr passen.",
+    "job_gone": "Der Job-Ordner wurde entfernt – es gibt nichts zu importieren.",
+    "end_changed": "Die Timeline hat sich seit dem Rendern geändert (Endframe {old} → {new}). Die Untertitel passen eventuell nicht mehr. Trotzdem importieren?",
+    "import_skipped": "Nicht importiert. Die SRT bleibt hier: {path}",
+    "importing": "Untertitel werden importiert …",
+    "import_failed": "Import fehlgeschlagen ({why}).",
+    "not_active": "Untertitelspur {track} ließ sich nicht aktivieren – es wurde nichts importiert.",
+    "not_placed": "Resolve hat nichts auf Untertitelspur {track} gelegt. Ist die Spur gesperrt? Details unter Workspace → Console.",
+    "placed": "Fertig: {n} Untertitel auf Untertitelspur {track} „{name}“.",
+    "position_off": "Lage prüfen: Der erste Untertitel steht bei Frame {actual}, erwartet war Frame {expected} (Abweichung {diff} Frames = {sec} s).",
+    "position_start_tc": "Die Abweichung entspricht genau dem Start-Timecode der Timeline – bitte melden (Workspace → Console).",
+    "srt_kept": "Die SRT bleibt hier: {path}",
+    "timeline_gone": "Die Timeline „{name}“ gibt es nicht mehr. Die SRT bleibt hier: {path} – öffne die richtige Timeline und nimm „SRT importieren …“.",
+    "cancelled": "Abgebrochen. Der Job-Ordner wurde entfernt.",
+    "choose_srt": "SRT-Datei wählen",
+    "ask_path": "Pfad der SRT-Datei:",
+    "no_file": "Keine Datei gewählt.",
+    "file_missing": "Datei nicht gefunden: {path}",
+    "ask_lang": "Sprache der Untertitel (für den Spurnamen, z. B. DE, EN, TR):",
+    "no_lang": "Keine Sprache angegeben – es wurde nichts importiert.",
+    "error": "Fehler: {why} (Details unter Workspace → Console)"
   },
   "tip": {
     "files": [
@@ -933,6 +1056,9 @@
       "Ein Segment ist, was angezeigt wird: bei Wort-für-Wort ein Wort, bei Satzweise ein Untertitel. Die Anfänge bleiben exakt – jedes Wort erscheint genau, wenn es gesprochen wird.",
       "",
       "Ohne Häkchen ist die SRT genau wie gesprochen, z.B. für den Vergleichsbericht. Lyrics haben eigene Regeln (3 · Lyrics). Empfehlung: Haltezeit 1 Sekunde."
-    ]
+    ],
+    "resolve_install": "Kopiert das Plugin in den Script-Ordner von DaVinci Resolve (…\\Fusion\\Scripts\\Utility). Der Ordner dieser Workbench, die Oberflächensprache und alle Texte des Plugins werden fest eingetragen – es gibt nichts einzustellen. Nach dem Verschieben der Workbench oder einem Sprachwechsel neu installieren.",
+    "resolve_countdown": "Sekunden, bis ein Job aus DaVinci Resolve automatisch transkribiert wird. Ein Klick ins Fenster hält den Countdown an.",
+    "resolve_hand_over": "Verschiebt die Untertitel an die Stelle des transkribierten Bereichs in der Timeline und übergibt sie an das wartende Plugin in DaVinci Resolve. Die SRT wird dafür neu von der Festplatte gelesen – Änderungen in der Zwischenzeit zählen."
   }
 }

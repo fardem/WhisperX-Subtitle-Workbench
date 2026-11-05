@@ -221,6 +221,9 @@ class Config:
         self.gap_min           = g("Gaps", "min_length", 1.0, float)
         self.gap_margin        = g("Gaps", "margin_db", 8.0, float)
         self.gap_srt           = g("Gaps", "write_srt", True, _bool)
+        # DaVinci Resolve: own countdown for jobs of the plugin (0 = off), options of the last job (JSON)
+        self.resolve_countdown = max(g("Resolve", "countdown", 10, int), 0)
+        self.resolve_last      = g("Resolve", "last_options", "")
 
         if self.smooth and self.pause_hold >= self.pause:      # a real pause must stay visible
             hold = round(self.pause / 2, 2)

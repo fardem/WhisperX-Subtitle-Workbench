@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.4.1** · [Changelog](CHANGELOG.md)
+**Version 0.5.0** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word**, with a user interface in English, German and Turkish.
 
@@ -20,6 +20,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
 - [Updating safely](#updating-safely)
 - [Usage](#usage)
 - [Comparing transcripts](#comparing-transcripts)
+- [DaVinci Resolve](#davinci-resolve)
 - [Settings](#settings)
 - [Interface language and translations](#interface-language-and-translations)
 - [Command line](#command-line)
@@ -50,6 +51,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
   - Suggests replacements.
   - Shows timing deviations.
   - Every time in the report is clickable and plays the audio from that point.
+- **DaVinci Resolve:** a plugin transcribes the timeline from inside Resolve; the subtitles come back onto a native subtitle track (see [DaVinci Resolve](#davinci-resolve)).
 - **System check** on every start: it lists Python, all packages with versions, ffmpeg, the models and the graphics card, and tells you which feature would fail.
 - **Comfort:**
   - Drag & drop onto the BAT file or into the window. A second start hands its files to the open window.
@@ -220,7 +222,7 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
 
 ## Updating safely
 
-- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.4.1*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
+- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.5.0*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
 - **The workbench itself:** `git pull`, or copy the new files over the old ones. Your settings are in `whisper_tool.ini`. That file is not part of the repository, so an update never overwrites it. New options get default values automatically.
 - **Python packages:** only update when you need something new. This is the safe way:
 
@@ -305,10 +307,46 @@ The report follows your system's light/dark mode:
 
 ---
 
+## DaVinci Resolve
+
+A plugin connects the workbench with **DaVinci Resolve Studio**: Resolve renders the audio of the timeline, the workbench transcribes it as usual, and the subtitles come back onto a **native subtitle track** – not as Text+ titles. You correct them right there in Resolve and style them further with your own tools. The plugin brings no title effects of its own.
+
+### Installing the plugin
+
+1. In the workbench: *Settings → DaVinci Resolve → Install / update plugin*. This writes `WhisperX_Subtitles.lua` to `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Utility\`, so the plugin is listed on every page of Resolve. The folder of the workbench, the interface language and all texts of the plugin are written into the file – there is nothing to configure.
+2. In Resolve: *Workspace → Scripts → WhisperX_Subtitles*. If it is not listed, restart Resolve once.
+
+Install the plugin again after an update of the workbench, after moving its folder and after changing the interface language; the tab shows whether the installed plugin is up to date.
+
+> The path of the workbench may only contain plain ASCII characters, e.g. `C:\WhisperX-Subtitle-Workbench` – no umlauts. On Windows, Resolve's Lua cannot open files under other paths; the installer says so instead of installing.
+
+### Workflow
+
+1. Open the timeline in Resolve. Set In and Out if only a part should be transcribed, otherwise the whole timeline is used. Start the plugin and press **Transcribe**.
+2. The plugin renders the main mix of the timeline as WAV into `temp\resolve\<job>\` of the workbench. Afterwards the render job is deleted, and the page, the Deliver settings and the In/Out marks are as before – also after an error or *Cancel*. Then it starts the workbench with the WAV; a workbench that is already open takes the file over and keeps its models loaded.
+3. In the workbench the job appears as “*Timeline* · DaVinci Resolve”. It has its own countdown (*Settings → DaVinci Resolve*, 10 seconds by default). When the plugin opened the window, the job is transcribed with the options of the last DaVinci job; in a window that was already open, with the options shown there. Without the countdown, press *Start* yourself.
+4. When the job is done, check the subtitles and press **→ Hand over to DaVinci**. The SRT is moved to the position of the range in the timeline and saved as `temp\resolve\letzte\<Timeline>_<LANG>.srt`. This folder always holds only the SRT of the last hand-over.
+5. The plugin, still waiting in Resolve, switches back to the timeline of the job, imports the SRT into the media pool bin *WhisperX* and puts it onto the **first empty subtitle track** (ST1, ST2, …) – or onto a new one. The track is named `WhisperX DE` (`WhisperX DE 2` if the name exists) and stays the active subtitle track. Then the WAV and the job folder are deleted.
+
+**Import SRT …** in the plugin puts any SRT onto a subtitle track the same way, e.g. a translation. The language for the track name comes from the file name (`…_EN.srt`), otherwise the plugin asks. The file dialog starts in `temp\resolve\letzte\`.
+
+While the plugin waits, Resolve stays usable. Changes to the timeline in the transcribed range can make the subtitles no longer fit; if the end of the timeline has changed, the plugin asks before importing. Every step is logged under *Workspace → Console* (lines starting with `[WhisperX]`) – this output helps if something does not work.
+
+### Known limits
+
+- Tested with DaVinci Resolve **Studio** 21.1.2 on Windows. The free edition of Resolve 21.1 blocks file access for scripts; there only *Import SRT …* works.
+- Resolve puts an SRT only onto the **active** subtitle track, and only one can be active. The plugin therefore deactivates the other subtitle tracks; afterwards the new track is the active one. An empty but locked track is skipped.
+- The subtitles are placed relative to the start of the timeline, i.e. shifted by the In point. Whether the start timecode (e.g. 01:00:00:00) has to be added as well is still being tested; the plugin compares the position of the first subtitle with the expected frame and reports a difference.
+- Stop the playback before *Transcribe* and while the result is imported – Resolve can hang when the page changes during playback.
+- The media pool item points to the SRT in `letzte\`; after the next hand-over has replaced that file, the item is offline. The subtitles on the timeline belong to the project.
+- `resolve/tools/probe_subtitles.lua` checks how a new Resolve version places an SRT – run it after a Resolve update.
+
+---
+
 ## Settings
 
 - **Main window:** language, mode, layout, audio filter and prompt. *Save as default* stores them in the INI.
-- **Settings …** has six tabs: Whisper, Speech detection, Subtitles, Audio & output, Languages and General. *Save* writes only the changed values to `whisper_tool.ini`, creates a `.bak` backup first and keeps all comments.
+- **Settings …** has seven tabs: Whisper, Speech detection, Subtitles, Audio & output, Languages, DaVinci Resolve and General. *Save* writes only the changed values to `whisper_tool.ini`, creates a `.bak` backup first and keeps all comments.
 - `whisper_tool.ini` can also be edited by hand. Every value is commented; the template is `whisper_tool.example.ini`.
 
 Changes take effect on the next start, without closing the window. The models are reloaded only when a model parameter changes.
@@ -364,6 +402,9 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | Text is missing in quiet passages | Look at the gap check. Then lower the *Onset* or try *silero* (*Settings → Speech detection*) |
 | Wrong language for the whole file | Set the language instead of *Automatic*; music or an intro at the start can mislead the detection |
 | Words from the prompt appear in silence or music | Shorten the prompt or choose *none* for this file |
+| The plugin is not listed under *Workspace → Scripts* in Resolve | Restart Resolve once; otherwise install the plugin again under *Settings → DaVinci Resolve* |
+| The plugin says the workbench is not found | The workbench folder was moved – install the plugin again |
+| The subtitles are at the wrong position in Resolve | Send the output of *Workspace → Console* (lines starting with `[WhisperX]`) |
 | Drag & drop into the window does not work | *Settings → General → Drag & drop → Enable …*, then restart the window. Dropping onto the BAT always works |
 
 ---
@@ -376,13 +417,17 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | `wt_core.py` | Audio loading, WhisperX, lyrics alignment, subtitle rules, gap check, system check, INI writer |
 | `wt_compare.py` | Word-by-word comparison and the HTML report (also usable on its own) |
 | `wt_i18n.py` | Loads the language files |
+| `wt_resolve.py` | DaVinci Resolve connection: job and result files, SRT shift, plugin installation |
+| `resolve/WhisperX_Subtitles.lua` | The plugin for DaVinci Resolve (template; *Settings → DaVinci Resolve* installs it) |
+| `resolve/tools/probe_subtitles.lua` | Test script: how Resolve places an SRT on a subtitle track |
 | `wt_version.py` | Name and version number (shown in the title bar, log and report) |
 | `lang/*.json` | All texts of the interface, log and report (en, de, tr) |
 | `whisper_tool.example.ini` | Settings template; copied to `whisper_tool.ini` on the first start |
 | `Whisper_Tool.bat` | Starter: double-click it or drop files onto it |
 | `requirements.txt` | The tested package versions (install torch first!) |
 | `constraints.txt` | Exact versions of all packages of the tested installation (`pip freeze`), used with `-c` in step 5 |
-| `tests/` | Automatic tests (pytest). They need no GPU and no WhisperX and run on GitHub with every push |
+| `tests/` | Automatic tests (pytest). They need no GPU and no WhisperX and run on GitHub with every push. The tests of the Resolve plugin run against a fake Resolve and need the package `lupa`; without it they are skipped |
+| `temp/` | Job folders of the plugin and `temp/resolve/letzte/` (not part of the repository) |
 
 ---
 
@@ -397,6 +442,7 @@ This tool builds on the work of others:
 - [pyannote.audio](https://github.com/pyannote/pyannote-audio)
 - [PyTorch / torchaudio](https://pytorch.org/), including the MMS_FA forced-alignment pipeline
 - [uroman](https://github.com/isi-nlp/uroman)
+- [AutoSubs](https://github.com/tmoroney/auto-subs) (MIT) – its audio export from Resolve was the model for the render part of the plugin (own code)
 - [FFmpeg](https://ffmpeg.org/)
 
 Their licenses apply to those packages. The screenshots use made-up demo content.

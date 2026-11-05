@@ -2,6 +2,26 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.5.0] – 2026-11-05
+
+**Updating from 0.4.x:** close the old window first. Python packages need no update, and your `whisper_tool.ini` needs no change: without the new section `[Resolve]` its defaults apply (countdown 10 seconds), the tool adds it when needed. To work with DaVinci Resolve, install the plugin under *Settings → DaVinci Resolve*.
+
+- **DaVinci Resolve plugin** (`resolve/WhisperX_Subtitles.lua`, Resolve Studio, *Workspace → Scripts → WhisperX_Subtitles* on every page) – subtitles on a **native subtitle track**, not as Text+ titles:
+  - *Transcribe* renders the main mix of the timeline as WAV – In to Out if set, otherwise the whole timeline – into `temp\resolve\<job>\` of the workbench and starts the workbench with it (`pythonw.exe`, no console window; an open workbench takes the file over and keeps its models loaded)
+  - the render job is deleted afterwards; the page, the Deliver settings (saved as a temporary render preset) and the In/Out marks are restored – also after an error or *Cancel*. Left-over render jobs and presets of the plugin are removed before a new render, jobs of others are never touched
+  - frames come from the API, never from timecode strings: start frame, start timecode, In/Out and end frame go into the job file (`key=value`), whatever the start of the timeline is
+  - after the hand-over it switches back to the timeline of the job (by its unique ID), asks if the end of the timeline has changed, imports the SRT into the media pool bin *WhisperX* and puts it onto the first empty subtitle track, otherwise a new one: all other subtitle tracks are deactivated, the target is activated – the way Resolve 21.1.2 accepts an SRT. It checks that the clips arrived and that the first subtitle is at the expected frame, names the track `WhisperX <LANG>` (`WhisperX DE 2` if the name exists) and deletes the WAV and the job folder
+  - *Import SRT …* places any SRT the same way, e.g. a translation `…_EN.srt` (the language comes from the file name, otherwise the plugin asks)
+  - every step is logged under *Workspace → Console*
+- **Resolve mode** in the workbench – only for files with the job file of the plugin next to them, without it nothing changes:
+  - the job is listed as “*Timeline* · DaVinci Resolve” and has its own countdown, independent of the normal one; when the plugin opened the window, it is transcribed with the options of the last DaVinci job
+  - **→ Hand over to DaVinci** shifts the SRT by the offset of the job and keeps it as the only file in `temp\resolve\letzte\<Timeline>_<LANG>.srt` (the previous one is deleted only after the new one is written), then tells the plugin through a result file that is written atomically
+  - job folders that were cancelled, imported or left behind are removed on the next start
+- New tab *Settings → DaVinci Resolve*: install / update the plugin – the folder of the workbench, the interface language and all texts of the plugin (from `lang/*.json`) are written into it –, whether it is installed and in which version, countdown for DaVinci jobs (`[Resolve] countdown`, 0 = off). The installer refuses a workbench folder with non-ASCII characters, which Resolve's Lua cannot open
+- `resolve/tools/probe_subtitles.lua`: the test script that checks how Resolve places an SRT on a subtitle track – run it again after a Resolve update
+- Tests for the SRT shift (25 and 29.97 fps, drop frame), the job and result files, the Resolve mode and the rule “only one last SRT”. The plugin itself is tested against a fake Resolve when the package `lupa` is installed
+- Fixed: a second countdown no longer made the first one tick twice as fast
+
 ## [0.4.1] – 2026-11-04
 
 - Fixed: in *Raw* mode a WhisperX segment with a real pause inside stayed on screen during the whole pause (e.g. 4 seconds of applause). A real pause now starts a new segment in every mode: *Sentences* and *Raw* are split there, in *Word by word* every word is its own segment anyway. A segment without word times stays as it is

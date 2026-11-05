@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.4.1** · [Änderungen](CHANGELOG.md)
+**Version 0.5.0** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -22,6 +22,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 - [Sicher aktualisieren](#sicher-aktualisieren)
 - [Bedienung](#bedienung)
 - [Transkripte vergleichen](#transkripte-vergleichen)
+- [DaVinci Resolve](#davinci-resolve)
 - [Einstellungen](#einstellungen)
 - [Sprache der Oberfläche und Übersetzungen](#sprache-der-oberfläche-und-übersetzungen)
 - [Kommandozeile](#kommandozeile)
@@ -52,6 +53,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
   - Schlägt Ersetzungen vor.
   - Zeigt Zeitabweichungen.
   - Jede Zeit im Bericht ist anklickbar und spielt das Audio ab dieser Stelle.
+- **DaVinci Resolve:** Ein Plugin transkribiert die Timeline direkt aus Resolve heraus; die Untertitel kommen auf eine native Untertitelspur zurück (siehe [DaVinci Resolve](#davinci-resolve)).
 - **Systemprüfung** bei jedem Start: Sie listet Python, alle Pakete samt Versionen, ffmpeg, die Modelle und die Grafikkarte auf und sagt dir, welche Funktion ausfallen würde.
 - **Komfort:**
   - Drag & Drop auf die BAT-Datei oder ins Fenster. Ein zweiter Start reicht seine Dateien an das schon offene Fenster weiter.
@@ -222,7 +224,7 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 
 ## Sicher aktualisieren
 
-- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.4.1*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
+- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.5.0*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
 - **Die Workbench selbst:** `git pull`, oder die neuen Dateien über die alten kopieren. Deine Einstellungen stehen in `whisper_tool.ini`. Diese Datei gehört nicht zum Repository, ein Update überschreibt sie also nie. Neue Optionen bekommen automatisch Standardwerte.
 - **Python-Pakete:** Nur aktualisieren, wenn du etwas Neues brauchst. So geht es sicher:
 
@@ -307,10 +309,46 @@ Der Bericht folgt dem hellen/dunklen Modus deines Systems:
 
 ---
 
+## DaVinci Resolve
+
+Ein Plugin verbindet die Workbench mit **DaVinci Resolve Studio**: Resolve rendert den Ton der Timeline, die Workbench transkribiert ihn wie gewohnt, und die Untertitel kommen auf eine **native Untertitelspur** zurück – nicht als Text+-Titel. Du korrigierst sie direkt in Resolve und gestaltest sie mit deinen eigenen Werkzeugen weiter. Das Plugin bringt keine eigenen Titel-Effekte mit.
+
+### Plugin installieren
+
+1. In der Workbench: *Einstellungen → DaVinci Resolve → Plugin installieren / aktualisieren*. Das schreibt `WhisperX_Subtitles.lua` nach `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Utility\`; damit steht das Plugin auf jeder Seite von Resolve zur Verfügung. Der Ordner der Workbench, die Oberflächensprache und alle Texte des Plugins werden fest eingetragen – es gibt nichts einzustellen.
+2. In Resolve: *Workspace → Scripts → WhisperX_Subtitles*. Fehlt es dort, Resolve einmal neu starten.
+
+Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach einem Wechsel der Oberflächensprache das Plugin neu installieren; der Reiter zeigt, ob das installierte Plugin aktuell ist.
+
+> Der Pfad der Workbench darf nur einfache ASCII-Zeichen enthalten, z.B. `C:\WhisperX-Subtitle-Workbench` – keine Umlaute. Unter Windows kann das Lua von Resolve keine Dateien unter anderen Pfaden öffnen; der Installer meldet das, statt zu installieren.
+
+### Ablauf
+
+1. Die Timeline in Resolve öffnen. In und Out setzen, wenn nur ein Teil transkribiert werden soll, sonst gilt die ganze Timeline. Das Plugin starten und **Transkribieren** drücken.
+2. Das Plugin rendert die Hauptmischung der Timeline als WAV nach `temp\resolve\<Job>\` der Workbench. Danach ist der Render-Job gelöscht, und Seite, Deliver-Einstellungen sowie In/Out-Marken sind wie vorher – auch nach einem Fehler oder *Abbrechen*. Dann startet es die Workbench mit der WAV; eine schon geöffnete Workbench übernimmt die Datei, ihre Modelle bleiben geladen.
+3. In der Workbench steht der Job als „*Timeline* · DaVinci Resolve“ in der Liste. Er hat einen eigenen Countdown (*Einstellungen → DaVinci Resolve*, Vorgabe 10 Sekunden). Hat das Plugin das Fenster geöffnet, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon offenen Fenster mit den dort eingestellten. Ohne Countdown startest du selbst mit *Start*.
+4. Ist der Job fertig, die Untertitel prüfen und **→ An DaVinci übergeben** drücken. Die SRT wird an die Stelle des Bereichs in der Timeline verschoben und als `temp\resolve\letzte\<Timeline>_<SPRACHE>.srt` gespeichert. Dieser Ordner enthält immer nur die SRT der letzten Übergabe.
+5. Das Plugin wartet in Resolve, wechselt zurück zur Timeline des Jobs, importiert die SRT in den Media-Pool-Bin *WhisperX* und legt sie auf die **erste leere Untertitelspur** (ST1, ST2, …) – oder auf eine neue. Die Spur heißt `WhisperX DE` (`WhisperX DE 2`, wenn es den Namen schon gibt) und bleibt die aktive Untertitelspur. Danach werden WAV und Job-Ordner gelöscht.
+
+**SRT importieren …** im Plugin legt eine beliebige SRT genauso auf eine Untertitelspur, z.B. eine Übersetzung. Die Sprache für den Spurnamen kommt aus dem Dateinamen (`…_EN.srt`), sonst fragt das Plugin nach. Der Dateidialog startet in `temp\resolve\letzte\`.
+
+Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timeline im transkribierten Bereich können dazu führen, dass die Untertitel nicht mehr passen; hat sich das Ende der Timeline geändert, fragt das Plugin vor dem Import nach. Jeder Schritt steht unter *Workspace → Console* (Zeilen mit `[WhisperX]`) – diese Ausgabe hilft, wenn etwas nicht klappt.
+
+### Bekannte Grenzen
+
+- Getestet mit DaVinci Resolve **Studio** 21.1.2 unter Windows. Die kostenlose Version von Resolve 21.1 sperrt den Dateizugriff für Scripts; dort geht nur *SRT importieren …*.
+- Resolve legt eine SRT nur auf die **aktive** Untertitelspur, und aktiv kann nur eine sein. Das Plugin deaktiviert deshalb die anderen Untertitelspuren; danach ist die neue Spur die aktive. Eine leere, aber gesperrte Spur wird übersprungen.
+- Die Untertitel werden relativ zum Anfang der Timeline gesetzt, also um den In-Punkt verschoben. Ob der Start-Timecode (z.B. 01:00:00:00) zusätzlich zählt, wird noch getestet; das Plugin vergleicht die Lage des ersten Untertitels mit dem erwarteten Frame und meldet eine Abweichung.
+- Vor *Transkribieren* und während des Imports die Wiedergabe anhalten – Resolve kann hängen, wenn die Seite während der Wiedergabe wechselt.
+- Das Element im Media Pool zeigt auf die SRT in `letzte\`; nachdem die nächste Übergabe sie ersetzt hat, ist es offline. Die Untertitel auf der Timeline gehören zum Projekt.
+- `resolve/tools/probe_subtitles.lua` prüft, wie eine neue Resolve-Version eine SRT platziert – nach einem Resolve-Update laufen lassen.
+
+---
+
 ## Einstellungen
 
 - **Hauptfenster:** Sprache, Modus, Layout, Audiofilter und Prompt. *Als Standard speichern* legt sie in der INI ab.
-- **Einstellungen …** hat sechs Reiter: Whisper, Spracherkennung, Untertitel, Audio & Ausgabe, Sprachen und Allgemein. *Speichern* schreibt nur die geänderten Werte in `whisper_tool.ini`, legt vorher eine `.bak`-Sicherung an und lässt alle Kommentare stehen.
+- **Einstellungen …** hat sieben Reiter: Whisper, Spracherkennung, Untertitel, Audio & Ausgabe, Sprachen, DaVinci Resolve und Allgemein. *Speichern* schreibt nur die geänderten Werte in `whisper_tool.ini`, legt vorher eine `.bak`-Sicherung an und lässt alle Kommentare stehen.
 - `whisper_tool.ini` kannst du auch von Hand bearbeiten. Jeder Wert ist kommentiert; die Vorlage ist `whisper_tool.example.ini`.
 
 Änderungen gelten beim nächsten Start, ohne das Fenster zu schließen. Die Modelle werden nur neu geladen, wenn sich ein Modell-Parameter ändert.
@@ -366,6 +404,9 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | Text fehlt an leisen Stellen | Den Lücken-Check ansehen. Dann den *Onset* senken oder *silero* testen (*Einstellungen → Spracherkennung*) |
 | Falsche Sprache für die ganze Datei | Die Sprache festlegen statt *Automatisch*; Musik oder ein Intro am Anfang können die Erkennung täuschen |
 | Prompt-Wörter tauchen in Stille oder Musik auf | Den Prompt kürzen oder für diese Datei *keiner* wählen |
+| Das Plugin fehlt in Resolve unter *Workspace → Scripts* | Resolve einmal neu starten; sonst das Plugin unter *Einstellungen → DaVinci Resolve* neu installieren |
+| Das Plugin meldet, die Workbench sei nicht zu finden | Der Ordner der Workbench wurde verschoben – das Plugin neu installieren |
+| Die Untertitel stehen in Resolve an der falschen Stelle | Die Ausgabe unter *Workspace → Console* schicken (Zeilen mit `[WhisperX]`) |
 | Drag & Drop ins Fenster geht nicht | *Einstellungen → Allgemein → Drag & Drop → Aktivieren …*, dann das Fenster neu starten. Auf die BAT ziehen geht immer |
 
 ---
@@ -378,13 +419,17 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | `wt_core.py` | Audio laden, WhisperX, Lyrics-Alignment, Untertitel-Regeln, Lücken-Check, Systemprüfung, INI-Schreiber |
 | `wt_compare.py` | Wort-für-Wort-Vergleich und HTML-Bericht (auch allein benutzbar) |
 | `wt_i18n.py` | Lädt die Sprachdateien |
+| `wt_resolve.py` | Anbindung an DaVinci Resolve: Job- und Fertig-Datei, SRT-Verschiebung, Plugin-Installation |
+| `resolve/WhisperX_Subtitles.lua` | Das Plugin für DaVinci Resolve (Vorlage; *Einstellungen → DaVinci Resolve* installiert es) |
+| `resolve/tools/probe_subtitles.lua` | Testscript: wie Resolve eine SRT auf eine Untertitelspur legt |
 | `wt_version.py` | Name und Versionsnummer (in Titelleiste, Protokoll und Bericht) |
 | `lang/*.json` | Alle Texte von Oberfläche, Protokoll und Bericht (en, de, tr) |
 | `whisper_tool.example.ini` | Einstellungs-Vorlage; wird beim ersten Start zu `whisper_tool.ini` kopiert |
 | `Whisper_Tool.bat` | Starter: doppelklicken oder Dateien darauf ziehen |
 | `requirements.txt` | Die getesteten Paketversionen (torch zuerst installieren!) |
 | `constraints.txt` | Exakte Versionen aller Pakete der getesteten Installation (`pip freeze`), wird in Schritt 5 mit `-c` benutzt |
-| `tests/` | Automatische Tests (pytest). Sie brauchen weder Grafikkarte noch WhisperX und laufen bei jedem Push auf GitHub |
+| `tests/` | Automatische Tests (pytest). Sie brauchen weder Grafikkarte noch WhisperX und laufen bei jedem Push auf GitHub. Die Tests des Resolve-Plugins laufen gegen ein nachgebautes Resolve und brauchen das Paket `lupa`; ohne es werden sie übersprungen |
+| `temp/` | Job-Ordner des Plugins und `temp/resolve/letzte/` (nicht im Repository) |
 
 ---
 
@@ -399,6 +444,7 @@ Dieses Tool baut auf der Arbeit anderer auf:
 - [pyannote.audio](https://github.com/pyannote/pyannote-audio)
 - [PyTorch / torchaudio](https://pytorch.org/), einschließlich der Forced-Alignment-Pipeline MMS_FA
 - [uroman](https://github.com/isi-nlp/uroman)
+- [AutoSubs](https://github.com/tmoroney/auto-subs) (MIT) – sein Audio-Export aus Resolve war das Vorbild für den Render-Teil des Plugins (eigener Code)
 - [FFmpeg](https://ffmpeg.org/)
 
 Für diese Pakete gelten ihre eigenen Lizenzen. Die Bildschirmfotos zeigen erfundene Demo-Inhalte.

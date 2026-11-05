@@ -1057,8 +1057,7 @@ class App(BaseTk):
     def _resolve_options(self, job, cfg: core.Config | None = None) -> core.JobOptions:
         """
         Options of a DaVinci Resolve job: language, mode and audio filter as chosen in the plugin,
-        everything else from the INI – as if the Workbench had just been started. The options of
-        the main window do not count for these jobs.
+        all other settings from the INI. The options of the main window do not apply to these jobs.
         """
         o = core.JobOptions.from_config(cfg or self.cfg)
         return replace(o,
@@ -1075,7 +1074,8 @@ class App(BaseTk):
             mode=label_of(self.mode_choices, o.mode) + ("" if job.mode else ini),
             filter=T("resolve.filter_on" if o.use_filter else "resolve.filter_off")
             + ("" if job.use_filter is not None else ini)) + "\n")
-        prompt = {"ini": "main.pmode_ini", "custom": "main.pmode_custom"}.get(o.prompt_mode, "main.pmode_none")
+        prompt = {"ini": "resolve.prompt_ini", "custom": "resolve.prompt_custom"}.get(o.prompt_mode,
+                                                                                     "resolve.prompt_none")
         self._append_log(i18n.line("info", "resolve.log_job_ini", prompt=T(prompt), chars=o.max_chars,
                                    lines=o.max_lines) + "\n")
 

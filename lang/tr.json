@@ -298,7 +298,7 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · DaVinci Resolve'dan gelen işler",
-    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Dil, mod ve ses filtresi eklenti penceresinden, geri kalan her şey burada kaydedilen ayarlardan (INI) gelir – Workbench yeni başlatılmış gibi. Ana penceredeki seçenekler bu işler için geçerli değildir.",
+    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Dil, mod ve ses filtresi eklenti penceresinden, diğer tüm ayarlar INI'den gelir. Ana penceredeki seçenekler bu işler için geçerli değildir.",
     "sw_resolve_countdown": "DaVinci Resolve'dan gelen işleri otomatik başlat:",
     "sw_resolve_countdown_unit": "saniye sonra",
     "resolve_countdown": "DaVinci işleri için geri sayım",
@@ -645,8 +645,11 @@
     "log_job_options": "DaVinci Resolve eklentisinden: {lang} · {mode} · {filter}",
     "filter_on": "ses filtresi açık",
     "filter_off": "ses filtresi kapalı",
-    "log_job_ini": "Geri kalan her şey INI'den, yeni başlatılmış gibi: prompt {prompt} · {chars} karakter × {lines} satır · kurallar Ayarlar → Altyazılar'dan",
-    "from_ini": "INI"
+    "log_job_ini": "Diğer ayarlar INI'den: {prompt} · {chars} karakter × {lines} satır · kurallar Ayarlar → Altyazılar'dan",
+    "from_ini": "INI",
+    "prompt_ini": "dile göre prompt",
+    "prompt_custom": "özel prompt",
+    "prompt_none": "prompt yok"
   },
   "plugin": {
     "title": "WhisperX Altyazılar",

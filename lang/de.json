@@ -298,7 +298,7 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · Jobs aus DaVinci Resolve",
-    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Sprache, Modus und Audiofilter kommen aus dem Plugin-Fenster, alles andere aus den hier gespeicherten Einstellungen (INI) – so, als wäre die Workbench gerade gestartet worden. Die Einstellungen im Hauptfenster gelten für diese Jobs nicht.",
+    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Sprache, Modus und Audiofilter kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI. Die Einstellungen im Hauptfenster gelten für diese Jobs nicht.",
     "sw_resolve_countdown": "Jobs aus DaVinci Resolve automatisch starten nach",
     "sw_resolve_countdown_unit": "Sekunden",
     "resolve_countdown": "Countdown für DaVinci-Jobs",
@@ -645,8 +645,11 @@
     "log_job_options": "Aus dem DaVinci-Resolve-Plugin: {lang} · {mode} · {filter}",
     "filter_on": "Audiofilter an",
     "filter_off": "Audiofilter aus",
-    "log_job_ini": "Alles andere aus der INI wie bei einem frischen Start: Prompt {prompt} · {chars} Zeichen × {lines} Zeilen · Regeln aus Einstellungen → Untertitel",
-    "from_ini": "INI"
+    "log_job_ini": "Übrige Einstellungen aus der INI: {prompt} · {chars} Zeichen × {lines} Zeilen · Regeln aus Einstellungen → Untertitel",
+    "from_ini": "INI",
+    "prompt_ini": "Prompt je Sprache",
+    "prompt_custom": "eigener Prompt",
+    "prompt_none": "ohne Prompt"
   },
   "plugin": {
     "title": "WhisperX Untertitel",

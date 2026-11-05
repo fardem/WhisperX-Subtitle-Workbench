@@ -298,7 +298,7 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · Jobs from DaVinci Resolve",
-    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. Language, mode and audio filter come from the plugin window; everything else from the settings saved here (the INI) – as if the Workbench had just been started. The options of the main window do not count for these jobs.",
+    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. Language, mode and audio filter come from the plugin window, all other settings from the INI. The options of the main window do not apply to these jobs.",
     "sw_resolve_countdown": "Start jobs from DaVinci Resolve automatically after",
     "sw_resolve_countdown_unit": "seconds",
     "resolve_countdown": "Countdown for DaVinci jobs",
@@ -645,8 +645,11 @@
     "log_job_options": "From the DaVinci Resolve plugin: {lang} · {mode} · {filter}",
     "filter_on": "audio filter on",
     "filter_off": "audio filter off",
-    "log_job_ini": "Everything else from the INI, as on a fresh start: prompt {prompt} · {chars} characters × {lines} lines · rules from Settings → Subtitles",
-    "from_ini": "INI"
+    "log_job_ini": "Other settings from the INI: {prompt} · {chars} characters × {lines} lines · rules from Settings → Subtitles",
+    "from_ini": "INI",
+    "prompt_ini": "prompt per language",
+    "prompt_custom": "custom prompt",
+    "prompt_none": "no prompt"
   },
   "plugin": {
     "title": "WhisperX Subtitles",

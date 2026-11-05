@@ -411,8 +411,8 @@ def test_hand_over_with_gap_and_fast_tracks(tmp_path):
 
 
 def test_resolve_job_options_come_from_the_plugin_and_the_ini(tmp_path):
-    # language, mode and audio filter from the plugin – everything else from the INI, as on a
-    # fresh start; the main window (whatever it shows) does not count
+    # language, mode and audio filter from the plugin – all other settings from the INI; the
+    # main window (whatever it shows) does not apply
     wt = pytest.importorskip("whisper_tool")
     ini = tmp_path / "whisper_tool.ini"
     ini.write_text((ROOT / "whisper_tool.example.ini").read_text(encoding="utf-8")

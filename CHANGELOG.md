@@ -4,8 +4,9 @@ All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic
 
 ## [0.6.2] – 2026-11-05
 
-**Updating from 0.6.1:** install the plugin again under *Settings → DaVinci Resolve*.
+**Updating from 0.6.1:** install the plugin again under *Settings → DaVinci Resolve*. The key `last_options` in `[Resolve]` is no longer used and can be deleted.
 
+- **Jobs from DaVinci Resolve use the INI.** Language, mode and audio filter come from the plugin window (it remembers these three); everything else comes from the INI, as on a fresh start – prompt, characters per line and lines, and all rules from *Settings → Subtitles*. The options of the main window no longer count for these jobs, and the workbench no longer brings back the options of the last DaVinci job. The log shows what the plugin chose and what comes from the INI. In the plugin, “as in the Workbench” is now called “Workbench default”
 - **Fixed:** the plugin window did not come back at its saved size. Resolve 21.2 reports the width a little below the minimum the plugin sets (505 instead of 520), and the plugin dropped such a size as unusable
 - Tested with DaVinci Resolve Studio 21.2.0.5
 

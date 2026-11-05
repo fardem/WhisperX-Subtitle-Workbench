@@ -298,7 +298,7 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · Jobs aus DaVinci Resolve",
-    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Öffnet das Plugin das Fenster, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon geöffneten Fenster mit den dort eingestellten. Sprache, Modus und Audiofilter, die du im Plugin-Fenster wählst, gehen beidem vor.",
+    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Sprache, Modus und Audiofilter kommen aus dem Plugin-Fenster, alles andere aus den hier gespeicherten Einstellungen (INI) – so, als wäre die Workbench gerade gestartet worden. Die Einstellungen im Hauptfenster gelten für diese Jobs nicht.",
     "sw_resolve_countdown": "Jobs aus DaVinci Resolve automatisch starten nach",
     "sw_resolve_countdown_unit": "Sekunden",
     "resolve_countdown": "Countdown für DaVinci-Jobs",
@@ -626,9 +626,8 @@
     "range_inout": "In bis Out ({dur})",
     "log_handed": "An DaVinci Resolve übergeben: {name} – {n} Untertitel, Sprache {lang}, verschoben um {offset}",
     "countdown": "DaVinci-Resolve-Job: automatischer Start in {n} s – Klick ins Fenster hält an",
-    "waiting_start": "DaVinci-Resolve-Job – Einstellungen prüfen und Start drücken",
+    "waiting_start": "DaVinci-Resolve-Job – Start drücken",
     "ready_hand_over": "Fertig – jetzt „An DaVinci übergeben“ drücken",
-    "last_options": "Einstellungen des letzten DaVinci-Resolve-Jobs übernommen",
     "err_gone": "Den DaVinci-Resolve-Job gibt es nicht mehr – er wurde in Resolve abgebrochen oder schon importiert.",
     "err_no_srt": "Untertiteldatei nicht gefunden: {path}",
     "err_no_cues": "Die Untertiteldatei enthält keine Untertitel: {path}",
@@ -643,11 +642,11 @@
       "other": "{n} alte DaVinci-Resolve-Job-Ordner entfernt"
     },
     "fast_cue": "zu schnell: {cps} Zeichen/s",
-    "log_job_options": "Einstellungen aus DaVinci Resolve: {lang} · {mode} · {filter}",
-    "as_window": "wie in diesem Fenster",
+    "log_job_options": "Aus dem DaVinci-Resolve-Plugin: {lang} · {mode} · {filter}",
     "filter_on": "Audiofilter an",
     "filter_off": "Audiofilter aus",
-    "filter_window": "Audiofilter wie in diesem Fenster"
+    "log_job_ini": "Alles andere aus der INI wie bei einem frischen Start: Prompt {prompt} · {chars} Zeichen × {lines} Zeilen · Regeln aus Einstellungen → Untertitel",
+    "from_ini": "INI"
   },
   "plugin": {
     "title": "WhisperX Untertitel",
@@ -710,7 +709,7 @@
     "error": "Fehler: {why} (Details unter Workspace → Console)",
     "label_lang": "Sprache",
     "label_mode": "Modus",
-    "opt_workbench": "wie in der Workbench",
+    "opt_workbench": "Vorgabe der Workbench",
     "lang_auto": "Automatisch",
     "lang_de": "Deutsch",
     "lang_en": "Englisch",

@@ -1727,7 +1727,7 @@ function M.main()
       local ok, i = pcall(function() return itm[id].CurrentIndex end)
       local item = list[key][(ok and tonumber(i) or 0) + 1]
       S["choice_" .. key] = item and item[1] or ""
-      log("Chosen", key, "->", S["choice_" .. key] == "" and "as in the Workbench" or S["choice_" .. key])
+      log("Chosen", key, "->", S["choice_" .. key] == "" and "Workbench default" or S["choice_" .. key])
       save_settings()                                 -- kept even if Resolve is closed without "Close"
     end
   end

@@ -32,7 +32,6 @@ for _cat in (UserWarning, FutureWarning, DeprecationWarning):
     warnings.filterwarnings("ignore", category=_cat)
 
 import argparse
-import json
 import queue
 import re
 import shutil
@@ -309,7 +308,6 @@ class App(BaseTk):
         self.worker    = None
         self.countdown = None
         self.countdown_resolve = False      # the running countdown is the one for DaVinci Resolve jobs
-        self.started_once = False           # Start was pressed in this window (options are "last used")
         self.current   = None
 
         self.title(f"{APP_NAME} {VERSION}")
@@ -593,13 +591,7 @@ class App(BaseTk):
                 rng = T("resolve.range_all" if job.whole else "resolve.range_inout", dur=fmt_clock(job.duration()))
                 self._append_log(i18n.line("info", "resolve.log_job", timeline=job.timeline, range=rng,
                                            fps=job.fps_text or f"{job.fps:g}") + "\n")
-                if job.language or job.mode or job.use_filter is not None:   # chosen in the plugin: wins
-                    flt = {None: "resolve.filter_window", True: "resolve.filter_on", False: "resolve.filter_off"}
-                    self._append_log(i18n.line(
-                        "info", "resolve.log_job_options",
-                        lang=label_of(self.lang_choices, job.language) if job.language else T("resolve.as_window"),
-                        mode=label_of(self.mode_choices, job.mode) if job.mode else T("resolve.as_window"),
-                        filter=T(flt[job.use_filter])) + "\n")
+                self._log_resolve_options(job)
                 self._resolve_progress(iid, "queued")
         if new and self._running():
             for iid in new:
@@ -812,9 +804,6 @@ class App(BaseTk):
             except Exception:
                 pass
             self._set_state(iid, "wait", T("status.wait"))
-        self.started_once = True
-        if any(self.items[i].get("job") for i in todo):
-            self._save_resolve_options(opts)
 
         self.engine.cancel.clear()
         self.b_start.state(["disabled"])
@@ -856,12 +845,7 @@ class App(BaseTk):
             self.q.put(("current", iid, n, total))
             self.q.put(("log", f"\n━━ [{n}/{total}] {item['path'].name} ━━\n"))
             t = time.perf_counter()
-            job_opts = opts
-            if job is not None:                       # language/mode/filter chosen in the plugin win
-                job_opts = replace(opts,
-                                   language=job.language if job.language in ("auto",) + core.LANGS else opts.language,
-                                   mode=job.mode if job.mode in core.MODES else opts.mode,
-                                   use_filter=opts.use_filter if job.use_filter is None else job.use_filter)
+            job_opts = opts if job is None else self._resolve_options(job)
             try:
                 info = self.engine.process(item["path"], job_opts)
                 # suffix with {model} → actual name; language, mode and gaps go with a hand-over to DaVinci
@@ -1062,68 +1046,38 @@ class App(BaseTk):
                                  activebackground=pressed if ready else off)
 
     def _resolve_arrived(self, iids):
-        """A job from the DaVinci Resolve plugin: own countdown, then the options of the last DaVinci job."""
+        """A job from the DaVinci Resolve plugin: own countdown (or Start by hand)."""
         self.tree.selection_set(iids)
-        if not self.started_once and self._options_untouched() and self._apply_last_options():
-            self._append_log(i18n.line("info", "resolve.last_options") + "\n")
         if self.cfg.resolve_countdown > 0:
             self._start_countdown(self.cfg.resolve_countdown, resolve=True)
         else:
             self._stop_countdown(silent=True)
             self.l_status.config(text=T("resolve.waiting_start"))
 
-    @staticmethod
-    def _options_tuple(o: core.JobOptions) -> tuple:
-        return (o.language, o.mode, o.use_filter, o.prompt_mode, o.max_chars, o.max_lines, o.keep_json, o.line_hold)
+    def _resolve_options(self, job, cfg: core.Config | None = None) -> core.JobOptions:
+        """
+        Options of a DaVinci Resolve job: language, mode and audio filter as chosen in the plugin,
+        everything else from the INI – as if the Workbench had just been started. The options of
+        the main window do not count for these jobs.
+        """
+        o = core.JobOptions.from_config(cfg or self.cfg)
+        return replace(o,
+                       language=job.language if job.language in ("auto",) + core.LANGS else o.language,
+                       mode=job.mode if job.mode in core.MODES else o.mode,
+                       use_filter=o.use_filter if job.use_filter is None else job.use_filter)
 
-    def _options_untouched(self) -> bool:
-        """Does the main window still show the defaults of the INI (nothing changed by hand)?"""
-        try:
-            return self._options_tuple(self._job_options()) == self._options_tuple(core.JobOptions.from_config(self.cfg))
-        except ValueError:
-            return False
-
-    def _save_resolve_options(self, o: core.JobOptions):
-        data = {"language": o.language, "mode": o.mode, "filter": o.use_filter, "prompt_mode": o.prompt_mode,
-                "custom_prompt": o.custom_prompt, "chars": o.max_chars, "lines": o.max_lines,
-                "json": o.keep_json, "hold": o.line_hold}
-        text = json.dumps(data, ensure_ascii=False)
-        if text == self.cfg.resolve_last:
-            return
-        try:
-            core.save_ini(self.ini_path, {("Resolve", "last_options"): text})
-            self.cfg.resolve_last = text
-        except OSError as e:
-            self._append_log(i18n.line("warn", "main.save_failed", err=e).replace("\n", " ") + "\n")
-
-    def _apply_last_options(self) -> bool:
-        """Options of the last DaVinci job ([Resolve] last_options) → main window."""
-        try:
-            data = json.loads(self.cfg.resolve_last) if self.cfg.resolve_last else None
-        except ValueError:
-            data = None
-        if not isinstance(data, dict):
-            return False
-        if data.get("language") in dict(self.lang_choices):
-            self.v_lang.set(label_of(self.lang_choices, data["language"]))
-        if data.get("mode") in dict(self.mode_choices):
-            self.v_mode.set(label_of(self.mode_choices, data["mode"]))
-        for var, key, lo, hi in ((self.v_chars, "chars", 10, 200), (self.v_lines, "lines", 1, 5)):
-            if isinstance(data.get(key), int) and lo <= data[key] <= hi:
-                var.set(str(data[key]))
-        if isinstance(data.get("hold"), (int, float)) and 0 <= data["hold"] <= 10:
-            self.v_hold.set(f"{data['hold']:g}")
-        for var, key in ((self.v_filter, "filter"), (self.v_json, "json")):
-            if isinstance(data.get(key), bool):
-                var.set(data[key])
-        if data.get("prompt_mode") in ("ini", "custom", "none"):
-            if data["prompt_mode"] == "custom":
-                self._custom_text = str(data.get("custom_prompt") or "") or getattr(self, "_custom_text", "")
-            self._pmode_prev = None                   # the prompt field takes over the remembered text
-            self.v_pmode.set(data["prompt_mode"])
-        self._update_prompt_field()
-        self._update_mode_fields()
-        return True
+    def _log_resolve_options(self, job):
+        o = self._resolve_options(job)
+        ini = " (" + T("resolve.from_ini") + ")"
+        self._append_log(i18n.line(
+            "info", "resolve.log_job_options",
+            lang=label_of(self.lang_choices, o.language) + ("" if job.language else ini),
+            mode=label_of(self.mode_choices, o.mode) + ("" if job.mode else ini),
+            filter=T("resolve.filter_on" if o.use_filter else "resolve.filter_off")
+            + ("" if job.use_filter is not None else ini)) + "\n")
+        prompt = {"ini": "main.pmode_ini", "custom": "main.pmode_custom"}.get(o.prompt_mode, "main.pmode_none")
+        self._append_log(i18n.line("info", "resolve.log_job_ini", prompt=T(prompt), chars=o.max_chars,
+                                   lines=o.max_lines) + "\n")
 
     def _hand_over(self, iids=None):
         """

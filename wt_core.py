@@ -222,12 +222,11 @@ class Config:
         self.gap_margin        = g("Gaps", "margin_db", 8.0, float)
         self.gap_srt           = g("Gaps", "write_srt", True, _bool)
         # DaVinci Resolve: own countdown for jobs of the plugin (0 = off), hand over by itself,
-        # gaps and fast subtitles as own tracks, close instead of minimize, options of the last job (JSON)
+        # gaps and fast subtitles as own tracks, close instead of minimize
         self.resolve_countdown = max(g("Resolve", "countdown", 10, int), 0)
         self.resolve_auto      = g("Resolve", "auto_hand_over", False, _bool)
         self.resolve_extra     = g("Resolve", "extra_tracks", True, _bool)
         self.resolve_close     = g("Resolve", "close_after", False, _bool)
-        self.resolve_last      = g("Resolve", "last_options", "")
 
         if self.smooth and self.pause_hold >= self.pause:      # a real pause must stay visible
             hold = round(self.pause / 2, 2)

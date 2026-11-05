@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.6.1** · [Changelog](CHANGELOG.md)
+**Version 0.6.2** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word** – with a **plugin for DaVinci Resolve** and a user interface in English, German and Turkish.
 
@@ -222,7 +222,7 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
 
 ## Updating safely
 
-- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.6.1*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
+- **Close the tool first.** The running version is shown in the title bar (e.g. *WhisperX Subtitle Workbench 0.6.2*), in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
 - **The workbench itself:** `git pull`, or copy the new files over the old ones. Your settings are in `whisper_tool.ini`. That file is not part of the repository, so an update never overwrites it. New options get default values automatically.
 - **Python packages:** only update when you need something new. This is the safe way:
 
@@ -325,9 +325,9 @@ Install the plugin again after an update of the workbench, after moving its fold
 
 ### Workflow
 
-1. Open the timeline in Resolve. Set In and Out if only a part should be transcribed, otherwise the whole timeline is used. Start the plugin, choose **Language** and **Mode** if this job needs other ones than the workbench window (“as in the Workbench” keeps those), switch the **Audio filter** on or off, and press **Transcribe**. The plugin window remembers its position, its size and these choices, and the workbench uses them for this job.
+1. Open the timeline in Resolve. Set In and Out if only a part should be transcribed, otherwise the whole timeline is used. Start the plugin, choose **Language** and **Mode** if this job needs other ones than the workbench window (“Workbench default” takes the default from the INI), switch the **Audio filter** on or off, and press **Transcribe**. The plugin window remembers its position, its size and these three choices.
 2. The plugin renders the main mix of the timeline as WAV into `resolve_temp\<job>\` of the workbench. Afterwards the render job is deleted, and the page, the Deliver settings and the In/Out marks are as before – also after an error or *Cancel*. Then it starts the workbench with the WAV; a workbench that is already open takes the file over and keeps its models loaded.
-3. In the workbench the job appears as “*Timeline* · DaVinci Resolve”. It has its own countdown (*Settings → DaVinci Resolve*, 10 seconds by default). When the plugin opened the window, the job is transcribed with the options of the last DaVinci job; in a window that was already open, with the options shown there. Without the countdown, press *Start* yourself. Meanwhile the plugin window shows where the job stands: countdown, transcription in percent, done.
+3. In the workbench the job appears as “*Timeline* · DaVinci Resolve”. It has its own countdown (*Settings → DaVinci Resolve*, 10 seconds by default). Language, mode and audio filter come from the plugin window; all other settings come from the INI: prompt, characters per line and lines, and all rules from *Settings → Subtitles*. The options of the main window do not apply to DaVinci jobs. The log shows both. Without the countdown, press *Start* yourself. Meanwhile the plugin window shows where the job stands: countdown, transcription in percent, done.
 4. When the job is done, check the subtitles and press **→ Hand over to DaVinci** (blue once the job is done). The SRT is moved to the position of the range in the timeline and saved as `resolve_temp\<Timeline>_<LANG>_<date-time>.srt`; this folder always holds only the SRT of the last hand-over. The name is new every time, because Resolve does not read a file again that is already in its media pool – it would place the subtitles of the first import. The workbench then minimizes itself – it stays open, so its models stay loaded for the next job. In *Settings → DaVinci Resolve* you can let it hand over by itself as soon as the job is transcribed, and close instead of minimize.
 5. The plugin, still waiting in Resolve, switches back to the timeline of the job, imports the SRT into the media pool bin *WhisperX* and puts it onto the **first empty subtitle track** (ST1, ST2, …) – or onto a new one. The track is named `WhisperX DE` (`WhisperX DE 2` if the name exists) and stays the active subtitle track. Then the WAV and the job folder are deleted, and the plugin window comes to the front with the result until you press *OK*.
 6. If switched on (the default), two more subtitle tracks help with checking: **WhisperX gaps** marks loud passages without text from the gap check, **WhisperX too fast** marks subtitles with more than 17 characters per second (mode *Sentences*). Jump through them in Resolve, then delete the two tracks. The transcript track stays the active one.
@@ -340,7 +340,7 @@ While the plugin waits, Resolve stays usable. Changes to the timeline in the tra
 
 ### Known limits
 
-- Tested with DaVinci Resolve **Studio** 21.1.2 on Windows. The free edition of Resolve 21.1 blocks file access for scripts; there only *Import SRT …* works.
+- Tested with DaVinci Resolve **Studio** 21.1.2 and 21.2.0.5 on Windows. The free edition of Resolve 21.1 blocks file access for scripts; there only *Import SRT …* works.
 - Resolve puts an SRT only onto the **active** subtitle track, and only one can be active. The plugin therefore deactivates the other subtitle tracks; afterwards the new track is the active one. An empty but locked track is skipped.
 - The subtitles are placed relative to the start of the timeline, i.e. shifted by the In point. Whether the start timecode (e.g. 01:00:00:00) has to be added as well is still being tested; the plugin compares the position of the first subtitle with the expected frame and reports a difference.
 - Stop the playback before *Transcribe* and while the result is imported – Resolve can hang when the page changes during playback.

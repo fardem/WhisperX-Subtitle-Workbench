@@ -350,7 +350,7 @@ def test_plugin_python_prefers_pythonw(tmp_path):
 
 def test_ini_resolve_section(tmp_path):
     cfg = core.Config(ROOT / "whisper_tool.example.ini")
-    assert cfg.resolve_countdown == 10 and cfg.resolve_last == ""
+    assert cfg.resolve_countdown == 10
     ini = tmp_path / "old.ini"
     ini.write_text("[Menu]\ntimeout = 15\n", encoding="utf-8")                # 0.4.x INI without [Resolve]
     assert core.Config(ini).resolve_countdown == 10
@@ -408,3 +408,21 @@ def test_hand_over_with_gap_and_fast_tracks(tmp_path):
     (plain.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:01,200", "zu schnell hier")), encoding="utf-8")
     wr.hand_over(plain, plain.folder / "audio.srt", "de", last_dir=tmp_path / "out")
     assert "gaps" not in wr.read_kv(plain.done_path) and "fast" not in wr.read_kv(plain.done_path)
+
+
+def test_resolve_job_options_come_from_the_plugin_and_the_ini(tmp_path):
+    # language, mode and audio filter from the plugin – all other settings from the INI; the
+    # main window (whatever it shows) does not apply
+    wt = pytest.importorskip("whisper_tool")
+    ini = tmp_path / "whisper_tool.ini"
+    ini.write_text((ROOT / "whisper_tool.example.ini").read_text(encoding="utf-8")
+                   .replace("prompt_mode   = ini", "prompt_mode   = none")
+                   .replace("default_chars = 42", "default_chars = 37")
+                   .replace("language = auto", "language = de"), encoding="utf-8")
+    cfg = core.Config(ini)
+    app = type("App", (), {"cfg": cfg})()
+    chosen = wt.App._resolve_options(app, make_job(tmp_path / "a", language="tr", mode="word", use_filter=True))
+    assert (chosen.language, chosen.mode, chosen.use_filter) == ("tr", "word", True)
+    assert (chosen.prompt_mode, chosen.max_chars, chosen.max_lines) == ("none", 37, 2)
+    default = wt.App._resolve_options(app, make_job(tmp_path / "b"))                  # "Workbench default"
+    assert (default.language, default.mode, default.use_filter) == ("de", "sentence", False)

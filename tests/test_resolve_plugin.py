@@ -744,6 +744,9 @@ def test_unusable_saved_geometry_is_ignored(tmp_path):
         assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "2"})) is None
     assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,330", "layout": "2"})).values()) == \
         [10, 20, 600, 330]
+    # Resolve 21.2 reported 505 wide although the minimum is 520 - restore it anyway
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,330", "layout": "2"})).values()) == \
+        [260, 180, 505, 330]
     # saved by 0.6.0 (no layout key): its start size was too big - start with the new one
     assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})) is None
 

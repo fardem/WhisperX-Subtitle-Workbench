@@ -298,7 +298,7 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · Jobs from DaVinci Resolve",
-    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. When the plugin opens the window, the job is transcribed with the options of the last DaVinci job; in a window that is already open, with the options shown there. Language, mode and audio filter chosen in the plugin window win over both.",
+    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. Language, mode and audio filter come from the plugin window, all other settings from the INI. The options of the main window do not apply to these jobs.",
     "sw_resolve_countdown": "Start jobs from DaVinci Resolve automatically after",
     "sw_resolve_countdown_unit": "seconds",
     "resolve_countdown": "Countdown for DaVinci jobs",
@@ -626,9 +626,8 @@
     "range_inout": "In to Out ({dur})",
     "log_handed": "Handed over to DaVinci Resolve: {name} – {n} subtitles, language {lang}, shifted by {offset}",
     "countdown": "DaVinci Resolve job: automatic start in {n} s – click into the window to stop",
-    "waiting_start": "DaVinci Resolve job – check the options and press Start",
+    "waiting_start": "DaVinci Resolve job – press Start",
     "ready_hand_over": "Done – now press “Hand over to DaVinci”",
-    "last_options": "Options of the last DaVinci Resolve job restored",
     "err_gone": "The DaVinci Resolve job no longer exists – it was cancelled in Resolve or has already been imported.",
     "err_no_srt": "Subtitle file not found: {path}",
     "err_no_cues": "The subtitle file contains no subtitles: {path}",
@@ -643,11 +642,14 @@
       "other": "{n} old DaVinci Resolve job folders removed"
     },
     "fast_cue": "too fast: {cps} characters/s",
-    "log_job_options": "Options from DaVinci Resolve: {lang} · {mode} · {filter}",
-    "as_window": "as in this window",
+    "log_job_options": "From the DaVinci Resolve plugin: {lang} · {mode} · {filter}",
     "filter_on": "audio filter on",
     "filter_off": "audio filter off",
-    "filter_window": "audio filter as in this window"
+    "log_job_ini": "Other settings from the INI: {prompt} · {chars} characters × {lines} lines · rules from Settings → Subtitles",
+    "from_ini": "INI",
+    "prompt_ini": "prompt per language",
+    "prompt_custom": "custom prompt",
+    "prompt_none": "no prompt"
   },
   "plugin": {
     "title": "WhisperX Subtitles",
@@ -710,7 +712,7 @@
     "error": "Error: {why} (details in Workspace → Console)",
     "label_lang": "Language",
     "label_mode": "Mode",
-    "opt_workbench": "as in the Workbench",
+    "opt_workbench": "Workbench default",
     "lang_auto": "Automatic",
     "lang_de": "German",
     "lang_en": "English",

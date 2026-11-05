@@ -2,6 +2,13 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.6.2] – 2026-11-05
+
+**Updating from 0.6.1:** install the plugin again under *Settings → DaVinci Resolve*.
+
+- **Fixed:** the plugin window did not come back at its saved size. Resolve 21.2 reports the width a little below the minimum the plugin sets (505 instead of 520), and the plugin dropped such a size as unusable
+- Tested with DaVinci Resolve Studio 21.2.0.5
+
 ## [0.6.1] – 2026-11-05
 
 **Updating from 0.6.0:** install the plugin again under *Settings → DaVinci Resolve*. The plugin window starts once with its new, smaller size.

@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.6.1** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.6.2** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -224,7 +224,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ## Güvenli güncelleme
 
-- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.6.1*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.6.2*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 
@@ -342,7 +342,7 @@ Eklenti beklerken Resolve kullanılabilir kalır. Yazıya dökülen aralıkta za
 
 ### Bilinen sınırlar
 
-- DaVinci Resolve **Studio** 21.1.2 ile Windows'ta test edildi. Resolve 21.1'in ücretsiz sürümü betiklerin dosya erişimini engeller; orada yalnızca *SRT içe aktar …* çalışır.
+- DaVinci Resolve **Studio** 21.1.2 ve 21.2.0.5 ile Windows'ta test edildi. Resolve 21.1'in ücretsiz sürümü betiklerin dosya erişimini engeller; orada yalnızca *SRT içe aktar …* çalışır.
 - Resolve bir SRT'yi yalnızca **etkin** altyazı izine yerleştirir ve aynı anda yalnızca biri etkin olabilir. Bu yüzden eklenti diğer altyazı izlerini devre dışı bırakır; sonrasında yeni iz etkin olandır. Boş ama kilitli bir iz atlanır.
 - Altyazılar zaman çizelgesinin başına göre, yani In noktası kadar kaydırılarak yerleştirilir. Başlangıç zaman kodunun (örn. 01:00:00:00) da eklenmesi gerekip gerekmediği hâlâ test ediliyor; eklenti ilk altyazının konumunu beklenen kareyle karşılaştırır ve farkı bildirir.
 - *Yazıya dök*'ten önce ve içe aktarma sırasında oynatmayı durdurun – oynatma sırasında sayfa değişirse Resolve takılabilir.

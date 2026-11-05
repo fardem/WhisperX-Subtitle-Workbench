@@ -33,7 +33,7 @@ check the job status by Error/CompletionPercentage, remove left-over jobs of its
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.6.1",
+  version   = "0.6.2",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -1226,14 +1226,15 @@ end
 -- Window: start size, smallest size; LAYOUT changes when they do (an older saved size is dropped).
 local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 330 }, { 520, 290 }, "2"
 
--- Window position and size as saved; nothing unusable (off screen, too small, older layout).
+-- Window position and size as saved; nothing unusable (off screen, tiny, older layout).
+-- Resolve may report a size below MinimumSize (e.g. 505 wide) - that counts as usable.
 local function saved_geometry(v)
   if tostring(v.layout or "") ~= LAYOUT then
     return nil
   end
   local x, y, w, h = tostring(v.geometry or ""):match("^(-?%d+),(-?%d+),(%d+),(%d+)$")
   x, y, w, h = tonumber(x), tonumber(y), tonumber(w), tonumber(h)
-  if x and w >= WIN_MIN[1] and h >= WIN_MIN[2] and w <= 4000 and h <= 3000
+  if x and w >= 300 and h >= 200 and w <= 4000 and h <= 3000
       and x > -200 and y > -200 and x < 8000 and y < 5000 then
     return { x, y, w, h }
   end

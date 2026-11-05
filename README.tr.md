@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.4.1** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.5.0** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -22,6 +22,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 - [Güvenli güncelleme](#güvenli-güncelleme)
 - [Kullanım](#kullanım)
 - [Transkriptleri karşılaştırma](#transkriptleri-karşılaştırma)
+- [DaVinci Resolve](#davinci-resolve)
 - [Ayarlar](#ayarlar)
 - [Arayüz dili ve çeviriler](#arayüz-dili-ve-çeviriler)
 - [Komut satırı](#komut-satırı)
@@ -52,6 +53,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
   - Değiştirmeler önerir.
   - Zaman sapmalarını gösterir.
   - Rapordaki her zaman tıklanabilir ve sesi o noktadan çalar.
+- **DaVinci Resolve:** bir eklenti zaman çizelgesini doğrudan Resolve içinden yazıya döker; altyazılar yerel bir altyazı izine geri gelir (bkz. [DaVinci Resolve](#davinci-resolve)).
 - **Sistem kontrolü** her başlatmada: Python'u, tüm paketleri sürümleriyle, ffmpeg'i, modelleri ve ekran kartını listeler ve hangi işlevin çalışmayacağını söyler.
 - **Kolaylıklar:**
   - BAT dosyasına veya pencereye sürükle-bırak. İkinci bir başlatma, dosyalarını zaten açık olan pencereye aktarır.
@@ -222,7 +224,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ## Güvenli güncelleme
 
-- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.4.1*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.5.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 
@@ -307,10 +309,46 @@ Rapor, sisteminizin açık/koyu moduna uyar:
 
 ---
 
+## DaVinci Resolve
+
+Bir eklenti, Workbench'i **DaVinci Resolve Studio** ile bağlar: Resolve zaman çizelgesinin sesini render eder, Workbench her zamanki gibi yazıya döker ve altyazılar **yerel bir altyazı izine** geri gelir – Text+ başlıkları olarak değil. Altyazıları doğrudan Resolve'da düzeltir, kendi araçlarınızla biçimlendirmeye devam edersiniz. Eklenti kendi başlık efektlerini getirmez.
+
+### Eklentiyi kurma
+
+1. Workbench'te: *Ayarlar → DaVinci Resolve → Eklentiyi kur / güncelle*. Bu, `WhisperX_Subtitles.lua` dosyasını `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Utility\` klasörüne yazar; böylece eklenti Resolve'un her sayfasında listelenir. Workbench'in klasörü, arayüz dili ve eklentinin tüm metinleri dosyaya yazılır – ayarlanacak bir şey yoktur.
+2. Resolve'da: *Workspace → Scripts → WhisperX_Subtitles*. Orada görünmüyorsa Resolve'u bir kez yeniden başlatın.
+
+Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini değiştirdikten sonra eklentiyi yeniden kurun; sekme, kurulu eklentinin güncel olup olmadığını gösterir.
+
+> Workbench'in yolu yalnızca düz ASCII karakterler içerebilir, örn. `C:\WhisperX-Subtitle-Workbench` – ü, ş, ğ gibi harfler olmadan. Resolve'un Lua'sı Windows'ta başka yollardaki dosyaları açamaz; kurulum bu durumda kurmak yerine bunu bildirir.
+
+### İş akışı
+
+1. Zaman çizelgesini Resolve'da açın. Yalnızca bir bölüm yazıya dökülecekse In ve Out koyun, yoksa tüm zaman çizelgesi kullanılır. Eklentiyi başlatın ve **Yazıya dök** düğmesine basın.
+2. Eklenti, zaman çizelgesinin ana miksini WAV olarak Workbench'in `temp\resolve\<iş>\` klasörüne render eder. Ardından render işi silinir; sayfa, Deliver ayarları ve In/Out işaretleri eskisi gibidir – bir hatadan veya *İptal*'den sonra da. Sonra Workbench'i WAV ile başlatır; zaten açık olan bir Workbench dosyayı devralır, modelleri yüklü kalır.
+3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Pencereyi eklenti açtıysa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız.
+4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın. SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `temp\resolve\letzte\<ZamanÇizelgesi>_<DİL>.srt` olarak kaydedilir. Bu klasörde her zaman yalnızca son aktarımın SRT'si bulunur.
+5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir.
+
+Eklentideki **SRT içe aktar …** herhangi bir SRT'yi, örneğin bir çeviriyi, aynı şekilde bir altyazı izine yerleştirir. İz adı için dil dosya adından alınır (`…_EN.srt`), yoksa eklenti sorar. Dosya penceresi `temp\resolve\letzte\` klasöründe açılır.
+
+Eklenti beklerken Resolve kullanılabilir kalır. Yazıya dökülen aralıkta zaman çizelgesinde yapılan değişiklikler altyazıların artık uymamasına yol açabilir; zaman çizelgesinin sonu değiştiyse eklenti içe aktarmadan önce sorar. Her adım *Workspace → Console* altında kaydedilir (`[WhisperX]` ile başlayan satırlar) – bir şey çalışmazsa bu çıktı yardımcı olur.
+
+### Bilinen sınırlar
+
+- DaVinci Resolve **Studio** 21.1.2 ile Windows'ta test edildi. Resolve 21.1'in ücretsiz sürümü betiklerin dosya erişimini engeller; orada yalnızca *SRT içe aktar …* çalışır.
+- Resolve bir SRT'yi yalnızca **etkin** altyazı izine yerleştirir ve aynı anda yalnızca biri etkin olabilir. Bu yüzden eklenti diğer altyazı izlerini devre dışı bırakır; sonrasında yeni iz etkin olandır. Boş ama kilitli bir iz atlanır.
+- Altyazılar zaman çizelgesinin başına göre, yani In noktası kadar kaydırılarak yerleştirilir. Başlangıç zaman kodunun (örn. 01:00:00:00) da eklenmesi gerekip gerekmediği hâlâ test ediliyor; eklenti ilk altyazının konumunu beklenen kareyle karşılaştırır ve farkı bildirir.
+- *Yazıya dök*'ten önce ve içe aktarma sırasında oynatmayı durdurun – oynatma sırasında sayfa değişirse Resolve takılabilir.
+- Medya havuzundaki öğe `letzte\` içindeki SRT'yi gösterir; bir sonraki aktarım o dosyayı değiştirdikten sonra öğe çevrimdışıdır. Zaman çizelgesindeki altyazılar projenin bir parçasıdır.
+- `resolve/tools/probe_subtitles.lua`, yeni bir Resolve sürümünün SRT'yi nasıl yerleştirdiğini kontrol eder – bir Resolve güncellemesinden sonra çalıştırın.
+
+---
+
 ## Ayarlar
 
 - **Ana pencere:** dil, mod, düzen, ses filtresi ve prompt. *Varsayılan olarak kaydet* bunları INI'ye yazar.
-- **Ayarlar …** altı sekmeden oluşur: Whisper, Konuşma algılama, Altyazılar, Ses ve çıktı, Diller ve Genel. *Kaydet* yalnızca değişen değerleri `whisper_tool.ini` dosyasına yazar, önce bir `.bak` yedeği oluşturur ve tüm açıklamaları korur.
+- **Ayarlar …** yedi sekmeden oluşur: Whisper, Konuşma algılama, Altyazılar, Ses ve çıktı, Diller, DaVinci Resolve ve Genel. *Kaydet* yalnızca değişen değerleri `whisper_tool.ini` dosyasına yazar, önce bir `.bak` yedeği oluşturur ve tüm açıklamaları korur.
 - `whisper_tool.ini` elle de düzenlenebilir. Her değerin açıklaması vardır; şablon `whisper_tool.example.ini` dosyasıdır.
 
 Değişiklikler pencereyi kapatmadan bir sonraki başlatmada geçerli olur. Modeller yalnızca bir model parametresi değiştiğinde yeniden yüklenir.
@@ -366,6 +404,9 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | Kısık sesli yerlerde metin eksik | Boşluk kontrolüne bakın. Sonra *Onset*'i düşürün veya *silero*'yu deneyin (*Ayarlar → Konuşma algılama*) |
 | Tüm dosya için yanlış dil | *Otomatik* yerine dili belirleyin; baştaki müzik veya giriş algılamayı yanıltabilir |
 | Prompt kelimeleri sessizlikte veya müzikte çıkıyor | Prompt'u kısaltın veya bu dosya için *yok*'u seçin |
+| Eklenti Resolve'da *Workspace → Scripts* altında yok | Resolve'u bir kez yeniden başlatın; olmazsa eklentiyi *Ayarlar → DaVinci Resolve* altında yeniden kurun |
+| Eklenti Workbench'in bulunamadığını söylüyor | Workbench klasörü taşınmış – eklentiyi yeniden kurun |
+| Altyazılar Resolve'da yanlış yerde | *Workspace → Console* altındaki çıktıyı gönderin (`[WhisperX]` ile başlayan satırlar) |
 | Pencereye sürükle-bırak çalışmıyor | *Ayarlar → Genel → Sürükle-bırak → Etkinleştir …*, sonra pencereyi yeniden başlatın. BAT üzerine sürüklemek her zaman çalışır |
 
 ---
@@ -378,13 +419,17 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | `wt_core.py` | Ses yükleme, WhisperX, şarkı sözü hizalama, altyazı kuralları, boşluk kontrolü, sistem kontrolü, INI yazıcı |
 | `wt_compare.py` | Kelime kelime karşılaştırma ve HTML raporu (tek başına da kullanılabilir) |
 | `wt_i18n.py` | Dil dosyalarını yükler |
+| `wt_resolve.py` | DaVinci Resolve bağlantısı: iş ve sonuç dosyaları, SRT kaydırma, eklenti kurulumu |
+| `resolve/WhisperX_Subtitles.lua` | DaVinci Resolve eklentisi (şablon; *Ayarlar → DaVinci Resolve* kurar) |
+| `resolve/tools/probe_subtitles.lua` | Test betiği: Resolve bir SRT'yi altyazı izine nasıl yerleştirir |
 | `wt_version.py` | Ad ve sürüm numarası (başlık çubuğunda, günlükte ve raporda görünür) |
 | `lang/*.json` | Arayüzün, günlüğün ve raporun tüm metinleri (en, de, tr) |
 | `whisper_tool.example.ini` | Ayar şablonu; ilk başlatmada `whisper_tool.ini` olarak kopyalanır |
 | `Whisper_Tool.bat` | Başlatıcı: çift tıklayın veya dosyaları üzerine sürükleyin |
 | `requirements.txt` | Test edilmiş paket sürümleri (önce torch'u kurun!) |
 | `constraints.txt` | Test edilmiş kurulumdaki tüm paketlerin tam sürümleri (`pip freeze`), 5. adımda `-c` ile kullanılır |
-| `tests/` | Otomatik testler (pytest). Ekran kartı veya WhisperX gerektirmez, GitHub'da her push'ta çalışır |
+| `tests/` | Otomatik testler (pytest). Ekran kartı veya WhisperX gerektirmez, GitHub'da her push'ta çalışır. Resolve eklentisinin testleri taklit bir Resolve'a karşı çalışır ve `lupa` paketini gerektirir; o yoksa atlanır |
+| `temp/` | Eklentinin iş klasörleri ve `temp/resolve/letzte/` (depoda değil) |
 
 ---
 
@@ -399,6 +444,7 @@ Bu araç başkalarının emeği üzerine kuruludur:
 - [pyannote.audio](https://github.com/pyannote/pyannote-audio)
 - [PyTorch / torchaudio](https://pytorch.org/), MMS_FA zorlamalı hizalama hattı dahil
 - [uroman](https://github.com/isi-nlp/uroman)
+- [AutoSubs](https://github.com/tmoroney/auto-subs) (MIT) – Resolve'dan ses dışa aktarımı, eklentinin render bölümüne örnek oldu (kendi kodumuz)
 - [FFmpeg](https://ffmpeg.org/)
 
 Bu paketler için kendi lisansları geçerlidir. Ekran görüntüleri uydurma demo içerik gösterir.

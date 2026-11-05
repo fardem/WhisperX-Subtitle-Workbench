@@ -5,3 +5,4 @@
 *.ini text eol=lf
 *.png binary
 *.yml text eol=lf
+*.lua text eol=lf

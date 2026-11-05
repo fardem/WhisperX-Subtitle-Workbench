@@ -21,6 +21,7 @@ All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic
 - `resolve/tools/probe_subtitles.lua`: the test script that checks how Resolve places an SRT on a subtitle track – run it again after a Resolve update
 - Tests for the SRT shift (25 and 29.97 fps, drop frame), the job and result files, the Resolve mode and the rule “only one last SRT”. The plugin itself is tested against a fake Resolve when the package `lupa` is installed
 - Fixed: a second countdown no longer made the first one tick twice as fast
+- README in all three languages: every screenshot taken again with 0.5.0, new ones of *Settings → DaVinci Resolve*, a DaVinci job ready to hand over and *Settings → Subtitles*; the plugin is named in the introduction and in the usage table
 
 ## [0.4.1] – 2026-11-04
 

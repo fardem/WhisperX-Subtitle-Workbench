@@ -2,6 +2,18 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.6.0] – 2026-11-05
+
+**Updating from 0.5.x:** close the workbench, update, then install the plugin again under *Settings → DaVinci Resolve*. The new options in `[Resolve]` start with their defaults (automatic hand-over off, extra tracks on, minimize after the hand-over).
+
+- **Plugin window:**
+  - shows where the job stands in the workbench: waiting for the start, the countdown, loading, transcription and word timestamps in percent, done, error (the workbench writes `progress.txt` into the job folder)
+  - **Language** and **Mode** can be chosen in the plugin; “as in the Workbench” keeps the options of the workbench window. A choice here wins over the workbench for this job
+  - remembers its position, its size and the two choices (`resolve_temp\plugin.txt`)
+- **Gaps and too fast subtitles as own subtitle tracks** (*Settings → DaVinci Resolve*, on by default): “WhisperX gaps” marks loud passages without text from the gap check, “WhisperX too fast” marks subtitles with more than 17 characters per second (mode *Sentences*). They are for checking in Resolve – delete the tracks afterwards. The transcript track stays the active one; nothing is added when there is nothing to show
+- **Hand over by itself** (*Settings → DaVinci Resolve*, off by default): as soon as the job is transcribed, the subtitles go to the waiting plugin
+- **After the hand-over** the workbench is minimized (the models stay loaded) or – with the new tick – closed. While other files are still running it is always minimized
+
 ## [0.5.1] – 2026-11-05
 
 **Updating from 0.5.0:** close the workbench, update, then install the plugin again under *Settings → DaVinci Resolve* (the tab shows “please update”). The old folder `temp\resolve\` is removed on the next start.

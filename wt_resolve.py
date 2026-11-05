@@ -41,6 +41,7 @@ JOB_FILE      = "job.txt"                      # plugin → Workbench
 DONE_FILE     = "done.txt"                     # Workbench → plugin (written atomically)
 CANCEL_FILE   = "cancel.txt"                   # plugin: the job was cancelled
 IMPORTED_FILE = "imported.txt"                 # plugin: imported, but files could not be deleted
+PROGRESS_FILE = "progress.txt"                 # Workbench → plugin: where the job stands
 JOB_FORMAT    = "whisperx-resolve-job/1"
 DONE_FORMAT   = "whisperx-resolve-done/1"
 JOB_MAX_AGE_H = 72                             # older job folders are left-overs (e.g. Resolve crashed)
@@ -146,6 +147,8 @@ class ResolveJob:
     out_frame:   int = 0         # last rendered frame
     end_frame:   int = 0         # end of the timeline when the audio was rendered
     whole:       bool = True     # True = whole timeline, False = In/Out
+    language:    str = ""        # chosen in the plugin ("" = as in the Workbench window)
+    mode:        str = ""        # chosen in the plugin ("" = as in the Workbench window)
 
     @classmethod
     def from_values(cls, folder, v: dict) -> "ResolveJob":
@@ -164,7 +167,8 @@ class ResolveJob:
                    drop_frame=v.get("drop_frame", "0").lower() in ("1", "true"), start_frame=start,
                    start_tc=v.get("start_tc", ""), in_frame=frame("in_frame", start),
                    out_frame=frame("out_frame", 0), end_frame=frame("end_frame", 0),
-                   whole=v.get("range", "all") != "inout")
+                   whole=v.get("range", "all") != "inout", language=v.get("language", "").lower(),
+                   mode=v.get("mode", "").lower())
 
     def values(self) -> dict:
         """The keys of job.txt, in the order the plugin writes them."""
@@ -172,7 +176,8 @@ class ResolveJob:
                 "timeline_id": self.timeline_id, "project": self.project, "fps": self.fps_text or f"{self.fps:g}",
                 "drop_frame": "1" if self.drop_frame else "0", "start_frame": self.start_frame,
                 "start_tc": self.start_tc, "range": "all" if self.whole else "inout", "in_frame": self.in_frame,
-                "out_frame": self.out_frame, "end_frame": self.end_frame}
+                "out_frame": self.out_frame, "end_frame": self.end_frame, "language": self.language,
+                "mode": self.mode}
 
     @property
     def audio_path(self) -> Path:
@@ -269,6 +274,44 @@ def first_cue_start(text: str) -> float | None:
     return shift_srt(text, 0)[2]
 
 
+def read_srt_cues(text: str) -> list[tuple[float, float, list[str]]]:
+    """SRT text → [(start, end, [lines])]; numbers and empty lines are dropped."""
+    cues, cur = [], None
+    for line in text.splitlines():
+        m = _CUE_LINE.match(line)
+        if m:
+            g = m.groups()
+            cur = (_ms(*g[1:5]) / 1000, _ms(*g[6:10]) / 1000, [])
+            cues.append(cur)
+        elif cur is not None and line.strip():
+            cur[2].append(line.strip())
+        elif not line.strip():
+            cur = None
+    return cues
+
+
+def fast_srt_cues(cues, max_cps: float, label) -> list:
+    """Subtitles with more characters per second than max_cps → cues for an own subtitle track."""
+    out = []
+    for start, end, lines in cues:
+        cps = sum(len(line) for line in lines) / max(end - start, 0.001)
+        if cps > max_cps + 0.05:                    # tolerance for rounding to milliseconds
+            out.append((start, end, [label(cps)]))
+    return out
+
+
+def write_progress(job: "ResolveJob", state: str, **values) -> bool:
+    """
+    Where the job stands, for the waiting plugin: queued, countdown (n), running (stage, pct),
+    done, error, cancelled. The job folder may be gone already – then nothing happens.
+    """
+    try:
+        write_kv(job.folder / PROGRESS_FILE, {"state": state, **values})
+        return True
+    except OSError:
+        return False
+
+
 # ─── FILE NAMES ───────────────────────────────────────────────────────────────
 
 TRANSLIT = {"ä": "ae", "ö": "oe", "ü": "ue", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue", "ß": "ss",
@@ -309,6 +352,8 @@ class HandOver:
     cues:   int
     first:  float         # start of the first subtitle (seconds from the timeline start)
     offset: float         # applied shift in seconds
+    gaps:   int = 0       # gaps handed over on an own track
+    fast:   int = 0       # subtitles too fast to read, handed over on an own track
 
 
 def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> Path:
@@ -336,10 +381,15 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> P
     return target
 
 
-def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir=None) -> HandOver:
+def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir=None,
+              gaps=None, gap_label=None, fast_cps: float | None = None, fast_label=None) -> HandOver:
     """
     "Hand over to DaVinci": shift the SRT, keep it in resolve_temp/, write done.txt for the plugin.
     The SRT is read again from disk, so changes made in the meantime (e.g. in Subtitle Edit) count.
+    Optional, each for an own subtitle track in Resolve (to check, then delete the track):
+      gaps      [(start, end, level_db)] of the gap check  → <Timeline>_<LANG>_gaps.srt
+      fast_cps  subtitles faster than this                 → <Timeline>_<LANG>_fast.srt
+    Both lie in the job folder, so the plugin deletes them after the import.
     """
     if not job.alive():
         raise ResolveError(T("resolve.err_gone"))
@@ -355,13 +405,29 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
     code = lang_code(lang)
     target = write_last_srt(Path(last_dir) if last_dir else TEMP_DIR,
                             last_srt_name(job.timeline, code), shifted, encoding)
+    extra = {}
+    stem = last_srt_name(job.timeline, code)[:-4]
+    if gaps:
+        gap_label = gap_label or (lambda s, e, rel: f"{e - s:.1f} s · {rel:+.0f} dB")
+        extra["gaps"] = [(s + offset, e + offset, [gap_label(s, e, rel)]) for s, e, rel in gaps]
+    if fast_cps:
+        fast = fast_srt_cues(read_srt_cues(shifted), fast_cps, fast_label or (lambda cps: f"{cps:.0f} cps"))
+        if fast:
+            extra["fast"] = fast
+    done = {"format": DONE_FORMAT, "job": job.job_id, "srt": target, "lang": code, "cues": cues,
+            "first": f"{first:.3f}", "offset": f"{offset:.3f}"}
+    for key, items in extra.items():
+        path = job.folder / f"{stem}_{key}.srt"
+        path.write_text("".join(f"{n}\n{_fmt_ms(round(s * 1000))} --> {_fmt_ms(round(e * 1000))}\n"
+                                + "\n".join(lines) + "\n\n" for n, (s, e, lines) in enumerate(items, 1)),
+                        encoding=encoding)
+        done[key] = path
+        done[key + "_n"] = len(items)
     created = sorted(p.name for p in job.folder.iterdir()
                      if p.is_file() and p.name not in (job.audio, JOB_FILE, DONE_FILE, DONE_FILE + ".tmp"))
-    write_kv(job.done_path, {"format": DONE_FORMAT, "job": job.job_id, "srt": target, "lang": code,
-                             "cues": cues, "first": f"{first:.3f}", "offset": f"{offset:.3f}",
-                             "files": ";".join(created)},
-             header="WhisperX Subtitle Workbench - result for DaVinci Resolve")
-    return HandOver(target, code, cues, first, offset)
+    done["files"] = ";".join(created)
+    write_kv(job.done_path, done, header="WhisperX Subtitle Workbench - result for DaVinci Resolve")
+    return HandOver(target, code, cues, first, offset, len(extra.get("gaps", [])), len(extra.get("fast", [])))
 
 
 def cleanup_jobs(temp_dir=None, max_age_hours: float = JOB_MAX_AGE_H, now: float | None = None) -> int:

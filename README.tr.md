@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.5.1** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.6.0** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -224,7 +224,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 
 ## Güvenli güncelleme
 
-- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.5.1*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
+- **Önce aracı kapatın.** Çalışan sürüm başlık çubuğunda (örn. *WhisperX Subtitle Workbench 0.6.0*), günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
 
@@ -327,11 +327,12 @@ Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini deği�
 
 ### İş akışı
 
-1. Zaman çizelgesini Resolve'da açın. Yalnızca bir bölüm yazıya dökülecekse In ve Out koyun, yoksa tüm zaman çizelgesi kullanılır. Eklentiyi başlatın ve **Yazıya dök** düğmesine basın.
+1. Zaman çizelgesini Resolve'da açın. Yalnızca bir bölüm yazıya dökülecekse In ve Out koyun, yoksa tüm zaman çizelgesi kullanılır. Eklentiyi başlatın, gerekirse bu iş için **Dil** ve **Mod** seçin (“Workbench'teki gibi” Workbench penceresinin seçeneklerini kullanır) ve **Yazıya dök** düğmesine basın. Eklenti penceresi konumunu, boyutunu ve iki seçimi hatırlar.
 2. Eklenti, zaman çizelgesinin ana miksini WAV olarak Workbench'in `resolve_temp\<iş>\` klasörüne render eder. Ardından render işi silinir; sayfa, Deliver ayarları ve In/Out işaretleri eskisi gibidir – bir hatadan veya *İptal*'den sonra da. Sonra Workbench'i WAV ile başlatır; zaten açık olan bir Workbench dosyayı devralır, modelleri yüklü kalır.
-3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Pencereyi eklenti açtıysa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız.
-4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın (iş bitince mavi olur). SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `resolve_temp\<ZamanÇizelgesi>_<DİL>.srt` olarak kaydedilir; bu klasörde her zaman yalnızca son aktarımın SRT'si bulunur. Ardından Workbench kendini simge durumuna küçültür – açık kalır, modelleri bir sonraki iş için yüklü kalır.
+3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Pencereyi eklenti açtıysa iş, son DaVinci işinin seçenekleriyle yazıya dökülür; zaten açık bir pencerede oradaki seçeneklerle. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız. Bu sırada eklenti penceresi işin nerede olduğunu gösterir: geri sayım, yüzde olarak transkripsiyon, bitti.
+4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın (iş bitince mavi olur). SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `resolve_temp\<ZamanÇizelgesi>_<DİL>.srt` olarak kaydedilir; bu klasörde her zaman yalnızca son aktarımın SRT'si bulunur. Ardından Workbench kendini simge durumuna küçültür – açık kalır, modelleri bir sonraki iş için yüklü kalır. *Ayarlar → DaVinci Resolve* altında iş yazıya dökülür dökülmez otomatik aktarımı ve küçültmek yerine kapatmayı açabilirsiniz.
 5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir; eklenti penceresi sonuçla öne gelir ve *Tamam*'a basana kadar orada kalır.
+6. Açıksa (varsayılan) iki ek altyazı izi kontrole yardım eder: **WhisperX boşluklar** boşluk kontrolünden metinsiz yüksek sesli yerleri, **WhisperX çok hızlı** saniyede 17 karakterden fazla olan altyazıları işaretler (*Cümle cümle* modu). Resolve'da bunlar arasında gezinin, sonra iki izi silin. Transkript izi etkin iz olarak kalır.
 
 ![Workbench'te aktarılmaya hazır bir DaVinci Resolve işi](docs/images/resolve-job.png)
 

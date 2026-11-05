@@ -6,7 +6,7 @@ Workspace -> Scripts -> WhisperX_Subtitles. Installed by the Workbench
 the interface language and all texts into the WX-CONFIG block below.
 
   Transcribe    renders the main mix of the timeline (In/Out if set, otherwise the whole
-                timeline) as WAV into <Workbench>\temp\resolve\<JobID>\audio.wav, writes
+                timeline) as WAV into <Workbench>\resolve_temp\<JobID>\audio.wav, writes
                 job.txt next to it and starts the Workbench with the WAV. When the Workbench
                 hands the result over (done.txt), the SRT goes onto a subtitle track.
   Import SRT    puts any SRT onto a subtitle track the same way (e.g. a translation ..._EN.srt).
@@ -33,7 +33,7 @@ check the job status by Error/CompletionPercentage, remove left-over jobs of its
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.5.0",
+  version   = "0.5.1",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -96,8 +96,9 @@ local function join(...)
 end
 M.join = join
 
-local TEMP = WX.workbench and join(WX.workbench, "temp", "resolve") or nil
-local LAST = TEMP and join(TEMP, "letzte") or nil
+-- <Workbench>\resolve_temp\ holds the job folders and the SRT of the last hand-over
+local TEMP = WX.workbench and join(WX.workbench, "resolve_temp") or nil
+local LAST = TEMP
 M.TEMP, M.LAST = TEMP, LAST
 
 local function round(x)
@@ -1037,12 +1038,34 @@ local function show(id, visible)
   end
 end
 
-local function hint(text)
-  set_text("Hint", text or "")
-  show("Hint", text ~= nil)
+-- UIManager lays a window out for a different size than it draws, and widgets that were
+-- hidden at the first layout pile up until the layout is calculated again: recalculate
+-- now and once more on the next tick, after the event loop has drawn the change.
+local function relayout()
   if win then
     pcall(function() win:RecalcLayout() end)
   end
+  S.relayout = true
+end
+
+-- After an import (or a question about it) the window comes to the front and stays there
+-- until OK / close. Resolve owns the window, so it stays above Resolve while you work.
+local function to_front(done)
+  if not win then
+    return
+  end
+  pcall(function() win:Show() end)
+  pcall(function() win:Raise() end)
+  pcall(function() win:ActivateWindow() end)
+  if done then
+    set_text("Close", T("btn_ok"))
+  end
+  relayout()
+  log("Window brought to the front")
+end
+
+local function waiting_text(seconds)
+  return T("waiting", { time = fmt_dur(seconds) }) .. "\n\n" .. T("hint_changes")
 end
 
 local function buttons()
@@ -1056,32 +1079,27 @@ local function buttons()
 end
 
 local function hide_question()
-  for _, id in ipairs({ "Question", "Answer", "Yes", "No" }) do
+  for _, id in ipairs({ "Answer", "Yes", "No" }) do
     show(id, false)
   end
-  if win then
-    pcall(function() win:RecalcLayout() end)
-  end
+  relayout()
 end
 
--- Question in the window (no blocking dialog): cb(yes, text) is called on Yes/No.
+-- Question in the window (no blocking dialog): the status line asks, cb(yes, text) is
+-- called on Yes/No.
 local function ask(question, yes_text, no_text, cb, input)
   S.ask_cb, S.ask_from = cb, S.state
   S.state = "asking"
-  set_text("Question", question)
+  status(question)
   set_text("Yes", yes_text)
   set_text("No", no_text)
-  show("Question", true)
   show("Yes", true)
   show("No", true)
   show("Answer", input ~= nil)
   if input ~= nil then
     set_text("Answer", input)
   end
-  if win then
-    pcall(function() win:RecalcLayout() end)
-  end
-  log("Question:", question)
+  relayout()
   buttons()
 end
 M.ask = ask
@@ -1131,7 +1149,6 @@ local function end_job(marker, extra)
   delete_job_files(marker, extra)
   S.job, S.done = nil, nil
   S.state = "idle"
-  hint(nil)
   buttons()
 end
 
@@ -1155,12 +1172,12 @@ local function after_render(project)
   log("Step 6 - job file written:", join(S.job.dir, "job.txt"))
   S.state = "waiting"
   S.wait_started = os.time()
-  hint(T("hint_changes"))
   buttons()
   if launch_workbench(path) then
-    status(T("waiting", { time = "0:00" }))
+    status(waiting_text(0))
   else
-    status(T("launch_failed", { path = path }))
+    S.launch_failed = path
+    status(T("launch_failed", { path = path }) .. "\n\n" .. T("hint_changes"))
   end
 end
 
@@ -1212,6 +1229,7 @@ local function import_now(project, tl)
   else
     status(msg .. "\n" .. T("srt_kept", { path = done.srt }))
   end
+  to_front(true)
 end
 
 local function check_done()
@@ -1220,14 +1238,15 @@ local function check_done()
     log("job.txt is gone:", job.dir)
     S.job = nil
     S.state = "idle"
-    hint(nil)
     buttons()
     status(T("job_gone"))
     return
   end
   local done = read_kv(join(job.dir, "done.txt"))
   if not done then
-    status(T("waiting", { time = fmt_dur(os.time() - (S.wait_started or os.time())) }), true)
+    if not S.launch_failed then
+      status(waiting_text(os.time() - (S.wait_started or os.time())), true)
+    end
     return
   end
   if not done.srt or done.srt == "" then
@@ -1249,6 +1268,7 @@ local function check_done()
   if not tl then
     end_job(nil, done.files)
     status(T("timeline_gone", { name = job.info.name, path = done.srt }))
+    to_front(true)
     return
   end
   if cur == nil or api(cur, "GetUniqueId") ~= job.info.id then
@@ -1264,8 +1284,10 @@ local function check_done()
         else
           end_job(nil, done.files)
           status(T("import_skipped", { path = done.srt }))
+          to_front(true)
         end
       end)
+    to_front(false)
     return
   end
   import_now(project, tl)
@@ -1276,6 +1298,10 @@ local function tick()
     return
   end
   S.ticking = true
+  if S.relayout then                                  -- second layout pass, see relayout()
+    S.relayout = false
+    pcall(function() win:RecalcLayout() end)
+  end
   local ok, err = pcall(function()
     if S.state == "idle" then
       refresh_info()
@@ -1314,8 +1340,9 @@ function M.transcribe()
     return status(T("playing"))
   end
   S.state = "busy"
+  S.launch_failed = nil
+  set_text("Close", T("btn_close"))
   buttons()
-  hint(nil)
   status(T("starting"))
   local ok, err = pcall(start_render, project, tl)
   if ok then
@@ -1380,6 +1407,7 @@ function M.import_click()
   if S.state ~= "idle" then
     return
   end
+  set_text("Close", T("btn_close"))
   choose_srt(function(path)
     if not file_exists(path) then
       return status(T("file_missing", { path = path }))
@@ -1423,7 +1451,7 @@ function M.cancel()
     end_job("cancel.txt", S.done and S.done.files)
   end
   S.state = "idle"
-  hint(nil)
+  set_text("Close", T("btn_close"))
   buttons()
   status(T("cancelled"))
 end
@@ -1465,20 +1493,20 @@ function M.main()
   win = disp:AddWindow({
     ID = "WhisperXWin",
     WindowTitle = T("title") .. " " .. WX.version,
-    Geometry = { 260, 180, 600, 380 },
+    Geometry = { 260, 180, 640, 440 },
+    MinimumSize = { 560, 400 },
     ui:VGroup{
       ID = "Root",
       Spacing = 8,
-      ui:Label{ ID = "Info", Text = "", WordWrap = true, Weight = 0 },
+      ui:Label{ ID = "Info", Text = "", WordWrap = true, Weight = 0, MinimumSize = { 500, 34 } },
       ui:HGroup{
         Weight = 0,
         ui:Button{ ID = "Transcribe", Text = T("btn_transcribe") },
         ui:Button{ ID = "ImportSrt", Text = T("btn_import") },
       },
-      ui:Label{ ID = "Status", Text = "", WordWrap = true, Weight = 1, Alignment = { AlignLeft = true, AlignTop = true } },
-      ui:Label{ ID = "Hint", Text = "", WordWrap = true, Weight = 0, Hidden = true,
-                StyleSheet = "QLabel { color: #e5c07b; }" },
-      ui:Label{ ID = "Question", Text = "", WordWrap = true, Weight = 0, Hidden = true },
+      -- one label for status, hints and questions: labels shown later lay out badly
+      ui:Label{ ID = "Status", Text = "", WordWrap = true, Weight = 1, MinimumSize = { 500, 150 },
+                Alignment = { AlignLeft = true, AlignTop = true } },
       ui:HGroup{
         Weight = 0,
         ui:LineEdit{ ID = "Answer", Text = "", Hidden = true },
@@ -1536,6 +1564,7 @@ function M.main()
   buttons()
   timer:Start()
   win:Show()
+  relayout()                                          -- the first layout is made for a wrong size
   disp:RunLoop()
   timer:Stop()
   win:Hide()

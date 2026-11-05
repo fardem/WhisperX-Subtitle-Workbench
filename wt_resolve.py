@@ -5,12 +5,12 @@ Connection to DaVinci Resolve – no user interface, no Resolve and no GPU neede
 
 How a job travels (the Lua plugin is resolve/WhisperX_Subtitles.lua):
 
-  1. The plugin renders the audio of the timeline into  temp/resolve/<JobID>/audio.wav
+  1. The plugin renders the audio of the timeline into  resolve_temp/<JobID>/audio.wav
      and writes  job.txt  next to it (timeline, frame rate, start frame, In/Out …).
   2. The Workbench gets the WAV like any other file. A media file with the plugin's
      job.txt next to it is a Resolve job ("Resolve mode", see find_job).
   3. "Hand over to DaVinci" (hand_over): the SRT is shifted by the offset of the job,
-     kept as the ONLY file in temp/resolve/letzte/<Timeline>_<LANG>.srt, and done.txt
+     kept as the ONLY SRT directly in resolve_temp/ (<Timeline>_<LANG>.srt), and done.txt
      tells the plugin where it is and which language it has.
   4. The plugin puts the SRT on a subtitle track and deletes the job folder.
 
@@ -34,8 +34,8 @@ import wt_i18n as i18n
 from wt_i18n import T
 
 HERE = Path(__file__).resolve().parent
-TEMP_DIR = HERE / "temp" / "resolve"          # job folders of the plugin
-LAST_DIR_NAME = "letzte"                       # holds only the SRT of the last hand-over
+TEMP_DIR = HERE / "resolve_temp"              # job folders of the plugin + the SRT of the last hand-over
+LEGACY_DIR = HERE / "temp" / "resolve"         # the same in 0.5.0 (temp/resolve/letzte/ held the SRT)
 
 JOB_FILE      = "job.txt"                      # plugin → Workbench
 DONE_FILE     = "done.txt"                     # Workbench → plugin (written atomically)
@@ -304,7 +304,7 @@ def is_ascii_path(path) -> bool:
 
 @dataclass
 class HandOver:
-    srt:    Path          # the shifted SRT in letzte/
+    srt:    Path          # the shifted SRT in resolve_temp/
     lang:   str           # "DE"
     cues:   int
     first:  float         # start of the first subtitle (seconds from the timeline start)
@@ -313,9 +313,9 @@ class HandOver:
 
 def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> Path:
     """
-    letzte/ holds exactly ONE file: the new SRT is written completely first (temp file,
-    then rename) – only then are the files of the previous job deleted. If writing fails,
-    the previous SRT stays.
+    resolve_temp/ holds exactly ONE SRT (job folders are subfolders): the new SRT is written
+    completely first (temp file, then rename) – only then is the SRT of the previous job
+    deleted. If writing fails, the previous SRT stays.
     """
     last_dir = Path(last_dir)
     last_dir.mkdir(parents=True, exist_ok=True)
@@ -328,7 +328,7 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> P
         tmp.unlink(missing_ok=True)
         raise
     for other in last_dir.iterdir():
-        if other.is_file() and other.name != target.name:
+        if other.is_file() and other.suffix.lower() == ".srt" and other.name != target.name:
             try:
                 other.unlink()
             except OSError:
@@ -338,7 +338,7 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> P
 
 def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir=None) -> HandOver:
     """
-    "Hand over to DaVinci": shift the SRT, keep it in letzte/, write done.txt for the plugin.
+    "Hand over to DaVinci": shift the SRT, keep it in resolve_temp/, write done.txt for the plugin.
     The SRT is read again from disk, so changes made in the meantime (e.g. in Subtitle Edit) count.
     """
     if not job.alive():
@@ -353,7 +353,7 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
     if not cues:
         raise ResolveError(T("resolve.err_no_cues", path=srt))
     code = lang_code(lang)
-    target = write_last_srt(Path(last_dir) if last_dir else TEMP_DIR / LAST_DIR_NAME,
+    target = write_last_srt(Path(last_dir) if last_dir else TEMP_DIR,
                             last_srt_name(job.timeline, code), shifted, encoding)
     created = sorted(p.name for p in job.folder.iterdir()
                      if p.is_file() and p.name not in (job.audio, JOB_FILE, DONE_FILE, DONE_FILE + ".tmp"))
@@ -367,7 +367,7 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
 def cleanup_jobs(temp_dir=None, max_age_hours: float = JOB_MAX_AGE_H, now: float | None = None) -> int:
     """
     Remove job folders that are no longer needed: cancelled, imported, empty or older than
-    max_age_hours (e.g. Resolve crashed while waiting). letzte/ is never touched.
+    max_age_hours (e.g. Resolve crashed while waiting). The SRT of the last hand-over stays.
     """
     temp_dir = Path(temp_dir) if temp_dir else TEMP_DIR
     if not temp_dir.is_dir():
@@ -375,7 +375,7 @@ def cleanup_jobs(temp_dir=None, max_age_hours: float = JOB_MAX_AGE_H, now: float
     now = time.time() if now is None else now
     removed = 0
     for d in temp_dir.iterdir():
-        if not d.is_dir() or d.is_symlink() or d.name == LAST_DIR_NAME:
+        if not d.is_dir() or d.is_symlink():
             continue
         try:
             files = list(d.iterdir())
@@ -387,6 +387,19 @@ def cleanup_jobs(temp_dir=None, max_age_hours: float = JOB_MAX_AGE_H, now: float
             shutil.rmtree(d, ignore_errors=True)
             removed += not d.exists()
     return removed
+
+
+def remove_legacy_dir(legacy=None) -> bool:
+    """0.5.0 kept its job folders in temp/resolve/ (the SRT in temp/resolve/letzte/) – remove that."""
+    legacy = Path(legacy) if legacy else LEGACY_DIR
+    if not legacy.is_dir():
+        return False
+    shutil.rmtree(legacy, ignore_errors=True)
+    try:
+        legacy.parent.rmdir()                 # temp/ itself only if it is empty now
+    except OSError:
+        pass
+    return not legacy.exists()
 
 
 # ─── PLUGIN INSTALLATION ──────────────────────────────────────────────────────
@@ -484,7 +497,7 @@ def install_plugin(version: str, lang: str, target_dir=None, workbench=None, pyt
         raise ResolveError(T("resolve.err_python", path=python))
     text = Path(template or PLUGIN_TEMPLATE).read_text(encoding="utf-8")
     text = build_plugin(text, workbench, python, lang, plugin_texts(), version)
-    (workbench / "temp" / "resolve" / LAST_DIR_NAME).mkdir(parents=True, exist_ok=True)
+    (workbench / TEMP_DIR.name).mkdir(parents=True, exist_ok=True)
     target_dir = Path(target_dir) if target_dir else scripts_dir()
     target_dir.mkdir(parents=True, exist_ok=True)
     target = target_dir / PLUGIN_FILE

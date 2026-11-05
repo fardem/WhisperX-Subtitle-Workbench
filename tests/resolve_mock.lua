@@ -437,7 +437,9 @@ function disp:AddWindow(spec)
   function win:GetItems() return items end
   function win:Show() win.shown = true end
   function win:Hide() win.shown = false end
-  function win:RecalcLayout() end
+  function win:RecalcLayout() record("RecalcLayout") end
+  function win:Raise() record("Raise") end
+  function win:ActivateWindow() record("ActivateWindow") end
   MOCK.win, MOCK.items = win, items
   return win
 end

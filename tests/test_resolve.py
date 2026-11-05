@@ -131,9 +131,9 @@ def test_kv_parser_is_tolerant():
 
 def test_done_file_is_written_atomically(tmp_path):
     path = tmp_path / "done.txt"
-    wr.write_kv(path, {"srt": r"C:\WhisperX\temp\resolve\letzte\A_DE.srt", "lang": "DE", "note": "two\nlines"})
+    wr.write_kv(path, {"srt": r"C:\WhisperX\resolve_temp\A_DE.srt", "lang": "DE", "note": "two\nlines"})
     assert sorted(p.name for p in tmp_path.iterdir()) == ["done.txt"]          # no .tmp left over
-    assert wr.read_kv(path) == {"srt": r"C:\WhisperX\temp\resolve\letzte\A_DE.srt", "lang": "DE",
+    assert wr.read_kv(path) == {"srt": r"C:\WhisperX\resolve_temp\A_DE.srt", "lang": "DE",
                                 "note": "two lines"}
 
 
@@ -232,6 +232,27 @@ def test_hand_over_without_subtitles(tmp_path):
         wr.hand_over(job, job.folder / "missing.srt", "de", last_dir=tmp_path / "letzte")
 
 
+def test_last_srt_lies_next_to_the_job_folders(tmp_path):
+    root = tmp_path / "resolve_temp"
+    job = make_job(root / "20261105-1")                        # a job that is still waiting
+    (root / "notes.txt").write_text("x", encoding="utf-8")
+    wr.write_last_srt(root, "Erste_DE.srt", "a")
+    wr.write_last_srt(root, "Zweite_DE.srt", "b")
+    assert sorted(p.name for p in root.iterdir()) == ["20261105-1", "Zweite_DE.srt", "notes.txt"]
+    assert job.alive()
+
+
+def test_folder_of_version_0_5_0_is_removed(tmp_path):
+    legacy = tmp_path / "temp" / "resolve"
+    make_job(legacy / "job")
+    wr.write_last_srt(legacy / "letzte", "A_DE.srt", "x")
+    assert wr.remove_legacy_dir(legacy) and not (tmp_path / "temp").exists()
+    legacy.mkdir(parents=True)
+    (tmp_path / "temp" / "mine.txt").write_text("x", encoding="utf-8")   # temp/ holds something else
+    assert wr.remove_legacy_dir(legacy) and (tmp_path / "temp" / "mine.txt").is_file()
+    assert wr.remove_legacy_dir(legacy) is False
+
+
 def test_cleanup_removes_only_finished_or_old_jobs(tmp_path):
     root = tmp_path / "resolve"
     make_job(root / "active")
@@ -244,9 +265,9 @@ def test_cleanup_removes_only_finished_or_old_jobs(tmp_path):
     old = time.time() - 4 * 86400
     for p in (root / "old").iterdir():
         os.utime(p, (old, old))
-    wr.write_last_srt(root / wr.LAST_DIR_NAME, "A_DE.srt", "x")
+    wr.write_last_srt(root, "A_DE.srt", "x")
     assert wr.cleanup_jobs(root) == 4
-    assert sorted(p.name for p in root.iterdir()) == ["active", wr.LAST_DIR_NAME]
+    assert sorted(p.name for p in root.iterdir()) == ["A_DE.srt", "active"]
 
 
 # ─── plugin installation ──────────────────────────────────────────────────────
@@ -287,7 +308,7 @@ def test_install_and_detect_plugin(tmp_path):
     info = wr.installed_plugin(path)
     assert (info["version"], info["workbench"], info["lang"]) == ("0.5.0", str(wb), "tr")
     assert not path.read_bytes().startswith(b"\xef\xbb\xbf")                # Lua cannot read a BOM
-    assert (wb / "temp" / "resolve" / wr.LAST_DIR_NAME).is_dir()
+    assert (wb / "resolve_temp").is_dir()
     assert "Yazıya dök" in path.read_text(encoding="utf-8")                  # all languages are in it
 
 

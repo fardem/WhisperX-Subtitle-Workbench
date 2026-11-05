@@ -30,7 +30,7 @@ class Harness:
         (self.wb / "whisper_tool.py").write_text("# fake", encoding="utf-8")
         self.python = self.wb / "venv" / "pythonw"
         self.python.write_text("", encoding="utf-8")
-        self.last = self.wb / "temp" / "resolve" / wr.LAST_DIR_NAME
+        self.last = self.wb / wr.TEMP_DIR.name
         self.last.mkdir(parents=True)
         self.texts = wr.plugin_texts()
         self.lang = lang
@@ -108,8 +108,7 @@ class Harness:
         return [tuple(c.values())[1:] for c in self.mock.calls.values() if c[1] == name]
 
     def job_dirs(self):
-        root = self.wb / "temp" / "resolve"
-        return [d for d in root.iterdir() if d.is_dir() and d.name != wr.LAST_DIR_NAME]
+        return [d for d in self.last.iterdir() if d.is_dir()]
 
     def tracks(self):
         tl = self.mock.timeline
@@ -170,7 +169,7 @@ def test_full_round_trip_with_in_out(tmp_path):
         h.tick()                                    # render finished → job.txt, Workbench started
         assert h.mock.page == "edit"                # page restored
         assert len(h.commands) == 1 and "whisper_tool.py" in h.commands[0] and "audio.wav" in h.commands[0]
-        assert h.T("hint_changes") == h.text("Hint")
+        assert h.T("hint_changes") in h.text("Status")
         job, res = h.workbench_hands_over()
         result["job"], result["res"] = job, res
         h.tick()                                    # done.txt → import
@@ -273,8 +272,8 @@ def test_end_frame_changed_asks_first(tmp_path):
         h.mock.timeline.last = h.mock.timeline.last + 100
         h.workbench_hands_over()
         h.tick()
-        seen["question"] = h.text("Question")
-        seen["hidden"] = h.mock["items"].Question.Hidden
+        seen["question"] = h.text("Status")
+        seen["hidden"] = h.mock["items"].Yes.Hidden
         assert h.tracks() == []                     # nothing imported before the answer
         h.click("Yes")
 
@@ -438,7 +437,7 @@ def test_left_over_jobs_and_presets_of_the_plugin_are_removed(tmp_path):
     h = Harness(tmp_path)
 
     def steps(h):
-        old = h.wb / "temp" / "resolve" / "old"
+        old = h.wb / wr.TEMP_DIR.name / "old"
         h.mock.renders = _lua_tables(h.lua, [
             {"id": "foreign", "settings": {"TargetDir": "D:/Renders"}, "name": "film.mov", "pct": 0,
              "status": "Ready", "error": "", "ticks_left": 0},
@@ -534,3 +533,35 @@ def test_import_waits_while_the_timeline_plays(tmp_path):
     h.run(steps, timelines=[timeline()])
     assert seen["status"] == h.T("playing") and seen["tracks"] == []
     assert h.tracks()[0]["name"] == "WhisperX DE"
+
+
+def test_window_comes_to_the_front_with_ok_after_the_import(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        seen["close_waiting"] = h.text("Close")
+        h.workbench_hands_over()
+        h.tick()
+        seen["close_done"] = h.text("Close")
+        h.click("Transcribe")                       # a new job: the button is "Close" again
+        seen["close_new"] = h.text("Close")
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert seen["close_waiting"] == h.T("btn_close") and seen["close_done"] == h.T("btn_ok")
+    assert seen["close_new"] == h.T("btn_close")
+    assert h.calls("Raise") and h.calls("ActivateWindow")
+
+
+def test_layout_is_calculated_again_after_showing(tmp_path):
+    h = Harness(tmp_path)
+
+    def steps(h):
+        n = len(h.calls("RecalcLayout"))
+        h.tick()                                    # the second pass after the event loop drew the window
+        assert len(h.calls("RecalcLayout")) == n + 1 >= 2
+
+    h.run(steps, timelines=[timeline()])

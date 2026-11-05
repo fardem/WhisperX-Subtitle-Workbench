@@ -493,9 +493,13 @@ class App(BaseTk):
         self.b_start.grid(row=0, column=0)
         self.b_cancel = ttk.Button(bf, text=T("main.cancel"), command=self.cancel, state="disabled")
         self.b_cancel.grid(row=0, column=1, padx=8)
-        # only visible with a job from DaVinci Resolve in the list, active once it is transcribed
-        self.b_resolve = ttk.Button(bf, text=T("resolve.hand_over"), command=self._hand_over, state="disabled")
-        self.b_resolve.grid(row=0, column=2, padx=(0, 8))
+        # only visible with a job from DaVinci Resolve in the list, blue and active once it is
+        # transcribed (a tk button: the native Windows theme ignores colors of ttk buttons)
+        self.b_resolve = tk.Button(bf, text=T("resolve.hand_over"), command=self._hand_over, state="disabled",
+                                   font=bold, relief="flat", bd=0, padx=14, pady=4, cursor="hand2",
+                                   fg="white", activeforeground="white", disabledforeground="#8c8c8c")
+        self._resolve_bg = (self.b_resolve.cget("background"), "#1a66d2", "#1557b0")   # off, on, pressed
+        self.b_resolve.grid(row=0, column=2, padx=(0, 8), sticky="ns")
         self.b_resolve.grid_remove()
         self.l_status = ttk.Label(bf, text=T("main.ready"))
         self.l_status.grid(row=0, column=3, sticky="w", padx=8)
@@ -1027,7 +1031,9 @@ class App(BaseTk):
         else:
             self.b_resolve.grid_remove()
         ready = any(it["state"] == "done" for it in jobs)
-        self.b_resolve.state(["!disabled"] if ready else ["disabled"])
+        off, on, pressed = self._resolve_bg
+        self.b_resolve.configure(state="normal" if ready else "disabled", background=on if ready else off,
+                                 activebackground=pressed if ready else off)
 
     def _resolve_arrived(self, iids):
         """A job from the DaVinci Resolve plugin: own countdown, then the options of the last DaVinci job."""
@@ -1096,11 +1102,14 @@ class App(BaseTk):
     def _hand_over(self):
         """
         "Hand over to DaVinci": the selected transcribed jobs – or all that were not handed over yet.
-        The SRT is shifted to the position of the range in the timeline and lands in temp/resolve/letzte/.
+        The SRT is shifted to the position of the range in the timeline and lands in resolve_temp/.
+        Afterwards the window gets out of the way (minimized – closing would unload the models),
+        and the plugin in DaVinci Resolve comes to the front with the result.
         """
         done = [i for i, it in self.items.items() if it.get("job") and it["state"] == "done"]
         sel = [i for i in self.tree.selection() if i in done]
         targets = sel or [i for i in done if not self.items[i].get("handed")] or done
+        handed = 0
         for iid in targets:
             it = self.items[iid]
             lang = it.get("lang")
@@ -1119,10 +1128,14 @@ class App(BaseTk):
                                        offset=i18n.secs(res.offset, 3)) + "\n")
             self.l_status.config(text=T("resolve.log_handed", name=res.srt.name, n=res.cues, lang=res.lang,
                                         offset=i18n.secs(res.offset, 3)))
+            handed += 1
+        if handed:
+            self.after(150, self.iconify)
 
     def _cleanup_resolve_jobs(self):
         """Background: remove job folders of the plugin that were cancelled, imported or left behind."""
         try:
+            wt_resolve.remove_legacy_dir()          # temp/resolve/ of 0.5.0
             n = wt_resolve.cleanup_jobs()
         except Exception:
             return

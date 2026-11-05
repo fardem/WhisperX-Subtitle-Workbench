@@ -10,8 +10,9 @@ How a job travels (the Lua plugin is resolve/WhisperX_Subtitles.lua):
   2. The Workbench gets the WAV like any other file. A media file with the plugin's
      job.txt next to it is a Resolve job ("Resolve mode", see find_job).
   3. "Hand over to DaVinci" (hand_over): the SRT is shifted by the offset of the job,
-     kept as the ONLY SRT directly in resolve_temp/ (<Timeline>_<LANG>.srt), and done.txt
-     tells the plugin where it is and which language it has.
+     kept as the ONLY SRT directly in resolve_temp/ (<Timeline>_<LANG>_<date-time>.srt), and
+     done.txt tells the plugin where it is and which language it has. The name is new for every
+     hand-over: Resolve keeps using what it read the first time it imported a path.
   4. The plugin puts the SRT on a subtitle track and deletes the job folder.
 
 Both directions use plain key=value files – Resolve's Lua has no JSON parser.
@@ -149,6 +150,7 @@ class ResolveJob:
     whole:       bool = True     # True = whole timeline, False = In/Out
     language:    str = ""        # chosen in the plugin ("" = as in the Workbench window)
     mode:        str = ""        # chosen in the plugin ("" = as in the Workbench window)
+    use_filter:  bool | None = None   # audio filter chosen in the plugin (None = as in the window)
 
     @classmethod
     def from_values(cls, folder, v: dict) -> "ResolveJob":
@@ -161,6 +163,7 @@ class ResolveJob:
         if not v.get("audio"):
             raise ValueError("audio")
         start = frame("start_frame")
+        flt = v.get("filter", "").strip().lower()
         return cls(folder=Path(folder), audio=v["audio"], job_id=v.get("job", ""),
                    timeline=v.get("timeline", ""), timeline_id=v.get("timeline_id", ""),
                    project=v.get("project", ""), fps=parse_fps(v.get("fps", "")), fps_text=v.get("fps", ""),
@@ -168,7 +171,8 @@ class ResolveJob:
                    start_tc=v.get("start_tc", ""), in_frame=frame("in_frame", start),
                    out_frame=frame("out_frame", 0), end_frame=frame("end_frame", 0),
                    whole=v.get("range", "all") != "inout", language=v.get("language", "").lower(),
-                   mode=v.get("mode", "").lower())
+                   mode=v.get("mode", "").lower(),
+                   use_filter=None if flt == "" else flt in ("1", "true", "on", "yes"))
 
     def values(self) -> dict:
         """The keys of job.txt, in the order the plugin writes them."""
@@ -177,7 +181,7 @@ class ResolveJob:
                 "drop_frame": "1" if self.drop_frame else "0", "start_frame": self.start_frame,
                 "start_tc": self.start_tc, "range": "all" if self.whole else "inout", "in_frame": self.in_frame,
                 "out_frame": self.out_frame, "end_frame": self.end_frame, "language": self.language,
-                "mode": self.mode}
+                "mode": self.mode, "filter": "" if self.use_filter is None else "1" if self.use_filter else "0"}
 
     @property
     def audio_path(self) -> Path:
@@ -335,8 +339,9 @@ def lang_code(lang: str) -> str:
     return code if code and code != "-" else "XX"
 
 
-def last_srt_name(timeline: str, lang: str) -> str:
-    return f"{ascii_name(timeline)}_{lang_code(lang)}.srt"
+def last_srt_name(timeline: str, lang: str, stamp: str = "") -> str:
+    """<Timeline>_<LANG>.srt, with a stamp <Timeline>_<LANG>_<stamp>.srt"""
+    return f"{ascii_name(timeline)}_{lang_code(lang)}" + (f"_{stamp}" if stamp else "") + ".srt"
 
 
 def is_ascii_path(path) -> bool:
@@ -382,14 +387,17 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> P
 
 
 def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir=None,
-              gaps=None, gap_label=None, fast_cps: float | None = None, fast_label=None) -> HandOver:
+              gaps=None, gap_label=None, fast_cps: float | None = None, fast_label=None,
+              stamp: str | None = None) -> HandOver:
     """
     "Hand over to DaVinci": shift the SRT, keep it in resolve_temp/, write done.txt for the plugin.
     The SRT is read again from disk, so changes made in the meantime (e.g. in Subtitle Edit) count.
     Optional, each for an own subtitle track in Resolve (to check, then delete the track):
-      gaps      [(start, end, level_db)] of the gap check  → <Timeline>_<LANG>_gaps.srt
-      fast_cps  subtitles faster than this                 → <Timeline>_<LANG>_fast.srt
+      gaps      [(start, end, level_db)] of the gap check  → <Timeline>_<LANG>_<stamp>_gaps.srt
+      fast_cps  subtitles faster than this                 → <Timeline>_<LANG>_<stamp>_fast.srt
     Both lie in the job folder, so the plugin deletes them after the import.
+    Every hand-over gets new file names (stamp = date and time): Resolve does not read a path
+    again that is already in the media pool – it would place the subtitles of the first import.
     """
     if not job.alive():
         raise ResolveError(T("resolve.err_gone"))
@@ -403,10 +411,10 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
     if not cues:
         raise ResolveError(T("resolve.err_no_cues", path=srt))
     code = lang_code(lang)
-    target = write_last_srt(Path(last_dir) if last_dir else TEMP_DIR,
-                            last_srt_name(job.timeline, code), shifted, encoding)
+    name = last_srt_name(job.timeline, code, stamp or time.strftime("%Y%m%d-%H%M%S"))
+    target = write_last_srt(Path(last_dir) if last_dir else TEMP_DIR, name, shifted, encoding)
     extra = {}
-    stem = last_srt_name(job.timeline, code)[:-4]
+    stem = name[:-4]
     if gaps:
         gap_label = gap_label or (lambda s, e, rel: f"{e - s:.1f} s · {rel:+.0f} dB")
         extra["gaps"] = [(s + offset, e + offset, [gap_label(s, e, rel)]) for s, e, rel in gaps]

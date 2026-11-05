@@ -593,11 +593,13 @@ class App(BaseTk):
                 rng = T("resolve.range_all" if job.whole else "resolve.range_inout", dur=fmt_clock(job.duration()))
                 self._append_log(i18n.line("info", "resolve.log_job", timeline=job.timeline, range=rng,
                                            fps=job.fps_text or f"{job.fps:g}") + "\n")
-                if job.language or job.mode:          # chosen in the plugin, wins over the main window
+                if job.language or job.mode or job.use_filter is not None:   # chosen in the plugin: wins
+                    flt = {None: "resolve.filter_window", True: "resolve.filter_on", False: "resolve.filter_off"}
                     self._append_log(i18n.line(
                         "info", "resolve.log_job_options",
                         lang=label_of(self.lang_choices, job.language) if job.language else T("resolve.as_window"),
-                        mode=label_of(self.mode_choices, job.mode) if job.mode else T("resolve.as_window")) + "\n")
+                        mode=label_of(self.mode_choices, job.mode) if job.mode else T("resolve.as_window"),
+                        filter=T(flt[job.use_filter])) + "\n")
                 self._resolve_progress(iid, "queued")
         if new and self._running():
             for iid in new:
@@ -855,10 +857,11 @@ class App(BaseTk):
             self.q.put(("log", f"\n━━ [{n}/{total}] {item['path'].name} ━━\n"))
             t = time.perf_counter()
             job_opts = opts
-            if job is not None:                       # language/mode chosen in the plugin win
+            if job is not None:                       # language/mode/filter chosen in the plugin win
                 job_opts = replace(opts,
                                    language=job.language if job.language in ("auto",) + core.LANGS else opts.language,
-                                   mode=job.mode if job.mode in core.MODES else opts.mode)
+                                   mode=job.mode if job.mode in core.MODES else opts.mode,
+                                   use_filter=opts.use_filter if job.use_filter is None else job.use_filter)
             try:
                 info = self.engine.process(item["path"], job_opts)
                 # suffix with {model} → actual name; language, mode and gaps go with a hand-over to DaVinci

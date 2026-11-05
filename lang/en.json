@@ -298,7 +298,7 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · Jobs from DaVinci Resolve",
-    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. When the plugin opens the window, the job is transcribed with the options of the last DaVinci job; in a window that is already open, with the options shown there. Language and mode chosen in the plugin window win over both.",
+    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. When the plugin opens the window, the job is transcribed with the options of the last DaVinci job; in a window that is already open, with the options shown there. Language, mode and audio filter chosen in the plugin window win over both.",
     "sw_resolve_countdown": "Start jobs from DaVinci Resolve automatically after",
     "sw_resolve_countdown_unit": "seconds",
     "resolve_countdown": "Countdown for DaVinci jobs",
@@ -643,8 +643,11 @@
       "other": "{n} old DaVinci Resolve job folders removed"
     },
     "fast_cue": "too fast: {cps} characters/s",
-    "log_job_options": "Language and mode from DaVinci Resolve: {lang} · {mode}",
-    "as_window": "as in this window"
+    "log_job_options": "Options from DaVinci Resolve: {lang} · {mode} · {filter}",
+    "as_window": "as in this window",
+    "filter_on": "audio filter on",
+    "filter_off": "audio filter off",
+    "filter_window": "audio filter as in this window"
   },
   "plugin": {
     "title": "WhisperX Subtitles",
@@ -727,7 +730,9 @@
     "wb_cancelled": "Workbench: cancelled.",
     "track_gaps": "WhisperX gaps",
     "track_fast": "WhisperX too fast",
-    "placed_extra": "+ {n} on subtitle track {track} “{name}” – to check, then delete the track."
+    "placed_extra": "+ {n} on subtitle track {track} “{name}” – to check, then delete the track.",
+    "label_filter": "Audio filter",
+    "count_off": "Resolve placed {placed} subtitles on ST{track}, the SRT has {cues}. Please check the track."
   },
   "tip": {
     "files": [

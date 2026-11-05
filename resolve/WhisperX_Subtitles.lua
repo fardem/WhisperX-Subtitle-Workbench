@@ -33,7 +33,7 @@ check the job status by Error/CompletionPercentage, remove left-over jobs of its
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.6.0",
+  version   = "0.6.1",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -740,6 +740,7 @@ local function write_job_file(project, wav_name)
     { "start_tc", info.start_tc }, { "range", job.whole and "all" or "inout" }, { "in_frame", job.a },
     { "out_frame", job.b }, { "end_frame", info.last }, { "resolve", api(resolve, "GetVersionString") or "" },
     { "language", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
+    { "filter", S.choice_filter and "1" or "0" },
     { "created", os.date("%Y-%m-%d %H:%M:%S") },
   }
   local ok, err = write_kv(join(job.dir, "job.txt"), "WhisperX Subtitle Workbench - DaVinci Resolve job", rows)
@@ -893,9 +894,23 @@ local function first_cue_in_file(path)
 end
 M.first_cue_in_file = first_cue_in_file
 
+local function count_cues(path)
+  local text = read_text(path)
+  if not text then
+    return nil
+  end
+  local n = 0
+  for _ in text:gmatch("%d+:%d+:%d+[,.]%d+%s*%-%->") do
+    n = n + 1
+  end
+  return n
+end
+M.count_cues = count_cues
+
 -- SRT -> media pool bin "WhisperX" -> track by the rule -> activate -> append -> check -> name.
--- -> ok, message, warning
-local function place_srt(project, tl, srt, base, first)
+-- expected = number of subtitles in the SRT (a different count on the track is reported)
+-- -> ok, message, warning, track, name, placed
+local function place_srt(project, tl, srt, base, first, expected)
   local mp = api(project, "GetMediaPool")
   local prev = api(mp, "GetCurrentFolder")
   local bin = whisperx_bin(mp)
@@ -908,7 +923,9 @@ local function place_srt(project, tl, srt, base, first)
   end
   local item = type(imported) == "table" and imported[1] or nil
   local props = item and api(item, "GetClipProperty")
-  log("ImportMedia", srt, "->", item and "ok" or "nothing", "| type:", tostring(type(props) == "table" and props["Type"]))
+  props = type(props) == "table" and props or {}
+  log("ImportMedia", srt, "->", item and "ok" or "nothing", "| type:", tostring(props["Type"]),
+      "| clip:", tostring(props["Clip Name"]), "| file:", tostring(props["File Path"]))
   if not item then
     return false, T("import_failed", { why = "ImportMedia" })
   end
@@ -945,6 +962,11 @@ local function place_srt(project, tl, srt, base, first)
   end
 
   local warning
+  expected = tonumber(expected)
+  if expected and expected > 0 and added ~= expected then
+    log("Placed", added, "subtitles, the SRT has", expected)
+    warning = T("count_off", { placed = added, track = target, cues = expected })
+  end
   local items = api(tl, "GetItemListInTrack", "subtitle", target)
   local actual
   if type(items) == "table" then
@@ -963,7 +985,7 @@ local function place_srt(project, tl, srt, base, first)
     log(string.format("First subtitle at frame %d, expected %d (start %d + %.3f s x %.6f fps) - difference %d",
         actual, expected, start, first, fps, diff))
     if math.abs(diff) > 1 then
-      warning = T("position_off", { actual = actual, expected = expected, diff = diff,
+      warning = (warning and (warning .. "\n") or "") .. T("position_off", { actual = actual, expected = expected, diff = diff,
                                     sec = string.format("%.3f", diff / fps) })
       if start ~= 0 and math.abs(math.abs(diff) - start) <= 1 then
         warning = warning .. "\n" .. T("position_start_tc")
@@ -992,8 +1014,12 @@ local function find_timeline(project, id)
   return nil
 end
 
+-- Date-time stamp the Workbench puts behind the language: _20261105-151530
+local STAMP = "_%d%d%d%d%d%d%d%d%-%d%d%d%d%d%d"
+
 local function lang_from_name(path)
   local name = tostring(path):match("[^/\\]+$") or tostring(path)
+  name = name:gsub(STAMP .. "(%.[sS][rR][tT])$", "%1")
   local code = name:match("_(%a%a)%.[sS][rR][tT]$") or name:match("_(%u%u%u)%.[sS][rR][tT]$")
   return code and code:upper() or nil
 end
@@ -1102,9 +1128,10 @@ local function buttons()
   local idle = S.state == "idle"
   itm.Transcribe.Enabled = idle and S.can_transcribe == true
   itm.ImportSrt.Enabled = idle and S.can_import == true
-  if itm.Lang and itm.Mode then
-    itm.Lang.Enabled = idle
-    itm.Mode.Enabled = idle
+  for _, id in ipairs({ "Lang", "Mode", "Filter" }) do
+    if itm[id] then
+      itm[id].Enabled = idle
+    end
   end
   itm.Cancel.Enabled = S.state == "rendering" or S.state == "waiting" or S.state == "asking"
 end
@@ -1196,29 +1223,53 @@ local function index_of(list, code)
   return 1
 end
 
--- Window position and size as saved; nothing unusable (off screen, too small).
+-- Window: start size, smallest size; LAYOUT changes when they do (an older saved size is dropped).
+local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 330 }, { 520, 290 }, "2"
+
+-- Window position and size as saved; nothing unusable (off screen, too small, older layout).
 local function saved_geometry(v)
+  if tostring(v.layout or "") ~= LAYOUT then
+    return nil
+  end
   local x, y, w, h = tostring(v.geometry or ""):match("^(-?%d+),(-?%d+),(%d+),(%d+)$")
   x, y, w, h = tonumber(x), tonumber(y), tonumber(w), tonumber(h)
-  if x and w >= 560 and h >= 400 and w <= 4000 and h <= 3000 and x > -200 and y > -200 and x < 8000 and y < 5000 then
+  if x and w >= WIN_MIN[1] and h >= WIN_MIN[2] and w <= 4000 and h <= 3000
+      and x > -200 and y > -200 and x < 8000 and y < 5000 then
     return { x, y, w, h }
   end
   return nil
 end
 M.saved_geometry = saved_geometry
 
+-- Current position and size of the window (several ways, the first one that answers counts).
+local function window_geometry()
+  local getters = {
+    function() return itm.WhisperXWin.Geometry end,
+    function() return win.Geometry end,
+    function() return win:GetGeometry() end,
+  }
+  for _, get in ipairs(getters) do
+    local ok, g = pcall(get)
+    if ok and type(g) == "table" and tonumber(g[1]) and tonumber(g[2]) and tonumber(g[3]) and tonumber(g[4]) then
+      return { math.floor(g[1]), math.floor(g[2]), math.floor(g[3]), math.floor(g[4]) }
+    end
+  end
+  return nil
+end
+
 local function save_settings()
   if not SETTINGS or not HAS_IO then
     return
   end
-  local rows = { { "lang", S.choice_lang or "" }, { "mode", S.choice_mode or "" } }
-  local ok, g = pcall(function() return itm.WhisperXWin.Geometry end)
-  if ok and type(g) == "table" and tonumber(g[3]) and tonumber(g[4]) then
+  local rows = { { "lang", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
+                 { "filter", S.choice_filter and "1" or "0" }, { "layout", LAYOUT } }
+  local g = window_geometry()
+  if g then
     rows[#rows + 1] = { "geometry", string.format("%d,%d,%d,%d", g[1], g[2], g[3], g[4]) }
   end
   make_dir(TEMP)
   local saved = write_kv(SETTINGS, "WhisperX plugin window", rows)
-  log("Window settings saved ->", tostring(saved))
+  log("Window settings saved ->", tostring(saved), "| geometry:", g and table.concat(g, ",") or "not readable")
 end
 
 -- ─── Steps ───────────────────────────────────────────────────────────────────
@@ -1301,16 +1352,20 @@ local function import_now(project, tl)
   end
   log("SaveProject before the import ->", tostring(api(pm, "SaveProject")))
   local ok, msg, warning, main = place_srt(project, tl, done.srt, "WhisperX " .. (done.lang or "XX"),
-                                           tonumber(done.first))
+                                           tonumber(done.first), tonumber(done.cues))
   if ok then
     -- gaps and too fast subtitles, each on its own track (to check, then delete the track)
     local names = { gaps = T("track_gaps"), fast = T("track_fast") }
     for _, key in ipairs({ "gaps", "fast" }) do
       if done[key] and done[key] ~= "" then
-        local eok, emsg, _, etrack, ename, en = place_srt(project, tl, done[key], names[key], nil)
+        local eok, emsg, ewarn, etrack, ename, en = place_srt(project, tl, done[key], names[key], nil,
+                                                              tonumber(done[key .. "_n"]))
         log("Extra track", key, "->", tostring(eok), emsg)
         if eok then
           msg = msg .. "\n" .. T("placed_extra", { n = en, track = etrack, name = ename })
+          if ewarn then
+            warning = (warning and (warning .. "\n") or "") .. ewarn
+          end
         end
       end
     end
@@ -1451,6 +1506,35 @@ function M.transcribe()
   fail_render(clean_error(err))
 end
 
+-- Resolve does not read a path again that is already in the media pool: it places what it read
+-- the first time (e.g. the SRT before it was corrected). So a chosen file is imported as a copy
+-- with a new name in resolve_temp\ - the next hand-over of the Workbench removes it.
+local function fresh_copy(path)
+  local text = read_text(path)
+  if not (text and TEMP and make_dir(TEMP)) then
+    return path
+  end
+  local name = (tostring(path):match("[^/\\]+$") or "import.srt"):gsub("%.[sS][rR][tT]$", "")
+  name = name:gsub(STAMP .. "$", ""):gsub("[^%w%-_]", "_")
+  local stamp = os.date("%Y%m%d-%H%M%S")
+  local copy = join(TEMP, name .. "_" .. stamp .. ".srt")
+  for i = 2, 99 do                                    -- twice in the same second
+    if not file_exists(copy) then
+      break
+    end
+    copy = join(TEMP, name .. "_" .. stamp .. "-" .. i .. ".srt")
+  end
+  local f = G_io.open(copy, "wb")
+  if not f then
+    return path
+  end
+  f:write(text)
+  f:close()
+  log("Copy for the import:", copy)
+  return copy
+end
+M.fresh_copy = fresh_copy
+
 local function manual_import(path, lang)
   local _, project, tl = current()
   if not (project and tl) then
@@ -1464,7 +1548,9 @@ local function manual_import(path, lang)
     log("OpenPage edit ->", tostring(api(resolve, "OpenPage", "edit")))
   end
   log("Import SRT:", path, "| language:", lang)
-  local ok, msg, warning = place_srt(project, tl, path, "WhisperX " .. lang, first_cue_in_file(path))
+  local source = fresh_copy(path)
+  local ok, msg, warning = place_srt(project, tl, source, "WhisperX " .. lang, first_cue_in_file(source),
+                                     count_cues(source))
   S.state = "idle"
   buttons()
   status(msg .. (warning and ("\n" .. warning) or ""))
@@ -1588,21 +1674,23 @@ function M.main()
   local list = choices()
   S.choice_lang = list.lang[index_of(list.lang, saved.lang)][1]
   S.choice_mode = list.mode[index_of(list.mode, saved.mode)][1]
+  S.choice_filter = saved.filter == "1"
   win = disp:AddWindow({
     ID = "WhisperXWin",
     WindowTitle = T("title") .. " " .. WX.version,
-    Geometry = saved_geometry(saved) or { 260, 180, 640, 460 },
-    MinimumSize = { 560, 420 },
+    Geometry = saved_geometry(saved) or { 260, 180, WIN_SIZE[1], WIN_SIZE[2] },
+    MinimumSize = WIN_MIN,
     ui:VGroup{
       ID = "Root",
-      Spacing = 8,
-      ui:Label{ ID = "Info", Text = "", WordWrap = true, Weight = 0, MinimumSize = { 500, 34 } },
+      Spacing = 6,
+      ui:Label{ ID = "Info", Text = "", WordWrap = true, Weight = 0, MinimumSize = { 400, 32 } },
       ui:HGroup{                                        -- chosen here, they win over the Workbench window
         Weight = 0,
         ui:Label{ ID = "LangLabel", Text = T("label_lang"), Weight = 0 },
         ui:ComboBox{ ID = "Lang", Weight = 1 },
         ui:Label{ ID = "ModeLabel", Text = T("label_mode"), Weight = 0 },
         ui:ComboBox{ ID = "Mode", Weight = 1 },
+        ui:CheckBox{ ID = "Filter", Text = T("label_filter"), Checked = S.choice_filter, Weight = 0 },
       },
       ui:HGroup{
         Weight = 0,
@@ -1610,7 +1698,7 @@ function M.main()
         ui:Button{ ID = "ImportSrt", Text = T("btn_import") },
       },
       -- one label for status, hints and questions: labels shown later lay out badly
-      ui:Label{ ID = "Status", Text = "", WordWrap = true, Weight = 1, MinimumSize = { 500, 150 },
+      ui:Label{ ID = "Status", Text = "", WordWrap = true, Weight = 1, MinimumSize = { 400, 80 },
                 Alignment = { AlignLeft = true, AlignTop = true } },
       ui:HGroup{
         Weight = 0,
@@ -1639,7 +1727,16 @@ function M.main()
       local item = list[key][(ok and tonumber(i) or 0) + 1]
       S["choice_" .. key] = item and item[1] or ""
       log("Chosen", key, "->", S["choice_" .. key] == "" and "as in the Workbench" or S["choice_" .. key])
+      save_settings()                                 -- kept even if Resolve is closed without "Close"
     end
+  end
+  win.On.Filter.Clicked = function()
+    local ok, checked = pcall(function() return itm.Filter.Checked end)
+    if ok and checked ~= nil then
+      S.choice_filter = checked and true or false
+    end
+    log("Chosen filter ->", S.choice_filter and "on" or "off")
+    save_settings()
   end
 
   win.On.WhisperXWin.Close = guarded(M.close)

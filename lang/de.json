@@ -298,7 +298,7 @@
       "{err}"
     ],
     "sec_resolve_jobs": "2 · Jobs aus DaVinci Resolve",
-    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Öffnet das Plugin das Fenster, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon geöffneten Fenster mit den dort eingestellten. Sprache und Modus, die du im Plugin-Fenster wählst, gehen beidem vor.",
+    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Öffnet das Plugin das Fenster, wird mit den Einstellungen des letzten DaVinci-Jobs transkribiert; in einem schon geöffneten Fenster mit den dort eingestellten. Sprache, Modus und Audiofilter, die du im Plugin-Fenster wählst, gehen beidem vor.",
     "sw_resolve_countdown": "Jobs aus DaVinci Resolve automatisch starten nach",
     "sw_resolve_countdown_unit": "Sekunden",
     "resolve_countdown": "Countdown für DaVinci-Jobs",
@@ -643,8 +643,11 @@
       "other": "{n} alte DaVinci-Resolve-Job-Ordner entfernt"
     },
     "fast_cue": "zu schnell: {cps} Zeichen/s",
-    "log_job_options": "Sprache und Modus aus DaVinci Resolve: {lang} · {mode}",
-    "as_window": "wie in diesem Fenster"
+    "log_job_options": "Einstellungen aus DaVinci Resolve: {lang} · {mode} · {filter}",
+    "as_window": "wie in diesem Fenster",
+    "filter_on": "Audiofilter an",
+    "filter_off": "Audiofilter aus",
+    "filter_window": "Audiofilter wie in diesem Fenster"
   },
   "plugin": {
     "title": "WhisperX Untertitel",
@@ -727,7 +730,9 @@
     "wb_cancelled": "Workbench: abgebrochen.",
     "track_gaps": "WhisperX Lücken",
     "track_fast": "WhisperX zu schnell",
-    "placed_extra": "+ {n} auf Untertitelspur {track} „{name}“ – zum Prüfen, danach die Spur löschen."
+    "placed_extra": "+ {n} auf Untertitelspur {track} „{name}“ – zum Prüfen, danach die Spur löschen.",
+    "label_filter": "Audiofilter",
+    "count_off": "Resolve hat {placed} Untertitel auf ST{track} gelegt, die SRT hat {cues}. Bitte die Spur prüfen."
   },
   "tip": {
     "files": [

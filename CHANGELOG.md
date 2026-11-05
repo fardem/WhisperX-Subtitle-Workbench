@@ -2,6 +2,15 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.6.1] – 2026-11-05
+
+**Updating from 0.6.0:** install the plugin again under *Settings → DaVinci Resolve*. The plugin window starts once with its new, smaller size.
+
+- **Fixed: Resolve placed old subtitles.** Every hand-over used the same file name (`<Timeline>_<LANG>.srt`). Resolve does not read a file again that is already in its media pool – it placed the subtitles of the first import, e.g. word by word although the new SRT has sentences. The SRT now gets a new name every time (`<Timeline>_<LANG>_<date-time>.srt`). *Import SRT …* imports a copy with a new name, so a corrected file is read again
+- The plugin compares the number of subtitles on the track with the SRT and reports a difference
+- **Audio filter** as a tick in the plugin window – it goes to the workbench with the job and wins over the main window (off at first, like in the INI template)
+- The plugin window starts smaller (600 × 330) and can be made smaller than before. Language, mode and audio filter are saved at once when changed, not only on *Close*
+
 ## [0.6.0] – 2026-11-05
 
 **Updating from 0.5.x:** close the workbench, update, then install the plugin again under *Settings → DaVinci Resolve*. The new options in `[Resolve]` start with their defaults (automatic hand-over off, extra tracks on, minimize after the hand-over).

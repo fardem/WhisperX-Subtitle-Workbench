@@ -185,7 +185,8 @@ def test_full_round_trip_with_in_out(tmp_path):
     assert tracks[0]["starts"] == [90000 + 11 * 25, 90000 + 14 * 25]   # In point + 1 s and + 4 s
     assert result["status"].startswith(h.T("placed", n=2, track=1, name="WhisperX DE"))
     assert h.job_dirs() == []                       # WAV and job folder deleted
-    assert [p.name for p in h.last.iterdir()] == ["Interview_Mueller_DE.srt"]
+    (name,) = [p.name for p in h.last.iterdir()]
+    assert name.startswith("Interview_Mueller_DE_") and name.endswith(".srt")
     assert list(h.mock.renders.values()) == []      # render job deleted
     assert all("WhisperX-Backup" not in p for p in h.mock.presets.values())
     assert (h.mock.format.format, h.mock.format.codec) == ("mov", "H264")   # Deliver settings restored
@@ -625,7 +626,89 @@ def test_language_and_mode_chosen_in_the_plugin_go_into_the_job(tmp_path):
         h.click("Cancel")
 
     h.run(steps, timelines=[timeline()])
-    assert (seen["job"].language, seen["job"].mode) == ("tr", "word")
+    assert (seen["job"].language, seen["job"].mode, seen["job"].use_filter) == ("tr", "word", False)
+
+
+def test_audio_filter_chosen_in_the_plugin_goes_into_the_job_and_stays(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        assert h.mock["items"].Filter.Checked is False        # default: off, like the INI template
+        h.mock.check("Filter", True)
+        seen["saved"] = wr.read_kv(h.last / "plugin.txt")      # saved at once, not only on "Close"
+        h.click("Transcribe")
+        h.tick(2)
+        (job_dir,) = h.job_dirs()
+        seen["job"] = wr.find_job(job_dir / "audio.wav")
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert seen["saved"]["filter"] == "1" and seen["job"].use_filter is True
+
+    h2 = Harness(tmp_path)
+
+    def second(h):
+        seen["checked"] = h.mock["items"].Filter.Checked
+
+    h2.run(second, timelines=[timeline()])
+    assert seen["checked"] is True
+
+
+def test_second_hand_over_of_the_same_timeline_places_its_own_subtitles(tmp_path):
+    # Resolve does not read a path again that is already in the media pool (the mock does the
+    # same) - word by word first, then sentences: the second track must get the sentences
+    h = Harness(tmp_path)
+    words = ((1.0, 1.5, "Guten"), (1.5, 2.0, "Morgen"), (2.0, 2.5, "allerseits"))
+    sentence = ((1.0, 2.5, "Guten Morgen allerseits"),)
+
+    def steps(h):
+        for stamp, cues in (("20261105-150000", words), ("20261105-151000", sentence)):
+            h.click("Transcribe")
+            h.tick(2)
+            h.workbench_hands_over(cues=cues, stamp=stamp)
+            h.tick()
+
+    h.run(steps, timelines=[timeline(start=0, start_tc="00:00:00:00")])
+    t = h.tracks()
+    assert [x["name"] for x in t] == ["WhisperX DE", "WhisperX DE 2"]
+    assert len(t[0]["starts"]) == 3 and len(t[1]["starts"]) == 1
+
+
+def test_fewer_subtitles_on_the_track_than_in_the_srt_are_reported(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        h.mock.max_place = 1
+        h.click("Transcribe")
+        h.tick(2)
+        h.workbench_hands_over()
+        h.tick()
+        seen["status"] = h.text("Status")
+
+    h.run(steps, timelines=[timeline()])
+    assert h.T("count_off", placed=1, track=1, cues=2) in seen["status"]
+
+
+def test_import_srt_reads_a_changed_file_again(tmp_path):
+    # e.g. the last SRT corrected in Subtitle Edit and imported once more
+    h = Harness(tmp_path)
+    srt = tmp_path / "Talk_EN.srt"
+    srt.write_text("1\n00:00:02,000 --> 00:00:03,000\nHello\n\n", encoding="utf-8")
+
+    def steps(h):
+        h.mock.request_file = str(srt)
+        h.click("ImportSrt")
+        srt.write_text("1\n00:00:02,000 --> 00:00:03,000\nHello\n\n2\n00:00:04,000 --> 00:00:05,000\nagain\n\n",
+                       encoding="utf-8")
+        h.click("ImportSrt")
+
+    h.run(steps, timelines=[timeline(start=0, start_tc="00:00:00:00")])
+    t = h.tracks()
+    assert [len(x["starts"]) for x in t] == [1, 2]
+    copies = sorted(p.name for p in h.last.glob("Talk_EN_*.srt"))
+    assert len(copies) == 2 and srt.exists()                    # copies in resolve_temp, the file stays
 
 
 def test_window_position_and_choices_are_remembered(tmp_path):
@@ -658,5 +741,16 @@ def test_unusable_saved_geometry_is_ignored(tmp_path):
     g.WX_TEST = True
     m = h.lua.execute(h.code)
     for bad in ("", "1,2,3", "0,0,100,100", "-5000,0,700,500", "0,0,99999,500"):
-        assert m.saved_geometry(h.lua.table_from({"geometry": bad})) is None
-    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})).values()) == [10, 20, 640, 460]
+        assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "2"})) is None
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,330", "layout": "2"})).values()) == \
+        [10, 20, 600, 330]
+    # saved by 0.6.0 (no layout key): its start size was too big - start with the new one
+    assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})) is None
+
+
+def test_language_from_a_name_with_date_and_time(tmp_path):
+    h = Harness(tmp_path)
+    h.lua.globals().WX_TEST = True
+    m = h.lua.execute(h.code)
+    assert m.lang_from_name("C:/x/Timeline_6_TR_20261105-151530.srt") == "TR"
+    assert m.lang_from_name("Timeline_6_20261105-151530.srt") is None

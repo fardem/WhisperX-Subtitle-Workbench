@@ -177,8 +177,8 @@ def test_hand_over_writes_shifted_srt_and_done_file(tmp_path):
                    encoding="utf-8")
     (tmp_path / "job" / "audio.gaps.srt").write_text("", encoding="utf-8")
     last = tmp_path / "letzte"
-    res = wr.hand_over(job, src, "de", last_dir=last)
-    assert res.srt == last / "Interview_Mueller_DE.srt" and res.lang == "DE" and res.cues == 2
+    res = wr.hand_over(job, src, "de", last_dir=last, stamp="20261105-151530")
+    assert res.srt == last / "Interview_Mueller_DE_20261105-151530.srt" and res.lang == "DE" and res.cues == 2
     assert res.first == pytest.approx(11.0) and res.offset == pytest.approx(10.0)
     assert "00:00:11,000 --> 00:00:12,000" in res.srt.read_text(encoding="utf-8")
     assert src.read_text(encoding="utf-8").startswith("1\n00:00:01,000")         # the original stays
@@ -193,12 +193,20 @@ def test_only_one_last_srt(tmp_path):
     b = make_job(tmp_path / "b", timeline="Zweite")
     for job in (a, b):
         (job.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:02,000", "x")), encoding="utf-8")
-    wr.hand_over(a, a.folder / "audio.srt", "de", last_dir=last)
-    assert [p.name for p in last.iterdir()] == ["Erste_Timeline_DE.srt"]
-    wr.hand_over(b, b.folder / "audio.srt", "en", last_dir=last)
-    assert [p.name for p in last.iterdir()] == ["Zweite_EN.srt"]
-    wr.hand_over(b, b.folder / "audio.srt", "en", last_dir=last)                  # same name: replaced
-    assert [p.name for p in last.iterdir()] == ["Zweite_EN.srt"]
+    wr.hand_over(a, a.folder / "audio.srt", "de", last_dir=last, stamp="20261105-150000")
+    assert [p.name for p in last.iterdir()] == ["Erste_Timeline_DE_20261105-150000.srt"]
+    wr.hand_over(b, b.folder / "audio.srt", "en", last_dir=last, stamp="20261105-150100")
+    assert [p.name for p in last.iterdir()] == ["Zweite_EN_20261105-150100.srt"]
+    wr.hand_over(b, b.folder / "audio.srt", "en", last_dir=last, stamp="20261105-150200")
+    assert [p.name for p in last.iterdir()] == ["Zweite_EN_20261105-150200.srt"]
+
+
+def test_every_hand_over_gets_a_new_name(tmp_path):
+    # Resolve does not read a path again that is already in its media pool
+    job = make_job(tmp_path / "job")
+    (job.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:02,000", "x")), encoding="utf-8")
+    res = wr.hand_over(job, job.folder / "audio.srt", "de", last_dir=tmp_path / "out")
+    assert re.fullmatch(r"Interview_Mueller_DE_\d{8}-\d{6}\.srt", res.srt.name)
 
 
 def test_previous_srt_stays_when_writing_fails(tmp_path, monkeypatch):
@@ -357,6 +365,15 @@ def test_language_and_mode_of_the_plugin(tmp_path):
     assert (a.language, a.mode) == ("tr", "word") and (b.language, b.mode) == ("", "")
 
 
+def test_audio_filter_of_the_plugin(tmp_path):
+    make_job(tmp_path / "on", use_filter=True)
+    make_job(tmp_path / "off", use_filter=False)
+    make_job(tmp_path / "old")                                   # plugin 0.6.0 and older: no key
+    on, off, old = (wr.find_job(tmp_path / d / "audio.wav") for d in ("on", "off", "old"))
+    assert (on.use_filter, off.use_filter, old.use_filter) == (True, False, None)
+    assert wr.read_kv(tmp_path / "off" / wr.JOB_FILE)["filter"] == "0"
+
+
 def test_progress_file(tmp_path):
     job = make_job(tmp_path / "job")
     assert wr.write_progress(job, "running", stage="asr", pct=45)
@@ -379,10 +396,10 @@ def test_hand_over_with_gap_and_fast_tracks(tmp_path):
                        ("00:00:04,000", "00:00:04,500", "Viel zu viel Text für so wenig Zeit")), encoding="utf-8")
     res = wr.hand_over(job, src, "de", last_dir=tmp_path / "out", gaps=[(5.0, 7.0, -3.0)],
                        gap_label=lambda s, e, rel: f"gap {e - s:.1f}", fast_cps=17,
-                       fast_label=lambda cps: f"{cps:.0f} cps")
+                       fast_label=lambda cps: f"{cps:.0f} cps", stamp="20261105-151530")
     done = wr.read_kv(job.done_path)
     gaps, fast = Path(done["gaps"]), Path(done["fast"])
-    assert gaps.parent == job.folder and gaps.name == "Interview_Mueller_DE_gaps.srt"
+    assert gaps.parent == job.folder and gaps.name == "Interview_Mueller_DE_20261105-151530_gaps.srt"
     assert gaps.read_text(encoding="utf-8") == "1\n00:00:15,000 --> 00:00:17,000\ngap 2.0\n\n"
     assert fast.read_text(encoding="utf-8") == "1\n00:00:14,000 --> 00:00:14,500\n70 cps\n\n"
     assert (res.gaps, res.fast, done["gaps_n"], done["fast_n"]) == (1, 1, "1", "1")

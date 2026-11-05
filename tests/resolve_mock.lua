@@ -174,7 +174,15 @@ end
 function MP:ImportMedia(list)
   record("ImportMedia", list[1], MOCK.current_folder.name)
   if MOCK.import_fails or not PY.exists(list[1]) then return {} end
-  local item = { path = list[1], folder = MOCK.current_folder.name }
+  -- like Resolve: a path that is already in the media pool is not read again - the clip of the
+  -- first import comes back, with the subtitles it had then
+  local known = MOCK.by_path[list[1]]
+  if known then
+    MOCK.imported = known
+    return { known.api }
+  end
+  local item = { path = list[1], folder = MOCK.current_folder.name, starts = parse_srt_starts(list[1]) }
+  MOCK.by_path[list[1]] = item
   table.insert(MOCK.current_folder.clips, item)
   item.api = method_table({
     GetClipProperty = function() return { Type = "Subtitle", ["File Path"] = item.path } end,
@@ -200,7 +208,8 @@ function MP:AppendToTimeline(list)
   end
   local fps = tl.fps
   local out = {}
-  for _, s in ipairs(parse_srt_starts(item.path)) do
+  for i, s in ipairs(item.starts) do
+    if MOCK.max_place and i > MOCK.max_place then break end
     local start = base + math.floor(s * fps + 0.5) + (MOCK.placement_shift or 0)
     table.insert(target.items, { start = start, stop = start + 10, text = "cue" })
     out[#out + 1] = {}
@@ -414,7 +423,7 @@ local function widget(kind)
     return spec
   end
 end
-for _, kind in ipairs({ "VGroup", "HGroup", "Label", "Button", "LineEdit", "TextEdit", "ComboBox" }) do
+for _, kind in ipairs({ "VGroup", "HGroup", "Label", "Button", "LineEdit", "TextEdit", "ComboBox", "CheckBox" }) do
   UI[kind] = widget(kind)
 end
 function UI:VGap() return { kind = "Gap" } end
@@ -477,10 +486,16 @@ function MOCK.choose(id, index)
   local h = MOCK.win.On[id] and MOCK.win.On[id].CurrentIndexChanged
   if h then h({}) end
 end
+function MOCK.check(id, checked)
+  MOCK.items[id].Checked = checked
+  local h = MOCK.win.On[id] and MOCK.win.On[id].Clicked
+  if h then h({ who = id }) end
+end
 function MOCK.close_window() MOCK.win.On.WhisperXWin.Close({}) end
 
 function MOCK.setup(opts)
   MOCK.timelines = {}
+  MOCK.by_path = {}
   for i, o in ipairs(opts.timelines) do MOCK.timelines[i] = new_timeline(o) end
   MOCK.timeline = MOCK.timelines[opts.current or 1]
   MOCK.mp = method_table(MP)

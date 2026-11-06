@@ -76,7 +76,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 | Windows | Windows 10/11, 64 bit | Arayüz Tkinter'dır; çekirdek Linux'ta da çalışır, BAT başlatıcısı Windows içindir |
 | NVIDIA ekran kartı | RTX 5080 (16 GB) | `large-v3` için ≥ 8 GB ekran kartı belleği önerilir. RTX 20xx veya daha yenisi; GTX 10xx ve daha eskileri başka bir PyTorch derlemesi gerektirir (4. adım). CPU ile de çalışır ama çok yavaştır |
 | NVIDIA sürücüsü | R570 veya daha yeni | CUDA 12.8 paketleri için gerekli. Yalnızca sürücü yeterli; CUDA araç setini kurmanız **gerekmez** |
-| Python | **3.10.11** (WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir. 3.10.11, Windows kurulum programı olan son 3.10 sürümüdür. Python 3.10 2026'dan beri güvenlik güncellemesi almıyor; paket kombinasyonu 3.10 ile test edilmiştir |
+| Python | **3.10.11** (WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir. 3.10.11, Windows kurulum programı olan son 3.10 sürümüdür. Python 3.10 Ekim 2026'dan beri güvenlik güncellemesi almıyor; paket kombinasyonu 3.10 ile test edilmiştir |
 | ffmpeg | 6.x / 7.x | Ayrı bir program, pip paketi değil. Herhangi bir tam sürüm, örn. `winget install Gyan.FFmpeg` |
 | İnternet | yalnızca ilk başlatmada | Whisper modeli (~3 GB), dile göre hizalama modelleri, MMS_FA (şarkı sözleri için ~1,2 GB) |
 

@@ -76,7 +76,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 | Windows | Windows 10/11, 64 Bit | Die Oberfläche ist Tkinter; der Kern läuft auch unter Linux, der BAT-Starter ist für Windows |
 | NVIDIA-Grafikkarte | RTX 5080 (16 GB) | ≥ 8 GB Grafikspeicher empfohlen für `large-v3`. RTX 20xx oder neuer; GTX 10xx und älter brauchen einen anderen PyTorch-Build (Schritt 4). Mit der CPU geht es, aber sehr langsam |
 | NVIDIA-Treiber | R570 oder neuer | Nötig für die CUDA-12.8-Pakete. Es reicht der Treiber; das CUDA-Toolkit musst du **nicht** installieren |
-| Python | **3.10.11** (WhisperX erlaubt 3.10–3.13) | Von python.org, mit „tcl/tk and IDLE“ (Tkinter), das ist standardmäßig angehakt. 3.10.11 ist die letzte 3.10-Version mit Windows-Installer. Python 3.10 bekommt seit 2026 keine Sicherheitsupdates mehr; die Paket-Kombination ist mit 3.10 getestet |
+| Python | **3.10.11** (WhisperX erlaubt 3.10–3.13) | Von python.org, mit „tcl/tk and IDLE“ (Tkinter), das ist standardmäßig angehakt. 3.10.11 ist die letzte 3.10-Version mit Windows-Installer. Python 3.10 bekommt seit Oktober 2026 keine Sicherheitsupdates mehr; die Paket-Kombination ist mit 3.10 getestet |
 | ffmpeg | 6.x / 7.x | Eigenes Programm, kein pip-Paket. Jeder Full-Build, z.B. `winget install Gyan.FFmpeg` |
 | Internet | nur beim ersten Start | Whisper-Modell (~3 GB), Alignment-Modelle je Sprache, MMS_FA (~1,2 GB für Lyrics) |
 

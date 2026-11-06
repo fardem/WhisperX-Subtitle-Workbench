@@ -1,4 +1,4 @@
-"""DaVinci Resolve connection (wt_resolve): job and done files, Resolve mode, SRT shift, "only one last SRT"."""
+"""DaVinci Resolve connection (wt_resolve): job and done files, Resolve mode, SRT shift, the last SRTs."""
 
 import os
 import re
@@ -168,7 +168,7 @@ def test_job_alive_until_cancelled(tmp_path):
     assert not job.alive()
 
 
-# ─── hand over and "only one last SRT" ────────────────────────────────────────
+# ─── hand over and "the SRTs of the last hand-overs" ──────────────────────────
 
 def test_hand_over_writes_shifted_srt_and_done_file(tmp_path):
     job = make_job(tmp_path / "job", whole=False, in_frame=90250)
@@ -187,18 +187,27 @@ def test_hand_over_writes_shifted_srt_and_done_file(tmp_path):
     assert done["files"] == "audio.gaps.srt;audio.srt"
 
 
-def test_only_one_last_srt(tmp_path):
+def test_the_srts_of_the_last_10_hand_overs_stay(tmp_path):
     last = tmp_path / "letzte"
-    a = make_job(tmp_path / "a", timeline="Erste Timeline")
-    b = make_job(tmp_path / "b", timeline="Zweite")
-    for job in (a, b):
-        (job.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:02,000", "x")), encoding="utf-8")
-    wr.hand_over(a, a.folder / "audio.srt", "de", last_dir=last, stamp="20261105-150000")
-    assert [p.name for p in last.iterdir()] == ["Erste_Timeline_DE_20261105-150000.srt"]
-    wr.hand_over(b, b.folder / "audio.srt", "en", last_dir=last, stamp="20261105-150100")
-    assert [p.name for p in last.iterdir()] == ["Zweite_EN_20261105-150100.srt"]
-    wr.hand_over(b, b.folder / "audio.srt", "en", last_dir=last, stamp="20261105-150200")
-    assert [p.name for p in last.iterdir()] == ["Zweite_EN_20261105-150200.srt"]
+    (last / "20261105-150000-0001").mkdir(parents=True)                # a job folder: never touched
+    job = make_job(tmp_path / "job", timeline="Zweite")
+    (job.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:02,000", "x")), encoding="utf-8")
+    names = []
+    for i in range(12):
+        res = wr.hand_over(job, job.folder / "audio.srt", "en", last_dir=last, stamp=f"20261105-15{i:02}00")
+        os.utime(res.srt, ns=(i * 10**9, (1_800_000_000 + i) * 10**9))   # the order on disk, also on coarse clocks
+        names.append(res.srt.name)
+        srts = sorted(p.name for p in last.glob("*.srt"))
+        assert srts == sorted(names[-10:])                              # the 11th removes the oldest
+    assert wr.KEEP_SRTS == 10 and (last / "20261105-150000-0001").is_dir()
+
+
+def test_keep_counts_the_new_srt(tmp_path):
+    last = tmp_path / "letzte"
+    for i in range(5):
+        p = wr.write_last_srt(last, f"A_DE_{i}.srt", "x", keep=3)
+        os.utime(p, ns=(0, (1_800_000_000 + i) * 10**9))
+    assert sorted(p.name for p in last.iterdir()) == ["A_DE_2.srt", "A_DE_3.srt", "A_DE_4.srt"]
 
 
 def test_every_hand_over_gets_a_new_name(tmp_path):
@@ -241,14 +250,14 @@ def test_hand_over_without_subtitles(tmp_path):
         wr.hand_over(job, job.folder / "missing.srt", "de", last_dir=tmp_path / "letzte")
 
 
-def test_last_srt_lies_next_to_the_job_folders(tmp_path):
+def test_last_srts_lie_next_to_the_job_folders(tmp_path):
     root = tmp_path / "resolve_temp"
     job = make_job(root / "20261105-1")                        # a job that is still waiting
     (root / "notes.txt").write_text("x", encoding="utf-8")
-    wr.write_last_srt(root, "Erste_DE.srt", "a")
-    wr.write_last_srt(root, "Zweite_DE.srt", "b")
+    wr.write_last_srt(root, "Erste_DE.srt", "a", keep=1)
+    wr.write_last_srt(root, "Zweite_DE.srt", "b", keep=1)
     assert sorted(p.name for p in root.iterdir()) == ["20261105-1", "Zweite_DE.srt", "notes.txt"]
-    assert job.alive()
+    assert job.alive()                                         # only SRTs are removed, never job folders
 
 
 def test_folder_of_version_0_5_0_is_removed(tmp_path):

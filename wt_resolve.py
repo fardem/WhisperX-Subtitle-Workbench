@@ -10,8 +10,9 @@ How a job travels (the Lua plugin is resolve/WhisperX_Subtitles.lua):
   2. The Workbench gets the WAV like any other file. A media file with the plugin's
      job.txt next to it is a Resolve job ("Resolve mode", see find_job).
   3. "Hand over to DaVinci" (hand_over): the SRT is shifted by the offset of the job,
-     kept as the ONLY SRT directly in resolve_temp/ (<Timeline>_<LANG>_<date-time>.srt), and
-     done.txt tells the plugin where it is and which language it has. The name is new for every
+     kept directly in resolve_temp/ (<Timeline>_<LANG>_<date-time>.srt) next to the SRTs of the
+     previous hand-overs (KEEP_SRTS), and done.txt tells the plugin where it is and which
+     language it has. The name is new for every
      hand-over: Resolve keeps using what it read the first time it imported a path.
   4. The plugin puts the SRT on a subtitle track and deletes the job folder.
 
@@ -35,7 +36,7 @@ import wt_i18n as i18n
 from wt_i18n import T
 
 HERE = Path(__file__).resolve().parent
-TEMP_DIR = HERE / "resolve_temp"              # job folders of the plugin + the SRT of the last hand-over
+TEMP_DIR = HERE / "resolve_temp"              # job folders of the plugin + the SRTs of the last hand-overs
 LEGACY_DIR = HERE / "temp" / "resolve"         # the same in 0.5.0 (temp/resolve/letzte/ held the SRT)
 
 JOB_FILE      = "job.txt"                      # plugin → Workbench
@@ -43,6 +44,7 @@ DONE_FILE     = "done.txt"                     # Workbench → plugin (written a
 CANCEL_FILE   = "cancel.txt"                   # plugin: the job was cancelled
 IMPORTED_FILE = "imported.txt"                 # plugin: imported, but files could not be deleted
 PROGRESS_FILE = "progress.txt"                 # Workbench → plugin: where the job stands
+KEEP_SRTS     = 10                             # SRTs of the last hand-overs kept in resolve_temp/
 JOB_FORMAT    = "whisperx-resolve-job/1"
 DONE_FORMAT   = "whisperx-resolve-done/1"
 JOB_MAX_AGE_H = 72                             # older job folders are left-overs (e.g. Resolve crashed)
@@ -361,11 +363,12 @@ class HandOver:
     fast:   int = 0       # subtitles too fast to read, handed over on an own track
 
 
-def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> Path:
+def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8", keep: int = KEEP_SRTS) -> Path:
     """
-    resolve_temp/ holds exactly ONE SRT (job folders are subfolders): the new SRT is written
-    completely first (temp file, then rename) – only then is the SRT of the previous job
-    deleted. If writing fails, the previous SRT stays.
+    resolve_temp/ keeps the SRTs of the last `keep` hand-overs (job folders are subfolders, they
+    are not touched): the new SRT is written completely first (temp file, then rename) – only
+    then are the oldest SRTs deleted, so that at most `keep` remain. If writing fails, nothing
+    is deleted. "Oldest" goes by the time the file was last written.
     """
     last_dir = Path(last_dir)
     last_dir.mkdir(parents=True, exist_ok=True)
@@ -377,12 +380,19 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8") -> P
     except OSError:
         tmp.unlink(missing_ok=True)
         raise
-    for other in last_dir.iterdir():
-        if other.is_file() and other.suffix.lower() == ".srt" and other.name != target.name:
-            try:
-                other.unlink()
-            except OSError:
-                pass                   # still open in another program – next time
+    def age(p: Path):
+        try:
+            return p.stat().st_mtime_ns
+        except OSError:
+            return 0
+    others = sorted((p for p in last_dir.iterdir()
+                     if p.is_file() and p.suffix.lower() == ".srt" and p.name != target.name),
+                    key=lambda p: (age(p), p.name), reverse=True)          # newest first
+    for old in others[max(keep - 1, 0):]:                                  # the new one counts too
+        try:
+            old.unlink()
+        except OSError:
+            pass                   # still open in another program – next time
     return target
 
 
@@ -441,7 +451,7 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
 def cleanup_jobs(temp_dir=None, max_age_hours: float = JOB_MAX_AGE_H, now: float | None = None) -> int:
     """
     Remove job folders that are no longer needed: cancelled, imported, empty or older than
-    max_age_hours (e.g. Resolve crashed while waiting). The SRT of the last hand-over stays.
+    max_age_hours (e.g. Resolve crashed while waiting). The SRTs of the last hand-overs stay.
     """
     temp_dir = Path(temp_dir) if temp_dir else TEMP_DIR
     if not temp_dir.is_dir():

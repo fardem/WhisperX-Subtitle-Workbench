@@ -2,6 +2,12 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.6.3] – 2026-11-06
+
+**Updating from 0.6.2:** install the plugin again under *Settings → DaVinci Resolve*.
+
+- `resolve_temp\` keeps the SRTs of the last **10** hand-overs instead of only the last one; the 11th deletes the oldest. Job folders are never touched
+
 ## [0.6.2] – 2026-11-05
 
 **Updating from 0.6.1:** install the plugin again under *Settings → DaVinci Resolve*. The key `last_options` in `[Resolve]` is no longer used and can be deleted.

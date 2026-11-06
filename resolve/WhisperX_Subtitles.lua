@@ -33,7 +33,7 @@ check the job status by Error/CompletionPercentage, remove left-over jobs of its
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.6.2",
+  version   = "0.6.3",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -96,7 +96,7 @@ local function join(...)
 end
 M.join = join
 
--- <Workbench>\resolve_temp\ holds the job folders and the SRT of the last hand-over
+-- <Workbench>\resolve_temp\ holds the job folders and the SRTs of the last hand-overs
 local TEMP = WX.workbench and join(WX.workbench, "resolve_temp") or nil
 local LAST = TEMP
 M.TEMP, M.LAST = TEMP, LAST

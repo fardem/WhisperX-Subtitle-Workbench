@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.6.2** · [Änderungen](CHANGELOG.md)
+**Version 0.6.3** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -224,7 +224,7 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 
 ## Sicher aktualisieren
 
-- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.6.2*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
+- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.6.3*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
 - **Die Workbench selbst:** `git pull`, oder die neuen Dateien über die alten kopieren. Deine Einstellungen stehen in `whisper_tool.ini`. Diese Datei gehört nicht zum Repository, ein Update überschreibt sie also nie. Neue Optionen bekommen automatisch Standardwerte.
 - **Python-Pakete:** Nur aktualisieren, wenn du etwas Neues brauchst. So geht es sicher:
 
@@ -330,7 +330,7 @@ Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach ein
 1. Die Timeline in Resolve öffnen. In und Out setzen, wenn nur ein Teil transkribiert werden soll, sonst gilt die ganze Timeline. Das Plugin starten, bei Bedarf **Sprache** und **Modus** für diesen Job wählen („Vorgabe der Workbench“ nimmt die Vorgabe aus der INI), den **Audiofilter** ein- oder ausschalten und **Transkribieren** drücken. Das Plugin-Fenster merkt sich Position, Größe und diese drei Auswahlen.
 2. Das Plugin rendert die Hauptmischung der Timeline als WAV nach `resolve_temp\<Job>\` der Workbench. Danach ist der Render-Job gelöscht, und Seite, Deliver-Einstellungen sowie In/Out-Marken sind wie vorher – auch nach einem Fehler oder *Abbrechen*. Dann startet es die Workbench mit der WAV; eine schon geöffnete Workbench übernimmt die Datei, ihre Modelle bleiben geladen.
 3. In der Workbench steht der Job als „*Timeline* · DaVinci Resolve“ in der Liste. Er hat einen eigenen Countdown (*Einstellungen → DaVinci Resolve*, Vorgabe 10 Sekunden). Sprache, Modus und Audiofilter kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI: Prompt, Zeichen pro Zeile und Zeilen sowie alle Regeln aus *Einstellungen → Untertitel*. Die Einstellungen im Hauptfenster gelten für DaVinci-Jobs nicht. Das Protokoll zeigt beides an. Ohne Countdown startest du selbst mit *Start*. Währenddessen zeigt das Plugin-Fenster, wo der Job steht: Countdown, Transkription in Prozent, fertig.
-4. Ist der Job fertig, die Untertitel prüfen und **→ An DaVinci übergeben** drücken (blau, sobald der Job fertig ist). Die SRT wird an die Stelle des Bereichs in der Timeline verschoben und als `resolve_temp\<Timeline>_<SPRACHE>_<Datum-Uhrzeit>.srt` gespeichert; dieser Ordner enthält immer nur die SRT der letzten Übergabe. Der Name ist jedes Mal neu, weil Resolve eine Datei, die schon im Media Pool liegt, nicht noch einmal liest – es würde die Untertitel des ersten Imports einsetzen. Danach minimiert sich die Workbench – sie bleibt offen, ihre Modelle bleiben für den nächsten Job geladen. Unter *Einstellungen → DaVinci Resolve* kannst du automatisch übergeben lassen, sobald der Job transkribiert ist, und schließen statt minimieren.
+4. Ist der Job fertig, die Untertitel prüfen und **→ An DaVinci übergeben** drücken (blau, sobald der Job fertig ist). Die SRT wird an die Stelle des Bereichs in der Timeline verschoben und als `resolve_temp\<Timeline>_<SPRACHE>_<Datum-Uhrzeit>.srt` gespeichert; dieser Ordner behält die SRTs der letzten 10 Übergaben, bei der 11. wird die älteste gelöscht. Der Name ist jedes Mal neu, weil Resolve eine Datei, die schon im Media Pool liegt, nicht noch einmal liest – es würde die Untertitel des ersten Imports einsetzen. Danach minimiert sich die Workbench – sie bleibt offen, ihre Modelle bleiben für den nächsten Job geladen. Unter *Einstellungen → DaVinci Resolve* kannst du automatisch übergeben lassen, sobald der Job transkribiert ist, und schließen statt minimieren.
 5. Das Plugin wartet in Resolve, wechselt zurück zur Timeline des Jobs, importiert die SRT in den Media-Pool-Bin *WhisperX* und legt sie auf die **erste leere Untertitelspur** (ST1, ST2, …) – oder auf eine neue. Die Spur heißt `WhisperX DE` (`WhisperX DE 2`, wenn es den Namen schon gibt) und bleibt die aktive Untertitelspur. Danach werden WAV und Job-Ordner gelöscht, und das Plugin-Fenster kommt mit dem Ergebnis nach vorne, bis du *OK* drückst.
 6. Eingeschaltet (Vorgabe) helfen zwei weitere Untertitelspuren beim Prüfen: **WhisperX Lücken** markiert laute Stellen ohne Text aus dem Lücken-Check, **WhisperX zu schnell** markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (Modus *Satzweise*). Du springst in Resolve von Eintrag zu Eintrag und löschst danach die beiden Spuren. Die Spur mit dem Transkript bleibt die aktive.
 
@@ -346,7 +346,7 @@ Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timelin
 - Resolve legt eine SRT nur auf die **aktive** Untertitelspur, und aktiv kann nur eine sein. Das Plugin deaktiviert deshalb die anderen Untertitelspuren; danach ist die neue Spur die aktive. Eine leere, aber gesperrte Spur wird übersprungen.
 - Die Untertitel werden relativ zum Anfang der Timeline gesetzt, also um den In-Punkt verschoben. Ob der Start-Timecode (z.B. 01:00:00:00) zusätzlich zählt, wird noch getestet; das Plugin vergleicht die Lage des ersten Untertitels mit dem erwarteten Frame und meldet eine Abweichung.
 - Vor *Transkribieren* und während des Imports die Wiedergabe anhalten – Resolve kann hängen, wenn die Seite während der Wiedergabe wechselt.
-- Das Element im Media Pool zeigt auf die SRT in `resolve_temp\`; nachdem die nächste Übergabe sie ersetzt hat, ist es offline. Die Untertitel auf der Timeline gehören zum Projekt.
+- Das Element im Media Pool zeigt auf die SRT in `resolve_temp\`; sobald die Datei als älteste der letzten 10 gelöscht ist, ist es offline. Die Untertitel auf der Timeline gehören zum Projekt.
 - `resolve/tools/probe_subtitles.lua` prüft, wie eine neue Resolve-Version eine SRT platziert – nach einem Resolve-Update laufen lassen.
 
 ---
@@ -439,7 +439,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | `requirements.txt` | Die getesteten Paketversionen (torch zuerst installieren!) |
 | `constraints.txt` | Exakte Versionen aller Pakete der getesteten Installation (`pip freeze`), wird in Schritt 5 mit `-c` benutzt |
 | `tests/` | Automatische Tests (pytest). Sie brauchen weder Grafikkarte noch WhisperX und laufen bei jedem Push auf GitHub. Die Tests des Resolve-Plugins laufen gegen ein nachgebautes Resolve und brauchen das Paket `lupa`; ohne es werden sie übersprungen |
-| `resolve_temp/` | Job-Ordner des Plugins und die SRT der letzten Übergabe (nicht im Repository) |
+| `resolve_temp/` | Job-Ordner des Plugins und die SRTs der letzten 10 Übergaben (nicht im Repository) |
 
 ---
 

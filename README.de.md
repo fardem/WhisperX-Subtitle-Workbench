@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.7.3** · [Änderungen](CHANGELOG.md)
+**Version 0.7.4** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -43,8 +43,8 @@ Du ziehst Video- oder Audiodateien ins Fenster, und die Workbench erstellt `.srt
   - **Wort-für-Wort:** ein Untertitel pro Wort, z.B. für Karaoke-Effekte.
   - **Raw:** die WhisperX-Abschnitte unverändert – nur an einer echten Pause geteilt.
 - **Pausen, flackerfrei für DaVinci Resolve** (*Einstellungen → Untertitel → Pausen*): Es zählt nur die Länge einer Pause. Bis zur eingestellten Grenze (z.B. 2 Sekunden) bleibt ein Segment stehen, bis das nächste beginnt; die Untertitelspur von DaVinci zeigt dann zwischendurch nie einen leeren Moment. Nach einer längeren, echten Pause (Applaus, Musik) bleibt es noch eine kurze Haltezeit stehen, dann ist der Bildschirm leer. Die Anfänge bleiben exakt. Gilt für Satzweise, Wort-für-Wort und Raw; bei Lyrics den *Abstand zur nächsten Liedzeile* auf 0 stellen.
-- **Sprache pro Datei:** Die Sprache wird pro Datei erkannt, oder du legst sie fest. Jede Sprache hat ihren eigenen Prompt, Füllwörter, Dangling-Wörter, Ersetzungen und optional ein eigenes Modell (z.B. ein türkisches Fine-Tune). Das eigene Modell kann eine eigene Genauigkeit (z.B. `bfloat16`) haben und ohne Prompt laufen, wenn es mit einem Prompt schlechter erkennt.
-- **Lyrics-Modus:** Liegt `lied.lyric.txt` neben `lied.mp3`, wird jede Zeile des Liedtexts zeitlich auf das Audio ausgerichtet. Das läuft über Forced Alignment (MMS_FA + uroman) und funktioniert für jede Sprache.
+- **Sprache pro Datei:** Die Sprache wird pro Datei erkannt, oder du legst sie fest. Jede Sprache hat ihren eigenen Prompt, Füllwörter, Dangling-Wörter, Ersetzungen und optional ein eigenes Modell (z.B. ein türkisches Fine-Tune). Das eigene Modell kann eine eigene Genauigkeit (z.B. `bfloat16`) haben und ohne Prompt laufen, wenn es mit einem Prompt schlechter erkennt. Mit dem Häkchen *Eigenes Modell verwenden* schaltest du es aus, ohne den Pfad zu löschen.
+- **Lyrics-Modus:** Liegt `lied.lyric.txt` neben `lied.mp3`, wird jede Zeile des Liedtexts zeitlich auf das Audio ausgerichtet. Das läuft über Forced Alignment (MMS_FA + uroman) und funktioniert für jede Sprache. Passt eine lange Aufnahme nicht in den Grafikspeicher, rechnet die Workbench sie in Abschnitten von 30 Sekunden.
 - **JSON → SRT:** Du kannst das WhisperX-Ergebnis behalten und die Untertitel später in Sekunden mit anderem Layout neu bauen.
 - **Lücken-Check:** Findet nach jeder Transkription laute, stimmähnliche Stellen ohne Text, also nicht erkannte Sprache. Dazu wird eine eigene Untertiteldatei geschrieben, mit der du jede Stelle direkt anspringen kannst.
 - **Score-Check:** Die Wort-Zeitstempel geben jedem Wort einen Score von 0 bis 1 – wie gut es an seiner Stelle zum Ton passt. Wörter unter einer Schwelle (Empfehlung 0,40) sind wahrscheinlich falsch erkannt oder falsch platziert; der Check listet sie im Protokoll und in einer eigenen Untertiteldatei. Die Untertitel selbst bleiben unverändert.

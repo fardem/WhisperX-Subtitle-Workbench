@@ -182,6 +182,7 @@ class Config:
         self.models            = per_lang("model.")
         self.computes          = per_lang("compute_type.")
         self.no_prompt         = {lang for lang, v in per_lang("use_prompt.").items() if not _bool(v)}
+        self.models_off        = {lang for lang, v in per_lang("use_model.").items() if not _bool(v)}
         self.beam_size         = g("Whisper", "beam_size", 5, int)
         self.compute_type      = g("Whisper", "compute_type", "float16")
         self.batch_size        = g("Whisper", "batch_size", 8, int)
@@ -274,8 +275,8 @@ class Config:
         return fallback or configured
 
     def model_for(self, lang: str) -> tuple[str, str, bool]:
-        """(model, compute type, takes a prompt?) – compute_type.<lang> and use_prompt.<lang> need model.<lang>."""
-        if lang in self.models:
+        """(model, compute type, takes a prompt?) – compute_type.<lang> and use_prompt.<lang> need model.<lang> on."""
+        if lang in self.models and lang not in self.models_off:
             return self.models[lang], self.computes.get(lang, self.compute_type), lang not in self.no_prompt
         return self.model, self.compute_type, True
 
@@ -865,6 +866,22 @@ def clean_lyric_word(word: str, uroman) -> str:
     return re.sub(r"[^a-z']", "", word).strip()
 
 
+MMS_HOP = 320          # samples per emission frame of MMS_FA (wav2vec2: stride 320, receptive field 400)
+LYRICS_CHUNK = 30      # seconds per pass when the whole recording does not fit into graphics memory
+LYRICS_CONTEXT = 2     # seconds on each side that a pass hears but whose frames it drops
+
+
+def emission_chunks(n_samples: int) -> list[tuple[int, int, int, int | None]]:
+    """(first sample, end sample, first frame, end frame or None for the rest) of each pass."""
+    step, ctx = LYRICS_CHUNK * SAMPLE_RATE, LYRICS_CONTEXT * SAMPLE_RATE
+    out = []
+    for start in range(0, n_samples, step):
+        lo, hi = max(0, start - ctx), min(n_samples, start + step + ctx)
+        first = (start - lo) // MMS_HOP
+        out.append((lo, hi, first, None if start + step >= n_samples else first + step // MMS_HOP))
+    return out
+
+
 def extend_line_ends(cues: list[list], duration: float, hold: float, gap: float):
     """Extend cue ends by up to `hold` s without running into the next line."""
     if hold <= 0 or not cues:
@@ -998,16 +1015,26 @@ class Engine:
         if self.cancel.is_set():
             raise Cancelled()
 
-    def _oom_retry(self, fn, keep):
-        """On 'CUDA out of memory', unload all other models once and try again."""
-        try:
-            return fn()
-        except Exception as e:
-            if "out of memory" not in str(e).lower():
-                raise
-            self.log(i18n.line("warn", "core.oom"))
+    def _oom_retry(self, fn, keep, fallback=None):
+        """On 'CUDA out of memory', unload all other models and try again; if that fails too, run fallback."""
+        steps = (fn, fn, fallback) if fallback else (fn, fn)
+        for i, step in enumerate(steps):
+            try:
+                return step()
+            except Exception as e:
+                if i == len(steps) - 1 or "out of memory" not in str(e).lower():
+                    raise
+            # after the except block: its traceback no longer holds the tensors of the failed attempt
+            if i == 0:
+                self.log(i18n.line("warn", "core.oom"))
             self.unload(keep=keep)
-            return fn()
+
+    def _step(self, stage: str):
+        """Progress callback for whisperx; it is called once per batch, so a cancel takes effect there."""
+        def report(pct):
+            self._check_cancel()
+            self.progress(stage, pct)
+        return report
 
     # ── Models ─────────────────────────────────────────────────────────────────
 
@@ -1102,7 +1129,7 @@ class Engine:
         t = time.perf_counter()
         result = model.transcribe(audio, batch_size=cfg.batch_size, language=lang, chunk_size=cfg.chunk_size,
                                   verbose=opts.live_lines,
-                                  progress_callback=lambda p: self.progress("asr", p))
+                                  progress_callback=self._step("asr"))
         self.log(i18n.tag("asr") + Tn("core.asr_done", len(result.get("segments", [])),
                                        time=i18n.secs(time.perf_counter() - t)))
         self._check_cancel()
@@ -1113,11 +1140,12 @@ class Engine:
         self.log(i18n.line("align", "core.align_words"))
         aligned = whisperx.align(result["segments"], am[0], am[1], audio, self.device,
                                  return_char_alignments=False,
-                                 progress_callback=lambda p: self.progress("align", p))
+                                 progress_callback=self._step("align"))
         aligned["language"] = lang
         return aligned, rules
 
-    def align_lyrics(self, audio: np.ndarray, lines: list[str], hold: float) -> tuple[list, list[int]]:
+    def align_lyrics(self, audio: np.ndarray, lines: list[str], hold: float,
+                     chunked: bool = False) -> tuple[list, list[int]]:
         import torch
         ur = self.uroman()
         entries = [(cw, i) for i, line in enumerate(lines) for word in line.split()
@@ -1126,10 +1154,18 @@ class Engine:
             raise ToolError(T("core.lyrics_no_words"))
 
         model, tokenizer, aligner = self.mms()
-        wav = torch.from_numpy(audio).unsqueeze(0).to(self.device)
-        self.log(i18n.line("align", "core.emissions"))
         with torch.inference_mode():
-            emission, _ = model(wav)
+            if chunked:
+                self.log(i18n.line("align", "core.emissions_chunked", secs=LYRICS_CHUNK))
+                parts = []
+                for lo, hi, first, end in emission_chunks(audio.shape[0]):
+                    self._check_cancel()
+                    part, _ = model(torch.from_numpy(audio[lo:hi]).unsqueeze(0).to(self.device))
+                    parts.append(part[:, first:end])
+                emission = torch.cat(parts, dim=1)
+            else:
+                self.log(i18n.line("align", "core.emissions"))
+                emission, _ = model(torch.from_numpy(audio).unsqueeze(0).to(self.device))
         num_frames = emission.shape[1]
         duration   = audio.shape[0] / SAMPLE_RATE
 
@@ -1179,7 +1215,8 @@ class Engine:
             audio = load_audio(src, cfg.ffmpeg)
             self.log(i18n.tag("audio") + i18n.secs(audio.shape[0] / SAMPLE_RATE))
             self._check_cancel()
-            cues, missing = self._oom_retry(lambda: self.align_lyrics(audio, lines, opts.line_hold), keep=("mms",))
+            cues, missing = self._oom_retry(lambda: self.align_lyrics(audio, lines, opts.line_hold), keep=("mms",),
+                                            fallback=lambda: self.align_lyrics(audio, lines, opts.line_hold, chunked=True))
             for n in missing:
                 self.log(i18n.line("warn", "core.line_not_aligned", n=n, text=repr(lines[n - 1])))
             lang, mode = "-", "lyrics"
@@ -1402,6 +1439,9 @@ def check_environment(cfg: Config) -> list[tuple[str, str]]:
 
     for lang, name in [("", cfg.model)] + sorted(cfg.models.items()):
         label = T("set.model") + (f" {lang}" if lang else "")
+        if lang in cfg.models_off:
+            res.append(("info", f"{label}: {name} · {T('check.model_off')}"))
+            continue
         _, compute, takes_prompt = cfg.model_for(lang)
         extra = (f" · {compute}" if lang and compute != cfg.compute_type else "") + \
                 ("" if takes_prompt else f" · {T('check.no_prompt')}")

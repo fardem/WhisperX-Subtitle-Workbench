@@ -35,6 +35,10 @@
     "lines": 10,
     "long_blocks": 0
   },
+  "tests/test_engine.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
   "tests/test_gaps.py": {
     "lines": 5,
     "long_blocks": 0
@@ -96,7 +100,7 @@
     "long_blocks": 0
   },
   "wt_core.py": {
-    "lines": 184,
+    "lines": 190,
     "long_blocks": 0
   },
   "wt_i18n.py": {

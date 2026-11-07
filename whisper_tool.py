@@ -1011,7 +1011,8 @@ class App(BaseTk):
     def _notify(self):
         try:
             import winsound
-            winsound.PlaySound(r"C:\Windows\Media\tada.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
+            tada = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "Media", "tada.wav")
+            winsound.PlaySound(tada, winsound.SND_FILENAME | winsound.SND_ASYNC)
         except Exception:
             self.bell()
         self.deiconify()
@@ -1618,6 +1619,8 @@ class SettingsDialog(tk.Toplevel if tk else object):
                                    "abbrev": clean_abbrev(c.raw("Abbreviations", code, core.ABBREVIATIONS.get(code, ""))),
                                    "repl": repl(f"Replacements.{code}"),
                                    "model": c.models.get(code, ""),
+                                   "use": code in c.models and code not in c.models_off,
+                                   "off_ini": code in c.models_off,
                                    "compute": c.computes.get(code, ""),
                                    "no_prompt": code in c.no_prompt}
         mono = "Consolas" if "Consolas" in tkfont.families() else "TkFixedFont"
@@ -1633,10 +1636,11 @@ class SettingsDialog(tk.Toplevel if tk else object):
 
         f.columnconfigure(1, weight=1)
         f.rowconfigure(5, weight=1)
-        def lbl(r, t, key):
+        def lbl(r, t, key, indent=0):
             w = ttk.Label(f, text=t + "  ⓘ")
-            w.grid(row=r, column=0, sticky="nw", padx=(0, 12), pady=(8, 0))
+            w.grid(row=r, column=0, sticky="nw", padx=(indent, 12), pady=(8, 0))
             tip(w, key, self.app.scale)
+            return w
         lbl(1, T("main.prompt"), "lang_prompt")
         self.t_prompt = tk.Text(f, height=4, wrap="word", undo=True, font="TkDefaultFont")
         self.t_prompt.grid(row=1, column=1, columnspan=2, sticky="ew", pady=(8, 0))
@@ -1662,29 +1666,34 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.t_repl.configure(yscrollcommand=rsb.set)
         self.t_repl.grid(row=0, column=0, sticky="nsew")
         rsb.grid(row=0, column=1, sticky="ns")
-        lbl(6, T("set.lang_model"), "lang_model")
+        # rows 7-9 belong to the own model: greyed out without the tick (_own_model_state)
+        self.v_luse = tk.BooleanVar()
+        self.cb_luse = ttk.Checkbutton(f, text=T("set.lang_use_model"), variable=self.v_luse)
+        self.cb_luse.grid(row=6, column=0, columnspan=3, sticky="w", pady=(10, 0))
+        tip(self.cb_luse, "lang_use_model", self.app.scale)
+        self.l_lmodel = lbl(7, T("set.lang_model"), "lang_model", indent=20)
         mf = ttk.Frame(f)
-        mf.grid(row=6, column=1, columnspan=2, sticky="w", pady=(8, 0))
+        mf.grid(row=7, column=1, columnspan=2, sticky="w", pady=(8, 0))
         self.v_lmodel = tk.StringVar()
         self.e_lmodel = ttk.Entry(mf, width=44, textvariable=self.v_lmodel)
         self.e_lmodel.pack(side="left")
         self.b_lmodel = ttk.Button(mf, text=T("set.folder"), command=lambda: self._pick(self.v_lmodel, folder=True))
         self.b_lmodel.pack(side="left", padx=6)
         ttk.Label(mf, text=T("set.empty_default"), foreground="#77767b").pack(side="left", padx=6)
-        # precision and prompt belong to the own model: greyed out without one (_own_model_state)
-        lbl(7, T("set.compute"), "lang_compute")
+        self.l_lcompute = lbl(8, T("set.compute"), "lang_compute", indent=20)
         self.v_lcompute = tk.StringVar()
         self.c_lcompute = ttk.Combobox(f, state="readonly", width=18, textvariable=self.v_lcompute,
                                        values=[T("set.compute_inherit"), *core.COMPUTE_TYPES])
-        self.c_lcompute.grid(row=7, column=1, sticky="w", pady=(8, 0))
+        self.c_lcompute.grid(row=8, column=1, sticky="w", pady=(8, 0))
         self.v_lno_prompt = tk.BooleanVar()
         self.cb_lno_prompt = ttk.Checkbutton(f, text=T("set.lang_no_prompt"), variable=self.v_lno_prompt)
-        self.cb_lno_prompt.grid(row=8, column=1, columnspan=2, sticky="w", pady=(6, 0))
+        self.cb_lno_prompt.grid(row=9, column=1, columnspan=2, sticky="w", pady=(6, 0))
         tip(self.cb_lno_prompt, "lang_no_prompt", self.app.scale)
         self.l_pinfo = ttk.Label(f, foreground="#77767b")
-        self.l_pinfo.grid(row=9, column=1, columnspan=2, sticky="w", pady=(6, 0))
+        self.l_pinfo.grid(row=10, column=1, columnspan=2, sticky="w", pady=(6, 0))
         self.cur_lang = "de"
         self.v_lmodel.trace_add("write", lambda *_: self._own_model_state())
+        self.v_luse.trace_add("write", lambda *_: self._own_model_state())
         self._load_lang("de")
 
     def _tab_resolve(self, f):
@@ -1785,6 +1794,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
             buf["dangling"] = self.t_dangling.get("1.0", "end-1c")
             buf["abbrev"]   = self.v_abbrev.get()
             buf["model"]    = self.v_lmodel.get()
+            buf["use"]      = self.v_luse.get()
             compute = self.v_lcompute.get()
             buf["compute"]  = "" if compute == T("set.compute_inherit") else compute
             buf["no_prompt"] = self.v_lno_prompt.get()
@@ -1801,16 +1811,21 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.v_abbrev.set(buf.get("abbrev", ""))
         self.v_lcompute.set(buf.get("compute") or T("set.compute_inherit"))
         self.v_lno_prompt.set(buf.get("no_prompt", False))
+        self.v_luse.set(buf.get("use", False))
         self.v_lmodel.set(buf.get("model", ""))
-        for w in (self.e_filler, self.e_abbrev, self.e_lmodel, self.b_lmodel):
+        for w in (self.e_filler, self.e_abbrev):
             w.state(["disabled" if only_repl else "!disabled"])
         self._own_model_state()
         self._prompt_info()
 
     def _own_model_state(self):
-        own = self.cur_lang != "*" and bool(self.v_lmodel.get().strip())
-        self.c_lcompute.state(["!disabled", "readonly"] if own else ["disabled"])
-        self.cb_lno_prompt.state(["!disabled"] if own else ["disabled"])
+        self.cb_luse.state(["disabled" if self.cur_lang == "*" else "!disabled"])
+        on = self.cur_lang != "*" and self.v_luse.get()
+        model = on and bool(self.v_lmodel.get().strip())
+        for w, active in ((self.l_lmodel, on), (self.e_lmodel, on), (self.b_lmodel, on),
+                          (self.l_lcompute, model), (self.cb_lno_prompt, model)):
+            w.state(["!disabled"] if active else ["disabled"])
+        self.c_lcompute.state(["!disabled", "readonly"] if model else ["disabled"])
 
     def _switch_lang(self):
         self._store_lang(self.cur_lang)
@@ -1891,8 +1906,12 @@ class SettingsDialog(tk.Toplevel if tk else object):
                     values[("Dangling", code)] = clean_list(buf["dangling"])
                 if clean_abbrev(buf["abbrev"]) != orig["abbrev"]:
                     values[("Abbreviations", code)] = clean_abbrev(buf["abbrev"])
-                if buf["model"].strip() != orig["model"]:
-                    values[("Whisper", f"model.{code}")] = buf["model"].strip()
+                model = buf["model"].strip()
+                if model != orig["model"]:
+                    values[("Whisper", f"model.{code}")] = model
+                off = not buf["use"]
+                if model and off != buf["off_ini"]:
+                    values[("Whisper", f"use_model.{code}")] = "0" if off else "1"
                 if buf["compute"] != orig["compute"]:
                     values[("Whisper", f"compute_type.{code}")] = buf["compute"]
                 if buf["no_prompt"] != orig["no_prompt"]:

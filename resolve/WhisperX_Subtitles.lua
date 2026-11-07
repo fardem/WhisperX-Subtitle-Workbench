@@ -16,7 +16,7 @@ left-over own jobs removed. Own code.
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.7.1",
+  version   = "0.7.2",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -47,7 +47,7 @@ M.log = log
 local function T(key, vars)
   local s = (WX.texts[WX.lang] or {})[key] or (WX.texts.en or {})[key] or key
   if vars then
-    s = (s:gsub("{(%w+)}", function(k)
+    s = (s:gsub("{([%w_]+)}", function(k)
       local v = vars[k]
       if v == nil then
         return "{" .. k .. "}"
@@ -723,7 +723,7 @@ local function write_job_file(project, wav_name)
     { "start_tc", info.start_tc }, { "range", job.whole and "all" or "inout" }, { "in_frame", job.a },
     { "out_frame", job.b }, { "end_frame", info.last }, { "resolve", api(resolve, "GetVersionString") or "" },
     { "language", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
-    { "filter", S.choice_filter and "1" or "0" },
+    { "filter", S.choice_filter and "1" or "0" }, { "chars", S.choice_chars }, { "lines", S.choice_lines },
     { "created", os.date("%Y-%m-%d %H:%M:%S") },
   }
   local ok, err = write_kv(join(job.dir, "job.txt"), "WhisperX Subtitle Workbench - DaVinci Resolve job", rows)
@@ -1116,6 +1116,13 @@ local function buttons()
       itm[id].Enabled = idle
     end
   end
+  -- characters and lines count only in mode "Sentences"; the Workbench default may be that mode
+  local layout = idle and S.choice_mode ~= "word" and S.choice_mode ~= "raw"
+  for _, id in ipairs({ "CharsLabel", "Chars", "LinesLabel", "Lines" }) do
+    if itm[id] then
+      itm[id].Enabled = layout
+    end
+  end
   itm.Cancel.Enabled = S.state == "rendering" or S.state == "waiting" or S.state == "asking"
 end
 
@@ -1207,7 +1214,41 @@ local function index_of(list, code)
 end
 
 -- Window: start size, smallest size; LAYOUT changes when they do (an older saved size is dropped).
-local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 330 }, { 520, 290 }, "2"
+local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 360 }, { 520, 320 }, "3"
+
+-- The same limits as CHARS_RANGE and LINES_RANGE in wt_core.py.
+local CHARS_RANGE, LINES_RANGE = { 10, 200 }, { 1, 5 }
+-- Without plugin.txt and whisper_tool.ini: the defaults of wt_core.Config.
+local CHARS_START, LINES_START = 45, 1
+
+-- Whole number within range, else nil.
+local function number_in(v, range)
+  local n = tonumber(v)
+  if n and n == math.floor(n) and n >= range[1] and n <= range[2] then
+    return math.floor(n)
+  end
+  return nil
+end
+M.number_in = number_in
+
+-- A SpinBox if the UIManager has one, else a LineEdit that "Transcribe" checks.
+local function number_field(id, value, range)
+  if S.spin then
+    return ui:SpinBox{ ID = id, Minimum = range[1], Maximum = range[2], Value = value, Weight = 0 }
+  end
+  return ui:LineEdit{ ID = id, Text = tostring(value), Weight = 0 }
+end
+
+-- Takes the values of the number fields; false if one is not a whole number within range.
+local function read_numbers()
+  local function get(id, range)
+    local ok, v = pcall(function() return S.spin and itm[id].Value or itm[id].Text end)
+    return ok and number_in(v, range) or nil
+  end
+  local chars, lines = get("Chars", CHARS_RANGE), get("Lines", LINES_RANGE)
+  S.choice_chars, S.choice_lines = chars or S.choice_chars, lines or S.choice_lines
+  return chars ~= nil and lines ~= nil
+end
 
 -- Window position and size as saved; nothing unusable (off screen, tiny, older layout).
 -- Resolve may report a size below MinimumSize (e.g. 505 wide) - that counts as usable.
@@ -1245,8 +1286,12 @@ local function save_settings()
   if not SETTINGS or not HAS_IO then
     return
   end
+  if itm then
+    read_numbers()
+  end
   local rows = { { "lang", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
-                 { "filter", S.choice_filter and "1" or "0" }, { "layout", LAYOUT } }
+                 { "filter", S.choice_filter and "1" or "0" }, { "chars", S.choice_chars },
+                 { "lines", S.choice_lines }, { "layout", LAYOUT } }
   local g = window_geometry()
   if g then
     rows[#rows + 1] = { "geometry", string.format("%d,%d,%d,%d", g[1], g[2], g[3], g[4]) }
@@ -1471,6 +1516,10 @@ function M.transcribe()
   if is_playing(tl) then
     return status(T("playing"))
   end
+  if not read_numbers() and S.choice_mode ~= "word" and S.choice_mode ~= "raw" then
+    return status(T("err_numbers", { chars_lo = CHARS_RANGE[1], chars_hi = CHARS_RANGE[2],
+                                     lines_lo = LINES_RANGE[1], lines_hi = LINES_RANGE[2] }))
+  end
   S.state = "busy"
   S.launch_failed = nil
   set_text("Close", T("btn_close"))
@@ -1659,6 +1708,11 @@ function M.main()
   S.choice_lang = list.lang[index_of(list.lang, saved.lang)][1]
   S.choice_mode = list.mode[index_of(list.mode, saved.mode)][1]
   S.choice_filter = saved.filter == "1"
+  local ini = WX.workbench and read_kv(join(WX.workbench, "whisper_tool.ini")) or {}
+  S.choice_chars = number_in(saved.chars, CHARS_RANGE) or number_in(ini.default_chars, CHARS_RANGE) or CHARS_START
+  S.choice_lines = number_in(saved.lines, LINES_RANGE) or number_in(ini.default_lines, LINES_RANGE) or LINES_START
+  S.spin = pcall(function() return assert(ui:SpinBox{}) end)
+  log("Number fields:", S.spin and "SpinBox" or "LineEdit", "| characters / lines:", S.choice_chars, S.choice_lines)
   win = disp:AddWindow({
     ID = "WhisperXWin",
     WindowTitle = T("title") .. " " .. WX.version,
@@ -1675,6 +1729,14 @@ function M.main()
         ui:Label{ ID = "ModeLabel", Text = T("label_mode"), Weight = 0 },
         ui:ComboBox{ ID = "Mode", Weight = 1 },
         ui:CheckBox{ ID = "Filter", Text = T("label_filter"), Checked = S.choice_filter, Weight = 0 },
+      },
+      ui:HGroup{
+        Weight = 0,
+        ui:Label{ ID = "CharsLabel", Text = T("label_chars"), Weight = 0 },
+        number_field("Chars", S.choice_chars, CHARS_RANGE),
+        ui:Label{ ID = "LinesLabel", Text = T("label_lines"), Weight = 0 },
+        number_field("Lines", S.choice_lines, LINES_RANGE),
+        ui:HGap(0, 1),
       },
       ui:HGroup{
         Weight = 0,
@@ -1712,6 +1774,15 @@ function M.main()
       S["choice_" .. key] = item and item[1] or ""
       log("Chosen", key, "->", S["choice_" .. key] == "" and "Workbench default" or S["choice_" .. key])
       save_settings()                                 -- kept even if Resolve is closed without "Close"
+      buttons()
+    end
+  end
+  for _, id in ipairs({ "Chars", "Lines" }) do
+    win.On[id][S.spin and "ValueChanged" or "TextChanged"] = function()
+      if read_numbers() then
+        log("Chosen characters / lines ->", S.choice_chars, S.choice_lines)
+        save_settings()
+      end
     end
   end
   win.On.Filter.Clicked = function()

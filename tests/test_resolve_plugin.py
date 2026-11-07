@@ -774,12 +774,14 @@ def test_unusable_saved_geometry_is_ignored(tmp_path):
     g.WX_TEST = True
     m = h.lua.execute(h.code)
     for bad in ("", "1,2,3", "0,0,100,100", "-5000,0,700,500", "0,0,99999,500"):
-        assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "2"})) is None
-    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,330", "layout": "2"})).values()) == \
-        [10, 20, 600, 330]
+        assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "3"})) is None
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,360", "layout": "3"})).values()) == \
+        [10, 20, 600, 360]
     # Resolve 21.2 reported 505 wide although the minimum is 520 - restore it anyway
-    assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,330", "layout": "2"})).values()) == \
-        [260, 180, 505, 330]
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,360", "layout": "3"})).values()) == \
+        [260, 180, 505, 360]
+    # saved before the row with characters and lines: too low for it
+    assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,330", "layout": "2"})) is None
     # saved by an older plugin (no layout key): its start size was too big - start with the new one
     assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})) is None
 
@@ -790,3 +792,78 @@ def test_language_from_a_name_with_date_and_time(tmp_path):
     m = h.lua.execute(h.code)
     assert m.lang_from_name("C:/x/Timeline_6_TR_20261105-151530.srt") == "TR"
     assert m.lang_from_name("Timeline_6_20261105-151530.srt") is None
+
+
+# ─── characters per line and lines per subtitle ───────────────────────────────
+
+def test_characters_and_lines_go_into_the_job_and_stay(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        assert h.mock["items"].Chars.kind == "SpinBox"
+        h.mock.set_number("Chars", 30)
+        h.mock.set_number("Lines", 1)
+        seen["saved"] = wr.read_kv(h.last / "plugin.txt")
+        h.click("Transcribe")
+        h.tick(2)
+        (job_dir,) = h.job_dirs()
+        seen["job"] = wr.find_job(job_dir / "audio.wav")
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert (seen["saved"]["chars"], seen["saved"]["lines"]) == ("30", "1")
+    assert (seen["job"].chars, seen["job"].lines) == (30, 1)
+
+    def second(h):
+        seen["again"] = (h.mock["items"].Chars.Value, h.mock["items"].Lines.Value)
+
+    Harness(tmp_path).run(second, timelines=[timeline()])
+    assert seen["again"] == (30, 1)
+
+
+def test_characters_and_lines_start_with_the_values_of_the_ini(tmp_path):
+    h = Harness(tmp_path)
+    (h.wb / "whisper_tool.ini").write_text("[Layout]\ndefault_chars = 37\ndefault_lines = 2\n", encoding="utf-8")
+    seen = {}
+
+    def steps(h):
+        seen["values"] = (h.mock["items"].Chars.Value, h.mock["items"].Lines.Value)
+
+    h.run(steps, timelines=[timeline()])
+    assert seen["values"] == (37, 2)
+
+
+def test_characters_and_lines_are_greyed_out_for_word_by_word_and_raw(tmp_path):
+    h = Harness(tmp_path)
+    seen = []
+
+    def steps(h):
+        for index in (1, 2, 3, 0):                     # sentences, word by word, raw, Workbench default
+            h.mock.choose("Mode", index)
+            seen.append((h.mock["items"].Chars.Enabled, h.mock["items"].LinesLabel.Enabled))
+
+    h.run(steps, timelines=[timeline()])
+    assert seen == [(True, True), (False, False), (False, False), (True, True)]
+
+
+def test_without_a_spinbox_a_text_field_is_checked_before_rendering(tmp_path):
+    h = Harness(tmp_path)
+    h.mock.no_spinbox = True
+    seen = {}
+
+    def steps(h):
+        assert h.mock["items"].Chars.kind == "LineEdit"
+        h.mock.set_number("Chars", "abc")
+        h.click("Transcribe")
+        seen["status"], seen["dirs"] = h.text("Status"), h.job_dirs()
+        h.mock.set_number("Chars", "38")
+        h.click("Transcribe")
+        h.tick(2)
+        (job_dir,) = h.job_dirs()
+        seen["job"] = wr.find_job(job_dir / "audio.wav")
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert seen["status"] == h.T("err_numbers", chars_lo=10, chars_hi=200, lines_lo=1, lines_hi=5)
+    assert seen["dirs"] == [] and seen["job"].chars == 38

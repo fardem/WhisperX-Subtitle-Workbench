@@ -131,9 +131,11 @@ class ResolveJob:
     out_frame:   int = 0         # last rendered frame
     end_frame:   int = 0         # end of the timeline when the audio was rendered
     whole:       bool = True     # True = whole timeline, False = In/Out
-    language:    str = ""        # chosen in the plugin ("" = as in the Workbench window)
-    mode:        str = ""        # chosen in the plugin ("" = as in the Workbench window)
-    use_filter:  bool | None = None   # audio filter chosen in the plugin (None = as in the window)
+    language:    str = ""        # chosen in the plugin ("" = Workbench default from the INI)
+    mode:        str = ""        # chosen in the plugin ("" = Workbench default from the INI)
+    use_filter:  bool | None = None   # audio filter chosen in the plugin (None = from the INI)
+    chars:       int = 0         # characters per line chosen in the plugin (0 = from the INI)
+    lines:       int = 0         # lines per subtitle chosen in the plugin (0 = from the INI)
 
     @classmethod
     def from_values(cls, folder, v: dict) -> "ResolveJob":
@@ -145,6 +147,11 @@ class ResolveJob:
             return int(round(float(raw)))
         if not v.get("audio"):
             raise ValueError("audio")
+        def whole(key):
+            try:
+                return max(int(v.get(key, "")), 0)
+            except ValueError:
+                return 0
         start = frame("start_frame")
         flt = v.get("filter", "").strip().lower()
         return cls(folder=Path(folder), audio=v["audio"], job_id=v.get("job", ""),
@@ -155,7 +162,8 @@ class ResolveJob:
                    out_frame=frame("out_frame", 0), end_frame=frame("end_frame", 0),
                    whole=v.get("range", "all") != "inout", language=v.get("language", "").lower(),
                    mode=v.get("mode", "").lower(),
-                   use_filter=None if flt == "" else flt in ("1", "true", "on", "yes"))
+                   use_filter=None if flt == "" else flt in ("1", "true", "on", "yes"),
+                   chars=whole("chars"), lines=whole("lines"))
 
     def values(self) -> dict:
         """The keys of job.txt, in the order the plugin writes them."""
@@ -164,7 +172,8 @@ class ResolveJob:
                 "drop_frame": "1" if self.drop_frame else "0", "start_frame": self.start_frame,
                 "start_tc": self.start_tc, "range": "all" if self.whole else "inout", "in_frame": self.in_frame,
                 "out_frame": self.out_frame, "end_frame": self.end_frame, "language": self.language,
-                "mode": self.mode, "filter": "" if self.use_filter is None else "1" if self.use_filter else "0"}
+                "mode": self.mode, "filter": "" if self.use_filter is None else "1" if self.use_filter else "0",
+                "chars": self.chars or "", "lines": self.lines or ""}
 
     @property
     def audio_path(self) -> Path:

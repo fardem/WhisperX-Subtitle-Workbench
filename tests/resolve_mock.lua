@@ -423,8 +423,14 @@ local function widget(kind)
     return spec
   end
 end
-for _, kind in ipairs({ "VGroup", "HGroup", "Label", "Button", "LineEdit", "TextEdit", "ComboBox", "CheckBox" }) do
+for _, kind in ipairs({ "VGroup", "HGroup", "Label", "Button", "LineEdit", "TextEdit", "ComboBox", "CheckBox",
+                        "SpinBox" }) do
   UI[kind] = widget(kind)
+end
+local spin_box = UI.SpinBox
+function UI:SpinBox(spec)
+  assert(not MOCK.no_spinbox, "unknown element SpinBox")      -- an older UIManager
+  return spin_box(self, spec)
 end
 function UI:VGap() return { kind = "Gap" } end
 function UI:HGap() return { kind = "Gap" } end
@@ -484,6 +490,13 @@ function MOCK.text(id) return MOCK.items[id].Text end
 function MOCK.choose(id, index)
   MOCK.items[id].CurrentIndex = index
   local h = MOCK.win.On[id] and MOCK.win.On[id].CurrentIndexChanged
+  if h then h({}) end
+end
+function MOCK.set_number(id, value)
+  local item = MOCK.items[id]
+  local event = item.kind == "SpinBox" and "ValueChanged" or "TextChanged"
+  if item.kind == "SpinBox" then item.Value = value else item.Text = value end
+  local h = MOCK.win.On[id] and MOCK.win.On[id][event]
   if h then h({}) end
 end
 function MOCK.check(id, checked)

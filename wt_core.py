@@ -26,6 +26,9 @@ SAMPLE_RATE = 16000
 
 LANGS = ("de", "en", "ar", "tr")                 # languages with their own rules (names: lang/*.json → speechlang)
 MODES = ("sentence", "word", "raw")
+# Characters per line and lines per subtitle; the plugin has the same limits (resolve/WhisperX_Subtitles.lua).
+CHARS_RANGE = (10, 200)
+LINES_RANGE = (1, 5)
 MEDIA_EXT = (".mp3", ".mp4", ".wav", ".flac", ".m4a", ".aac", ".ogg", ".opus",
              ".mkv", ".avi", ".mov", ".webm", ".wma")
 

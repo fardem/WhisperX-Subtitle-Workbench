@@ -47,6 +47,10 @@
     "lines": 2,
     "long_blocks": 0
   },
+  "tests/test_input.py": {
+    "lines": 1,
+    "long_blocks": 0
+  },
   "tests/test_pauses.py": {
     "lines": 21,
     "long_blocks": 0
@@ -100,7 +104,7 @@
     "long_blocks": 0
   },
   "wt_core.py": {
-    "lines": 190,
+    "lines": 191,
     "long_blocks": 0
   },
   "wt_i18n.py": {

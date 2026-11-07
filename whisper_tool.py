@@ -703,7 +703,7 @@ class App(BaseTk):
                 continue
             if media is None and src.suffix.lower() in core.MEDIA_EXT:
                 media = src
-            found += [p for p in src.parent.glob(core.glob_escape(src.stem) + "*.srt")
+            found += [p for p in core.sibling_files(src, ".srt")
                       if not p.name.endswith(check_suffixes) and p not in found]
         found.sort(key=lambda p: p.stat().st_mtime)
         CompareDialog(self, str(found[0]) if found else "", str(found[-1]) if len(found) > 1 else "",

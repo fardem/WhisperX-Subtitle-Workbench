@@ -2,7 +2,9 @@
 
 import pytest
 
+import wt_core as core
 import wt_i18n as i18n
+from helpers import ROOT
 
 wt = pytest.importorskip("whisper_tool")      # the GUI module – Tkinter itself is not needed for these tests
 
@@ -101,3 +103,27 @@ def test_score_rows_and_tracks_have_their_texts(code):
     finally:
         i18n.load("en")
 
+
+
+# ─── plugin at the start ──────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("status, skip, can_ask, action", [
+    ("missing", "", True, ""),
+    ("current", "", True, ""),
+    ("outdated", "", True, "ask"),
+    ("outdated", "", False, "log"),              # files, a job or a batch at the start
+    ("outdated", wt.VERSION, True, "log"),       # "No" for this version
+    ("outdated", "0.0.1", True, "ask"),          # "No" for an older version
+    ("other", "", True, "log"),
+])
+def test_question_about_the_plugin_at_the_start(status, skip, can_ask, action):
+    assert wt.plugin_start_action(status, skip, can_ask) == action
+
+
+def test_no_to_the_plugin_update_is_kept_in_the_ini(tmp_path):
+    ini = tmp_path / "whisper_tool.ini"
+    ini.write_text((ROOT / "whisper_tool.example.ini").read_text(encoding="utf-8"), encoding="utf-8")
+    assert core.Config(ini).resolve_skip == ""
+    core.save_ini(ini, {("Resolve", "skip_plugin_update"): "0.7.4"})
+    assert core.Config(ini).resolve_skip == "0.7.4"
+    assert "skip_plugin_update = 0.7.4" in ini.read_text(encoding="utf-8")

@@ -2,6 +2,12 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.5] – 2026-11-07
+
+**Updating from 0.7.4:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.
+
+- **Plugin update at the start.** If the installed plugin has another version or interface language, the Workbench asks at the start: *Yes* installs it again, *Later* asks at the next start, *No* only at the next version (`[Resolve] skip_plugin_update`). The question comes only at a start without files; with files, a job from Resolve or a plugin of another Workbench folder the log names it. A plugin that is not installed is not mentioned
+
 ## [0.7.4] – 2026-11-07
 
 **Updating from 0.7.3:** install the plugin again under *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.

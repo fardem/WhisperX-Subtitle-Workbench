@@ -330,6 +330,20 @@ def test_install_and_detect_plugin(tmp_path):
     assert "Yazıya dök" in path.read_text(encoding="utf-8")                  # all languages are in it
 
 
+def test_plugin_status(tmp_path):
+    wb = tmp_path / "Workbench"
+    (wb / "venv").mkdir(parents=True)
+    py = wb / "venv" / "pythonw.exe"
+    py.write_text("", encoding="utf-8")
+    target = tmp_path / "Scripts" / "Utility"
+    assert wr.plugin_status("0.7.4", "de", target / wr.PLUGIN_FILE, wb) == ("missing", None)
+    path = wr.install_plugin("0.7.3", "de", target_dir=target, workbench=wb, python=py)
+    assert wr.plugin_status("0.7.3", "de", path, wb)[0] == "current"
+    assert wr.plugin_status("0.7.4", "de", path, wb)[0] == "outdated"
+    assert wr.plugin_status("0.7.3", "en", path, wb)[0] == "outdated"            # texts in another language
+    assert wr.plugin_status("0.7.3", "de", path, tmp_path / "Copy")[0] == "other"
+
+
 def test_install_refuses_non_ascii_paths(tmp_path):
     wb = tmp_path / "Ünterlagen"
     wb.mkdir()

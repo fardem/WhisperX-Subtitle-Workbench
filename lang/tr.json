@@ -644,6 +644,18 @@
   },
   "resolve": {
     "kind": "DaVinci",
+    "update_ask": [
+      "DaVinci Resolve için kurulu eklenti bu Workbench ile uyuşmuyor.",
+      "",
+      "Eklenti: {plugin}",
+      "Workbench: {workbench}",
+      "",
+      "Şimdi güncellensin mi? “Sonra” bir sonraki açılışta yeniden sorar, “Hayır” ancak bir sonraki sürümde."
+    ],
+    "update_yes": "Evet",
+    "update_later": "Sonra",
+    "update_no": "Hayır",
+    "update_log": "DaVinci Resolve eklentisi: {state} → Ayarlar → DaVinci Resolve",
     "item": "{timeline} · DaVinci Resolve",
     "hand_over": "→ DaVinci'ye aktar",
     "hand_over_title": "DaVinci'ye aktar",

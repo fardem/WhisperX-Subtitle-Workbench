@@ -550,6 +550,19 @@ def installed_plugin(path=None) -> dict | None:
     return info
 
 
+def plugin_status(version: str, lang: str, path=None, workbench=None) -> tuple[str, dict | None]:
+    """→ ("missing" | "other" | "outdated" | "current", installed plugin); "other" = for another Workbench folder."""
+    info = installed_plugin(path)
+    if not info:
+        return "missing", None
+    folder = info.get("workbench") or ""
+    if folder and os.path.normcase(os.path.abspath(folder)) != os.path.normcase(str(Path(workbench or HERE))):
+        return "other", info
+    if not folder or info.get("version") != version or info.get("lang") != lang:
+        return "outdated", info
+    return "current", info
+
+
 def install_plugin(version: str, lang: str, target_dir=None, workbench=None, python=None,
                    template=None) -> Path:
     """

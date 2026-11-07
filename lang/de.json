@@ -123,6 +123,10 @@
       "one": "1 Lücke",
       "other": "{n} Lücken"
     },
+    "unsure": {
+      "one": "1 unsicher",
+      "other": "{n} unsicher"
+    },
     "error": "Fehler – siehe Protokoll",
     "running": "läuft …",
     "done": {
@@ -188,6 +192,10 @@
     "gap_min_hint": "kürzere Stellen ignorieren · Standard 1.0",
     "gap_margin": "Lücken: über Grundrauschen (dB)",
     "gap_margin_hint": "kleiner = empfindlicher · Standard 8",
+    "sw_score": "Score-Check: Wörter mit Score unter",
+    "sw_score_unit": "markieren",
+    "score": "Score-Check: Schwelle",
+    "score_srt": "Fundstellen zusätzlich als <name>{suffix} speichern",
     "orphan_limit": "Kurze Wörter nach einem Komma (Zeichen)",
     "orphan_fill": "Kurze Wörter nach einem Komma: Füllgrad (Prozent)",
     "max_duration": "Lange Sätze teilen (Sekunden Sprache)",
@@ -304,7 +312,10 @@
     "resolve_countdown": "Countdown für DaVinci-Jobs",
     "resolve_countdown_off": "Ohne Haken startest du selbst mit „Start“.",
     "resolve_auto_hand_over": "Nach dem Transkribieren automatisch an DaVinci übergeben",
-    "resolve_extra_tracks": "Lücken und zu schnelle Untertitel mit übergeben, jeweils auf eine eigene Untertitelspur",
+    "resolve_track_gaps": "Lücken auf eigener Spur „WhisperX Lücken“ (braucht den Lücken-Check)",
+    "resolve_track_fast": "Zu schnelle Untertitel auf eigener Spur „WhisperX zu schnell“ (nur Satzweise)",
+    "sw_resolve_score": "Unsichere Wörter auf eigener Spur „WhisperX unsicher“: Score unter",
+    "sw_resolve_score_unit": "(wie unter Spracherkennung)",
     "resolve_close_after": "Workbench nach der Übergabe schließen (sonst wird sie minimiert und die Modelle bleiben geladen)"
   },
   "cmpdlg": {
@@ -411,6 +422,7 @@
     "done": "fertig",
     "check": "check",
     "gap": "lücke",
+    "score": "unsicher",
     "dnd": "dnd",
     "compare": "vergleich",
     "device": "device",
@@ -478,6 +490,14 @@
     "gap_more": "und {n} weitere",
     "gap_file": "Fundstellen zum Anspringen: {name}",
     "gap_tip": "Tipp: Ist es Sprache, Onset senken oder silero testen (Einstellungen → Spracherkennung). Musik, Gesang oder Applaus kann man ignorieren.",
+    "score_suffix": ".unsicher.srt",
+    "score_cue": "unsicher: {words}",
+    "score_found": {
+      "one": "Score: Median {median} · 5 % unter {low} · 1 Stelle unter {threshold}",
+      "other": "Score: Median {median} · 5 % unter {low} · {n} Stellen unter {threshold}"
+    },
+    "score_none": "Score-Check: keine bewerteten Wörter (z. B. kein Ausrichtungsmodell für diese Sprache) – nichts zu prüfen",
+    "score_tip": "Tipp: Die Stellen anhören. Ist ein Wort falsch erkannt, hilft eine Ersetzung oder der Prompt (Einstellungen → Sprachen). Namen und Fremdwörter sind oft richtig, obwohl ihr Score niedrig ist.",
     "asr_done": {
       "one": "1 Segment in {time}",
       "other": "{n} Segmente in {time}"
@@ -732,6 +752,7 @@
     "wb_cancelled": "Workbench: abgebrochen.",
     "track_gaps": "WhisperX Lücken",
     "track_fast": "WhisperX zu schnell",
+    "track_score": "WhisperX unsicher",
     "placed_extra": "+ {n} auf Untertitelspur {track} „{name}“ – zum Prüfen, danach die Spur löschen.",
     "label_filter": "Audiofilter",
     "count_off": "Resolve hat {placed} Untertitel auf ST{track} gelegt, die SRT hat {cues}. Bitte die Spur prüfen."
@@ -746,6 +767,7 @@
       "• JSON → SRT – ein gespeichertes WhisperX-Ergebnis wird nur neu in Untertitel umgewandelt",
       "",
       "Status „⚠ Lücken“: laute Stellen ohne Text gefunden – Details im Protokoll",
+      "Status „⚠ unsicher“: Wörter mit niedrigem Score (Score-Check) – Details im Protokoll",
       "",
       "Doppelklick: fertige SRT im Explorer zeigen",
       "Entf-Taste: markierte Dateien entfernen",
@@ -955,6 +977,20 @@
       "Größer (10–12): nur deutliche Fälle.",
       "Standard 8 dB."
     ],
+    "score": [
+      "Score-Check nach jeder Transkription: Die Wort-Zeitstempel geben jedem Wort einen Score von 0 bis 1 – wie gut es an seiner Stelle zum Ton passt. Klar erkannte Wörter liegen hoch (oft 0,8–1,0). Ein niedriger Score heißt: Das Wort ist wahrscheinlich falsch erkannt oder falsch platziert.",
+      "",
+      "Markiert werden Wörter unter der Schwelle. Höhere Schwelle = mehr Einträge. Empfehlung: 0,40.",
+      "",
+      "Namen und Fremdwörter landen öfter darunter, auch wenn sie richtig sind. Zahlen werden praktisch nie markiert; Wörter mit weniger als 3 Buchstaben werden nicht bewertet.",
+      "",
+      "Fundstellen stehen gelb im Protokoll, die Datei bekommt „⚠ unsicher“ im Status. Die Untertitel selbst ändern sich nicht."
+    ],
+    "score_srt": [
+      "Speichert die Fundstellen zusätzlich als <name>{score_suffix}. Als zweite Untertitelspur in VLC oder Subtitle Edit laden – dann springst du direkt zu den unsicheren Wörtern.",
+      "",
+      "Gibt es keine Fundstellen mehr, wird eine alte {score_suffix} automatisch entfernt."
+    ],
     "orphan_limit": [
       "Ein kurzes Wort direkt nach einem Komma beginnt den nächsten Untertitel, statt allein am Ende einer vollen Zeile zu hängen:",
       "",
@@ -1094,7 +1130,15 @@
     "resolve_countdown": "Sekunden, bis ein Job aus DaVinci Resolve automatisch transkribiert wird. Ein Klick ins Fenster hält den Countdown an.",
     "resolve_hand_over": "Verschiebt die Untertitel an die Stelle des transkribierten Bereichs in der Timeline und übergibt sie an das wartende Plugin in DaVinci Resolve. Die SRT wird dafür neu von der Festplatte gelesen – Änderungen in der Zwischenzeit zählen.",
     "resolve_auto_hand_over": "„An DaVinci übergeben“ musst du nicht mehr drücken: Sobald der Job transkribiert ist, gehen die Untertitel an das wartende Plugin. Sinnvoll, wenn du die Untertitel ohnehin in Resolve prüfst.",
-    "resolve_extra_tracks": "Zwei zusätzliche Untertitelspuren in Resolve: „WhisperX Lücken“ markiert laute Stellen ohne Text (Lücken-Check), „WhisperX zu schnell“ markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (nur Satzweise). Sie sind zum Prüfen da – danach die Spuren löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu.",
+    "resolve_track_gaps": "Eine zusätzliche Untertitelspur in Resolve: „WhisperX Lücken“ markiert laute Stellen ohne Text. Braucht den Lücken-Check (Reiter Spracherkennung). Sie ist zum Prüfen da – danach die Spur löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu.",
+    "resolve_track_fast": "Eine zusätzliche Untertitelspur in Resolve: „WhisperX zu schnell“ markiert Untertitel mit mehr als 17 Zeichen pro Sekunde. Nur im Modus Satzweise. Sie ist zum Prüfen da – danach die Spur löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu.",
+    "resolve_score": [
+      "Eine zusätzliche Untertitelspur in Resolve: „WhisperX unsicher“ markiert Wörter mit niedrigem Score (Score-Check). Das ist dieselbe Einstellung wie im Reiter Spracherkennung – eine Änderung gilt an beiden Stellen.",
+      "",
+      "Der Score reicht von 0 bis 1; klar erkannte Wörter liegen hoch. Höhere Schwelle = mehr Einträge. Namen und Fremdwörter landen öfter darunter. Zahlen werden praktisch nie markiert; Wörter mit weniger als 3 Buchstaben werden nicht bewertet.",
+      "",
+      "Sie ist zum Prüfen da – danach die Spur löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu."
+    ],
     "resolve_close_after": "Ohne Haken minimiert sich die Workbench nach der Übergabe und behält ihre Modelle – der nächste Job startet ohne Ladezeit. Mit Haken schließt sie sich."
   }
 }

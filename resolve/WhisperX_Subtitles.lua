@@ -33,7 +33,7 @@ check the job status by Error/CompletionPercentage, remove left-over jobs of its
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.6.3",
+  version   = "0.7.0",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -1355,9 +1355,9 @@ local function import_now(project, tl)
   local ok, msg, warning, main = place_srt(project, tl, done.srt, "WhisperX " .. (done.lang or "XX"),
                                            tonumber(done.first), tonumber(done.cues))
   if ok then
-    -- gaps and too fast subtitles, each on its own track (to check, then delete the track)
-    local names = { gaps = T("track_gaps"), fast = T("track_fast") }
-    for _, key in ipairs({ "gaps", "fast" }) do
+    -- gaps, too fast subtitles and unsure words, each on its own track (to check, then delete the track)
+    local names = { gaps = T("track_gaps"), fast = T("track_fast"), score = T("track_score") }
+    for _, key in ipairs({ "gaps", "fast", "score" }) do
       if done[key] and done[key] ~= "" then
         local eok, emsg, ewarn, etrack, ename, en = place_srt(project, tl, done[key], names[key], nil,
                                                               tonumber(done[key .. "_n"]))

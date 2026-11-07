@@ -361,6 +361,7 @@ class HandOver:
     offset: float         # applied shift in seconds
     gaps:   int = 0       # gaps handed over on an own track
     fast:   int = 0       # subtitles too fast to read, handed over on an own track
+    score:  int = 0       # unsure words of the score check, handed over on an own track
 
 
 def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8", keep: int = KEEP_SRTS) -> Path:
@@ -398,14 +399,15 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8", keep
 
 def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir=None,
               gaps=None, gap_label=None, fast_cps: float | None = None, fast_label=None,
-              stamp: str | None = None) -> HandOver:
+              score=None, stamp: str | None = None) -> HandOver:
     """
     "Hand over to DaVinci": shift the SRT, keep it in resolve_temp/, write done.txt for the plugin.
     The SRT is read again from disk, so changes made in the meantime (e.g. in Subtitle Edit) count.
     Optional, each for an own subtitle track in Resolve (to check, then delete the track):
       gaps      [(start, end, level_db)] of the gap check  → <Timeline>_<LANG>_<stamp>_gaps.srt
       fast_cps  subtitles faster than this                 → <Timeline>_<LANG>_<stamp>_fast.srt
-    Both lie in the job folder, so the plugin deletes them after the import.
+      score     [(start, end, text)] of the score check    → <Timeline>_<LANG>_<stamp>_score.srt
+    They lie in the job folder, so the plugin deletes them after the import.
     Every hand-over gets new file names (stamp = date and time): Resolve does not read a path
     again that is already in the media pool – it would place the subtitles of the first import.
     """
@@ -432,6 +434,8 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
         fast = fast_srt_cues(read_srt_cues(shifted), fast_cps, fast_label or (lambda cps: f"{cps:.0f} cps"))
         if fast:
             extra["fast"] = fast
+    if score:
+        extra["score"] = [(s + offset, e + offset, [text]) for s, e, text in score]
     done = {"format": DONE_FORMAT, "job": job.job_id, "srt": target, "lang": code, "cues": cues,
             "first": f"{first:.3f}", "offset": f"{offset:.3f}"}
     for key, items in extra.items():
@@ -445,7 +449,8 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
                      if p.is_file() and p.name not in (job.audio, JOB_FILE, DONE_FILE, DONE_FILE + ".tmp"))
     done["files"] = ";".join(created)
     write_kv(job.done_path, done, header="WhisperX Subtitle Workbench - result for DaVinci Resolve")
-    return HandOver(target, code, cues, first, offset, len(extra.get("gaps", [])), len(extra.get("fast", [])))
+    return HandOver(target, code, cues, first, offset, len(extra.get("gaps", [])), len(extra.get("fast", [])),
+                    len(extra.get("score", [])))
 
 
 def cleanup_jobs(temp_dir=None, max_age_hours: float = JOB_MAX_AGE_H, now: float | None = None) -> int:

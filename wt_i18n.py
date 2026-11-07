@@ -186,7 +186,7 @@ def secs(x: float, digits: int = 1, sign: bool = False) -> str:
 
 # ── Log prefixes ──────────────────────────────────────────────────────────────
 
-TAGS = ("info", "warn", "error", "done", "check", "gap", "dnd", "compare", "device",
+TAGS = ("info", "warn", "error", "done", "check", "gap", "score", "dnd", "compare", "device",
         "model", "align", "lang", "prompt", "asr", "json", "lyrics", "audio")
 
 

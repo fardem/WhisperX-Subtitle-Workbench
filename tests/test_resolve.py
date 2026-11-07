@@ -419,6 +419,47 @@ def test_hand_over_with_gap_and_fast_tracks(tmp_path):
     assert "gaps" not in wr.read_kv(plain.done_path) and "fast" not in wr.read_kv(plain.done_path)
 
 
+def test_hand_over_with_score_track(tmp_path):
+    job = make_job(tmp_path / "job", whole=False, in_frame=90250)                    # offset 10 s
+    src = job.folder / "audio.srt"
+    src.write_text(srt(("00:00:01,000", "00:00:03,000", "Hallo Rafah")), encoding="utf-8")
+    res = wr.hand_over(job, src, "de", last_dir=tmp_path / "out", stamp="20261107-091500",
+                       score=[(1.3, 1.8, "unsicher: Rafah 0,28"), (2.0, 2.5, "unsicher: Gaza 0,31")])
+    done = wr.read_kv(job.done_path)
+    score = Path(done["score"])
+    assert score.parent == job.folder and score.name == "Interview_Mueller_DE_20261107-091500_score.srt"
+    assert score.read_text(encoding="utf-8") == ("1\n00:00:11,300 --> 00:00:11,800\nunsicher: Rafah 0,28\n\n"
+                                                 "2\n00:00:12,000 --> 00:00:12,500\nunsicher: Gaza 0,31\n\n")
+    assert (res.score, done["score_n"], res.gaps, res.fast) == (2, "2", 0, 0)
+    assert score.name in done["files"] and "gaps" not in done and "fast" not in done
+    empty = make_job(tmp_path / "empty")
+    (empty.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:03,000", "Hallo")), encoding="utf-8")
+    assert wr.hand_over(empty, empty.folder / "audio.srt", "de", last_dir=tmp_path / "out", score=[]).score == 0
+    assert "score" not in wr.read_kv(empty.done_path)
+
+
+def test_extra_tracks_follow_the_settings(tmp_path):
+    wt = pytest.importorskip("whisper_tool")
+    item = {"gap_list": [(5.0, 7.0, -3.0)], "mode": "sentence",
+            "score_list": [(1.3, 2.8, [("Bundesregierung", 0.31), ("Rafah", 0.22)])]}
+
+    def tracks(text, **it):
+        ini = tmp_path / "t.ini"
+        ini.write_text(text, encoding="utf-8")
+        app = type("App", (), {"cfg": core.Config(ini)})()
+        return wt.App._extra_tracks(app, {**item, **it})
+
+    on = tracks("[Score]\nthreshold = 0.4\n")
+    assert on["gaps"] == item["gap_list"] and on["fast_cps"] == core.READING_CPS
+    assert on["score"] == [(1.3, 2.8, "unsure: Bundesregierung 0.31 · Rafah 0.22")]
+    off = tracks("[Resolve]\ntrack_gaps = 0\ntrack_fast = 0\n")             # no [Score]: the check is off
+    assert (off["gaps"], off["fast_cps"], off["score"]) == (None, None, None)
+    assert tracks("[Score]\nthreshold = 0.4\n", mode="word")["fast_cps"] is None     # Sentences only
+    assert tracks("[Score]\nthreshold = 0.4\n", score_list=[])["score"] is None      # nothing to show
+    old = tracks("[Resolve]\nextra_tracks = 0\n[Score]\nthreshold = 0.4\n")      # 0.6.x INI
+    assert (old["gaps"], old["fast_cps"]) == (None, None) and old["score"]
+
+
 def test_resolve_job_options_come_from_the_plugin_and_the_ini(tmp_path):
     # language, mode and audio filter from the plugin – all other settings from the INI; the
     # main window (whatever it shows) does not apply

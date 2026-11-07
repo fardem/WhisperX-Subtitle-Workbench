@@ -2,6 +2,20 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.0] – 2026-11-07
+
+**Updating from 0.6.3:** close the workbench, update, then install the plugin again under *Settings → DaVinci Resolve*. In your `whisper_tool.ini` the score check is off – switch it on under *Settings → Speech detection* (recommended: 0.40). `[Resolve] extra_tracks` is taken over: as long as one of the new keys `track_gaps` and `track_fast` is missing, it takes the value of `extra_tracks`. The workbench no longer writes `extra_tracks`, and you can delete it – if it was 0, add `track_gaps = 0` and `track_fast = 0` instead. Python packages need no update.
+
+- **Score check** (`[Score]`, *Settings → Speech detection*, under the gap check): the word timestamps of WhisperX give every word a score from 0 to 1 – how well it fits the audio at its place. Words below the threshold (recommended 0.40) were probably misrecognized or misplaced:
+  - the log shows the median and the 5 % quantile of all scores, then the places below the threshold with their words and scores
+  - `<name>.unsure.srt` (German `.unsicher.srt`, Turkish `.belirsiz.srt`) to jump to them in VLC or Subtitle Edit, like the list of the gap check; marked words at most 1 second apart are one entry, every entry lasts at least 0.5 seconds
+  - the file gets “⚠ n unsure” in the list; the comparison dialog leaves the score files out
+  - words without a score and words with fewer than 3 letters are not rated, so numbers are practically never marked. Names and foreign words land below the threshold more often
+  - for speech and JSON → SRT (a JSON saved with “Keep JSON” has the scores), not for lyrics. Without scores – a language without an alignment model – the log says so in one line
+  - read only: the subtitle SRT stays exactly as before
+- **DaVinci Resolve:** a third subtitle track **WhisperX unsure** marks the words of the score check. *Settings → DaVinci Resolve* has one row per track instead of one tick for all: gaps (`track_gaps`), too fast subtitles (`track_fast`) and unsure words – this row is the score check itself, the same setting as under *Speech detection*. The transcript track stays the active one
+- `[Score] threshold` in the INI: 0 = off, otherwise 0.05–0.95; another value gives a warning and switches the check off. Without `[Score]` the check is off, so an existing INI behaves as before; the template switches it on (0.4)
+
 ## [0.6.3] – 2026-11-06
 
 **Updating from 0.6.2:** install the plugin again under *Settings → DaVinci Resolve*.

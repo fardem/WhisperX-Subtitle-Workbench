@@ -9,6 +9,7 @@ Core logic for whisper_tool.py (no user interface).
   - lyrics alignment with MMS_FA when <name>.lyric.txt is next to the file
   - subtitle rules: sentences (orphan, dangling, long sentences), word by word, raw
   - pauses: seamless up to X seconds, a short hold after a real pause (smooth display)
+  - checks: gaps (loud passages without text), score (words that fit the audio badly)
 
 Heavy libraries (torch, whisperx, torchaudio, uroman) are only imported
 when they are really needed.
@@ -221,13 +222,23 @@ class Config:
         self.gap_min           = g("Gaps", "min_length", 1.0, float)
         self.gap_margin        = g("Gaps", "margin_db", 8.0, float)
         self.gap_srt           = g("Gaps", "write_srt", True, _bool)
+        # Score check: words below the threshold fit the audio badly (0 = off – also without [Score])
+        self.score_threshold   = g("Score", "threshold", 0.0, float)
+        self.score_srt         = g("Score", "write_srt", True, _bool)
         # DaVinci Resolve: own countdown for jobs of the plugin (0 = off), hand over by itself,
-        # gaps and fast subtitles as own tracks, close instead of minimize
+        # gaps and fast subtitles as own tracks, close instead of minimize.
+        # track_gaps / track_fast replace extra_tracks (0.6.x) – a missing key takes its value
         self.resolve_countdown = max(g("Resolve", "countdown", 10, int), 0)
         self.resolve_auto      = g("Resolve", "auto_hand_over", False, _bool)
-        self.resolve_extra     = g("Resolve", "extra_tracks", True, _bool)
+        extra                  = g("Resolve", "extra_tracks", True, _bool)
+        self.resolve_gaps      = g("Resolve", "track_gaps", extra, _bool)
+        self.resolve_fast      = g("Resolve", "track_fast", extra, _bool)
         self.resolve_close     = g("Resolve", "close_after", False, _bool)
 
+        if self.score_threshold != 0 and not SCORE_MIN <= self.score_threshold <= SCORE_MAX:
+            self.warnings.append(T("core.ini_invalid", entry=f"[Score] threshold={self.score_threshold:g}",
+                                   default="0"))
+            self.score_threshold = 0.0
         if self.smooth and self.pause_hold >= self.pause:      # a real pause must stay visible
             hold = round(self.pause / 2, 2)
             self.warnings.append(T("core.ini_invalid", entry=f"[Layout] pause_hold={self.pause_hold:g} (≥ pause)",
@@ -783,6 +794,87 @@ def write_gap_srt(path, gaps, encoding="utf-8"):
                      for s, e, rel in gaps], encoding)
 
 
+# ─── SCORE CHECK ──────────────────────────────────────────────────────────────
+# whisperx.align() gives every word a "score" (0–1): the mean of its letters' scores, every
+# letter the mean frame probability on the alignment path. A low score means the word fits
+# the audio badly at this place – it was misrecognized or misplaced. Read only, never changed:
+# the subtitles stay exactly the same.
+
+SCORE_MIN, SCORE_MAX = 0.05, 0.95  # allowed thresholds ([Score] threshold; 0 = off)
+SCORE_LETTERS = 3                  # words with fewer letters are not rated ("in", "z.B.")
+SCORE_JOIN    = 1.0                # flagged words at most this far apart (s) become one entry
+SCORE_MIN_LEN = 0.5                # an entry lasts at least this long (s) – never into the next one
+SCORE_WORDS   = 4                  # words shown per entry, the rest as "+n"
+
+
+def word_score(w: dict) -> float | None:
+    """Score of a rated word – None without a score or with fewer than 3 letters."""
+    if sum(c.isalpha() for c in str(w.get("word", ""))) < SCORE_LETTERS:
+        return None
+    try:
+        s = float(w["score"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return s if np.isfinite(s) else None
+
+
+def _rated_words(result: dict) -> list[tuple[dict, float]]:
+    return [(w, s) for seg in result.get("segments", []) for w in seg.get("words", [])
+            if (s := word_score(w)) is not None]
+
+
+def score_stats(result: dict) -> tuple[float, float] | None:
+    """(median, 5 % quantile) of all rated words – None if there is no rated word."""
+    scores = [s for _, s in _rated_words(result)]
+    if not scores:
+        return None
+    return float(np.median(scores)), float(np.percentile(scores, 5))
+
+
+def find_unsure(result: dict, threshold: float) -> list[tuple[float, float, list[tuple[str, float]]]]:
+    """
+    → [(start, end, [(word, score), …])] for rated words with a score below `threshold`.
+    Flagged words at most SCORE_JOIN s apart (start of the next minus end of the previous)
+    become one entry. It starts exactly at the first word and ends at the end of the last one,
+    but lasts at least SCORE_MIN_LEN s – never beyond the start of the next entry.
+    """
+    flagged = []
+    for w, s in _rated_words(result):
+        if s < threshold and "start" in w and "end" in w:
+            word = str(w["word"]).strip()
+            flagged.append((float(w["start"]), float(w["end"]), word.strip(STRIP_CHARS) or word, s))
+    flagged.sort(key=lambda x: x[0])
+    groups: list[list] = []                  # [start, end, words]
+    for start, end, word, s in flagged:
+        if groups and start - groups[-1][1] <= SCORE_JOIN + 1e-6:
+            groups[-1][1] = max(groups[-1][1], end)
+            groups[-1][2].append((word, s))
+        else:
+            groups.append([start, end, [(word, s)]])
+    out = []
+    for i, (start, end, words) in enumerate(groups):
+        end = max(end, start + SCORE_MIN_LEN)
+        if i + 1 < len(groups):
+            end = min(end, groups[i + 1][0])
+        out.append((start, end, words))
+    return out
+
+
+def unsure_words(words, limit: int = SCORE_WORDS) -> str:
+    """[(word, score)] → "Rafah 0.28 · Gaza 0.31 +2" – at most `limit` words, decimal sign per language."""
+    text = " · ".join(f"{w} {i18n.num(s, 2)}" for w, s in words[:limit])
+    return text + (f" +{len(words) - limit}" if len(words) > limit else "")
+
+
+def unsure_label(words) -> str:
+    """Text of an entry, e.g. "unsure: Rafah 0.28 · Gaza 0.31" (score file, track in DaVinci Resolve)."""
+    return T("core.score_cue", words=unsure_words(words))
+
+
+def write_score_srt(path, unsure, encoding="utf-8"):
+    write_srt(path, [(s, e, [unsure_label(words)]) for s, e, words in unsure], encoding)
+
+
 # ─── LYRICS ───────────────────────────────────────────────────────────────────
 
 def load_lyrics(path) -> list[str]:
@@ -1121,6 +1213,10 @@ class Engine:
                 info["gap_list"] = self._report_gaps(audio, result, src)    # also for DaVinci Resolve
                 info["gaps"] = len(info["gap_list"])
 
+        if kind != "lyrics" and cfg.score_threshold > 0:    # speech and JSON: the words have scores
+            info["score_list"] = self._report_score(result, src)            # also for DaVinci Resolve
+            info["unsure"] = len(info["score_list"])
+
         cues = display_cues(cues, mode, cfg, duration)      # pause rule – lyrics keep their own
         if mode == "sentence":
             info["fast"] = self._report_fast(cues)
@@ -1165,6 +1261,32 @@ class Engine:
             self.log(tag + T("core.gap_file", name=gap_file.name))
         self.log(tag + T("core.gap_tip"))
         return gaps
+
+    def _report_score(self, result, src: Path) -> list:
+        """Score check: words that fit the audio badly – in the log and as <name>.unsure.srt."""
+        cfg = self.cfg
+        stats = score_stats(result)
+        if stats is None:                         # e.g. a language without an alignment model
+            self.log(i18n.line("info", "core.score_none"))
+            return []
+        unsure = find_unsure(result, cfg.score_threshold)
+        score_file = src.with_name(src.stem + T("core.score_suffix"))
+        tag = i18n.tag("score")
+        self.log(tag + ("" if unsure else "✓ ")
+                 + Tn("core.score_found", len(unsure), median=i18n.num(stats[0], 2), low=i18n.num(stats[1], 2),
+                      threshold=i18n.num(cfg.score_threshold, 2)))
+        if not unsure:
+            score_file.unlink(missing_ok=True)        # remove the list of an earlier run
+            return []
+        for s, e, words in unsure[:15]:
+            self.log(f"{tag}  {fmt_pos(s)} – {fmt_pos(e)}   ({unsure_words(words)})")
+        if len(unsure) > 15:
+            self.log(f"{tag}  … " + T("core.gap_more", n=len(unsure) - 15))
+        if cfg.score_srt:
+            write_score_srt(score_file, unsure, cfg.encoding)
+            self.log(tag + T("core.gap_file", name=score_file.name))
+        self.log(tag + T("core.score_tip"))
+        return unsure
 
 
 def _json_default(o):

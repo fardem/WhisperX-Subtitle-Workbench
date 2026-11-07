@@ -2,6 +2,8 @@
 
 import shutil
 
+import pytest
+
 import wt_core as core
 from helpers import ROOT
 
@@ -65,3 +67,49 @@ def test_save_ini_adds_missing_key_to_its_section(tmp_path):
 def test_suffix_placeholders():
     assert core.fill_suffix(".{model}.srt", r"C:\models\whisper-tr", "tr") == ".whisper-tr.srt"
     assert core.fill_suffix(".{model}.{lang}.srt", "large-v3", "de") == ".large-v3.de.srt"
+
+
+def test_score_check_is_off_without_its_section(tmp_path):
+    ini = tmp_path / "old.ini"
+    ini.write_text("[Gaps]\nenabled = 1\n", encoding="utf-8")                  # INI of 0.6.3
+    cfg = core.Config(ini)
+    assert (cfg.score_threshold, cfg.score_srt) == (0.0, True) and not_ffmpeg(cfg.warnings) == []
+    assert core.Config(EXAMPLE).score_threshold == 0.4
+
+
+@pytest.mark.parametrize("raw, value", [("0", 0.0), ("0.05", 0.05), ("0.4", 0.4), ("0.95", 0.95)])
+def test_valid_score_thresholds(tmp_path, raw, value):
+    ini = tmp_path / "t.ini"
+    ini.write_text(f"[Score]\nthreshold = {raw}\nwrite_srt = 0\n", encoding="utf-8")
+    cfg = core.Config(ini)
+    assert (cfg.score_threshold, cfg.score_srt) == (value, False) and not_ffmpeg(cfg.warnings) == []
+
+
+@pytest.mark.parametrize("raw", ["0.01", "0.96", "1", "-0.4", "viel", "nan"])
+def test_invalid_score_threshold_gives_a_warning_and_off(tmp_path, raw):
+    ini = tmp_path / "t.ini"
+    ini.write_text(f"[Score]\nthreshold = {raw}\n", encoding="utf-8")
+    cfg = core.Config(ini)
+    assert cfg.score_threshold == 0.0
+    assert any("[Score] threshold" in w for w in cfg.warnings)
+
+
+@pytest.mark.parametrize("text, gaps, fast", [
+    ("[Menu]\ntimeout = 15\n", True, True),                                    # no [Resolve] at all
+    ("[Resolve]\nextra_tracks = 1\n", True, True),                             # INI of 0.6.x
+    ("[Resolve]\nextra_tracks = 0\n", False, False),
+    ("[Resolve]\nextra_tracks = 0\ntrack_gaps = 1\n", True, False),            # a new key wins, the other follows
+    ("[Resolve]\nextra_tracks = 1\ntrack_fast = 0\n", True, False),
+    ("[Resolve]\ntrack_gaps = 0\ntrack_fast = 1\n", False, True),
+])
+def test_track_keys_fall_back_to_extra_tracks(tmp_path, text, gaps, fast):
+    ini = tmp_path / "t.ini"
+    ini.write_text(text, encoding="utf-8")
+    cfg = core.Config(ini)
+    assert (cfg.resolve_gaps, cfg.resolve_fast) == (gaps, fast)
+
+
+def test_example_ini_has_the_new_track_keys_only():
+    text = EXAMPLE.read_text(encoding="utf-8")
+    assert "track_gaps = 1" in text and "track_fast = 1" in text
+    assert not any(line.startswith("extra_tracks") for line in text.splitlines())

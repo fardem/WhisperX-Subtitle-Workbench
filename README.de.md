@@ -8,7 +8,7 @@ Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passe
 
 ![Hauptfenster](docs/images/main-window.png)
 
-Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, lange Sätze und Pausen. Ein Lücken-Check findet laute Stellen ohne Text. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen. Mit dem Plugin für DaVinci Resolve transkribierst du eine Timeline direkt aus Resolve heraus, und die Untertitel landen auf einer Untertitelspur.
+Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, lange Sätze und Pausen. Ein Lücken-Check findet laute Stellen ohne Text, ein Score-Check findet Wörter, die schlecht zum Ton passen. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen. Mit dem Plugin für DaVinci Resolve transkribierst du eine Timeline direkt aus Resolve heraus, und die Untertitel landen auf einer Untertitelspur.
 
 > Die Bildschirmfotos zeigen die englische Oberfläche; unter *Einstellungen → Allgemein* lässt sie sich auf Deutsch umstellen.
 
@@ -47,6 +47,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 - **Lyrics-Modus:** Liegt `lied.lyric.txt` neben `lied.mp3`, wird jede Zeile des Liedtexts zeitlich auf das Audio ausgerichtet. Das läuft über Forced Alignment (MMS_FA + uroman) und funktioniert für jede Sprache.
 - **JSON → SRT:** Du kannst das WhisperX-Ergebnis behalten und die Untertitel später in Sekunden mit anderem Layout neu bauen.
 - **Lücken-Check:** Findet nach jeder Transkription laute, stimmähnliche Stellen ohne Text, also verschluckte Sprache. Dazu wird eine eigene Untertiteldatei geschrieben, mit der du jede Stelle direkt anspringen kannst.
+- **Score-Check:** Die Wort-Zeitstempel geben jedem Wort einen Score von 0 bis 1 – wie gut es an seiner Stelle zum Ton passt. Wörter unter einer Schwelle (Empfehlung 0,40) sind wahrscheinlich falsch erkannt oder falsch platziert; der Check listet sie im Protokoll und in einer eigenen Untertiteldatei. Die Untertitel selbst bleiben unverändert.
 - **Vergleichsbericht** (HTML): A gegen B, A gegen Referenz oder A gegen B gegen Referenz.
   - Zeigt bei jedem Unterschied, wer recht hat.
   - Zeigt die Fehlerquote (WER) jeder Datei und die Fehler, die beide gleich machen.
@@ -271,6 +272,11 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
   - Dateien mit verdächtigen Lücken bekommen in der Liste den Status „⚠ Lücken“.
   - Die Stellen erscheinen gelb im Protokoll.
   - Sie werden außerdem als `<name>.luecken.srt` gespeichert. Der Dateiname folgt der Oberflächensprache: `.gaps.srt` auf Englisch, `.bosluklar.srt` auf Türkisch. In VLC oder Subtitle Edit als zweite Untertitelspur laden, um jede Stelle anzuspringen.
+- **Score-Check** (*Einstellungen → Spracherkennung*, unter dem Lücken-Check; in einer INI von vor 0.7.0 aus):
+  - Das Protokoll zeigt zuerst Median und 5-%-Quantil aller Wort-Scores, z. B. `Score: Median 0,88 · 5 % unter 0,61 · 7 Stellen unter 0,40`, danach die Stellen mit ihren Wörtern und Scores. Dateien mit solchen Stellen bekommen den Status „⚠ unsicher“.
+  - Die Stellen werden außerdem als `<name>.unsicher.srt` gespeichert (`.unsure.srt` auf Englisch, `.belirsiz.srt` auf Türkisch), z. B. `unsicher: Bundesverfassungsgericht 0,32 · Rafah 0,28`. Markierte Wörter mit höchstens 1 Sekunde Abstand sind ein Eintrag.
+  - Höhere Schwelle = mehr Einträge. Namen und Fremdwörter landen öfter darunter, auch wenn sie richtig sind. Zahlen werden praktisch nie markiert, Wörter mit weniger als 3 Buchstaben werden nicht bewertet.
+  - Er funktioniert auch für eine mit „JSON behalten“ gespeicherte JSON, nicht für Lyrics. Für eine Sprache ohne Ausrichtungsmodell gibt es keine Scores; das Protokoll sagt das.
 - **Maus auf ein Bedienelement halten** zeigt eine ausführliche Erklärung.
 
 ---
@@ -332,7 +338,7 @@ Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach ein
 3. In der Workbench steht der Job als „*Timeline* · DaVinci Resolve“ in der Liste. Er hat einen eigenen Countdown (*Einstellungen → DaVinci Resolve*, Vorgabe 10 Sekunden). Sprache, Modus und Audiofilter kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI: Prompt, Zeichen pro Zeile und Zeilen sowie alle Regeln aus *Einstellungen → Untertitel*. Die Einstellungen im Hauptfenster gelten für DaVinci-Jobs nicht. Das Protokoll zeigt beides an. Ohne Countdown startest du selbst mit *Start*. Währenddessen zeigt das Plugin-Fenster, wo der Job steht: Countdown, Transkription in Prozent, fertig.
 4. Ist der Job fertig, die Untertitel prüfen und **→ An DaVinci übergeben** drücken (blau, sobald der Job fertig ist). Die SRT wird an die Stelle des Bereichs in der Timeline verschoben und als `resolve_temp\<Timeline>_<SPRACHE>_<Datum-Uhrzeit>.srt` gespeichert; dieser Ordner behält die SRTs der letzten 10 Übergaben, bei der 11. wird die älteste gelöscht. Der Name ist jedes Mal neu, weil Resolve eine Datei, die schon im Media Pool liegt, nicht noch einmal liest – es würde die Untertitel des ersten Imports einsetzen. Danach minimiert sich die Workbench – sie bleibt offen, ihre Modelle bleiben für den nächsten Job geladen. Unter *Einstellungen → DaVinci Resolve* kannst du automatisch übergeben lassen, sobald der Job transkribiert ist, und schließen statt minimieren.
 5. Das Plugin wartet in Resolve, wechselt zurück zur Timeline des Jobs, importiert die SRT in den Media-Pool-Bin *WhisperX* und legt sie auf die **erste leere Untertitelspur** (ST1, ST2, …) – oder auf eine neue. Die Spur heißt `WhisperX DE` (`WhisperX DE 2`, wenn es den Namen schon gibt) und bleibt die aktive Untertitelspur. Danach werden WAV und Job-Ordner gelöscht, und das Plugin-Fenster kommt mit dem Ergebnis nach vorne, bis du *OK* drückst.
-6. Eingeschaltet (Vorgabe) helfen zwei weitere Untertitelspuren beim Prüfen: **WhisperX Lücken** markiert laute Stellen ohne Text aus dem Lücken-Check, **WhisperX zu schnell** markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (Modus *Satzweise*). Du springst in Resolve von Eintrag zu Eintrag und löschst danach die beiden Spuren. Die Spur mit dem Transkript bleibt die aktive.
+6. Bis zu drei weitere Untertitelspuren helfen beim Prüfen, jede einzeln unter *Einstellungen → DaVinci Resolve* ein- oder ausgeschaltet: **WhisperX Lücken** markiert laute Stellen ohne Text aus dem Lücken-Check, **WhisperX zu schnell** markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (Modus *Satzweise*), **WhisperX unsicher** markiert die Wörter des Score-Checks (immer, wenn der Score-Check an ist – die Zeile unter *Einstellungen → DaVinci Resolve* ist dieselbe Einstellung wie unter *Spracherkennung*). Du springst in Resolve von Eintrag zu Eintrag und löschst danach die Spuren. Eine Spur kommt nur dazu, wenn es etwas zu zeigen gibt, und die Spur mit dem Transkript bleibt die aktive.
 
 ![Ein DaVinci-Resolve-Job in der Workbench, bereit zur Übergabe](docs/images/resolve-job.png)
 
@@ -356,6 +362,8 @@ Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timelin
 - **Hauptfenster:** Sprache, Modus, Layout, Audiofilter und Prompt. *Als Standard speichern* legt sie in der INI ab.
 - **Einstellungen …** hat sieben Reiter: Whisper, Spracherkennung, Untertitel, Audio & Ausgabe, Sprachen, DaVinci Resolve und Allgemein. *Speichern* schreibt nur die geänderten Werte in `whisper_tool.ini`, legt vorher eine `.bak`-Sicherung an und lässt alle Kommentare stehen.
 - `whisper_tool.ini` kannst du auch von Hand bearbeiten. Jeder Wert ist kommentiert; die Vorlage ist `whisper_tool.example.ini`.
+
+*Einstellungen → Spracherkennung* enthält auch die beiden Checks nach der Transkription: den Lücken-Check und den Score-Check mit seiner Schwelle. Unter *Einstellungen → DaVinci Resolve* legst du fest, welche Prüfspuren bei einer Übergabe mitgehen.
 
 *Einstellungen → Untertitel* ist nach den Fragen geordnet, die das Tool nacheinander beantwortet: **1 · Aufteilen** – welche Wörter zusammen in einen Untertitel kommen, **2 · Pausen** – wie lange ein Segment stehen bleibt, **3 · Lyrics** – eigene Regeln für Liedzeilen.
 
@@ -412,6 +420,8 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | Eine Zeile der Systemprüfung ist rot | Sie nennt das fehlende Teil und welche Funktion betroffen ist. Siehe [Bekannte Wege, die Installation kaputt zu machen](#bekannte-wege-die-installation-kaputt-zu-machen) |
 | „torch ist eine Version ohne CUDA“ | torch wurde von PyPI installiert. Schritt 4 der Installation wiederholen |
 | Text fehlt an leisen Stellen | Den Lücken-Check ansehen. Dann den *Onset* senken oder *silero* testen (*Einstellungen → Spracherkennung*) |
+| Falsche Wörter in den Untertiteln | Den Score-Check einschalten (*Einstellungen → Spracherkennung*) und die gemeldeten Stellen anhören. Wiederkehrende Fehler mit einer Ersetzung oder dem Prompt beheben (*Einstellungen → Sprachen*) |
+| Der Score-Check markiert viele Namen, die richtig sind | Namen und Fremdwörter haben oft einen niedrigen Score. Die Schwelle senken, z. B. auf 0,30 |
 | Falsche Sprache für die ganze Datei | Die Sprache festlegen statt *Automatisch*; Musik oder ein Intro am Anfang können die Erkennung täuschen |
 | Prompt-Wörter tauchen in Stille oder Musik auf | Den Prompt kürzen oder für diese Datei *keiner* wählen |
 | Das Plugin fehlt in Resolve unter *Workspace → Scripts* | Resolve einmal neu starten; sonst das Plugin unter *Einstellungen → DaVinci Resolve* neu installieren |
@@ -426,7 +436,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | Datei | Aufgabe |
 |---|---|
 | `whisper_tool.py` | Oberfläche (Tkinter), Einstellungsdialog, Vergleichsdialog, Konsolenmodus |
-| `wt_core.py` | Audio laden, WhisperX, Lyrics-Alignment, Untertitel-Regeln, Lücken-Check, Systemprüfung, INI-Schreiber |
+| `wt_core.py` | Audio laden, WhisperX, Lyrics-Alignment, Untertitel-Regeln, Lücken-Check, Score-Check, Systemprüfung, INI-Schreiber |
 | `wt_compare.py` | Wort-für-Wort-Vergleich und HTML-Bericht (auch allein benutzbar) |
 | `wt_i18n.py` | Lädt die Sprachdateien |
 | `wt_resolve.py` | Anbindung an DaVinci Resolve: Job- und Fertig-Datei, SRT-Verschiebung, Plugin-Installation |

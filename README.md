@@ -8,7 +8,7 @@ A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics alig
 
 ![Main window](docs/images/main-window.png)
 
-You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, long sentences and pauses. A gap check finds loud passages that got no text. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio. The DaVinci Resolve plugin transcribes a timeline from inside Resolve and puts the subtitles onto a subtitle track.
+You drop video or audio files into the window, and the tool creates `.srt` subtitles. The subtitle rules are tuned for readable output: line length, orphan words, dangling words, long sentences and pauses. A gap check finds loud passages that got no text, a score check finds words that fit the audio badly. The comparison report shows which model or setting recognizes better, with error rates, timing deviations and clickable audio. The DaVinci Resolve plugin transcribes a timeline from inside Resolve and puts the subtitles onto a subtitle track.
 
 ---
 
@@ -45,6 +45,7 @@ You drop video or audio files into the window, and the tool creates `.srt` subti
 - **Lyrics mode:** put `song.lyric.txt` next to `song.mp3`, and every line of the song text is aligned to the audio. This uses forced alignment (MMS_FA + uroman) and works for any language.
 - **JSON → SRT:** you can keep the WhisperX result and later rebuild the subtitles with a different layout in seconds.
 - **Gap check:** after each transcription it finds loud, voice-like passages without text, i.e. speech that was missed. It writes an extra subtitle file you can load to jump to each passage.
+- **Score check:** the word timestamps give every word a score from 0 to 1 – how well it fits the audio at its place. Words below a threshold (recommended 0.40) were probably misrecognized or misplaced; the check lists them in the log and in an extra subtitle file. The subtitles themselves stay unchanged.
 - **Comparison report** (HTML): A vs. B, A vs. reference, or A vs. B vs. reference.
   - Shows who is right at every difference.
   - Shows the error rate (WER) of each file and the errors both files share.
@@ -269,6 +270,11 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
   - Files with suspicious gaps get the status “⚠ gaps” in the list.
   - The passages appear in yellow in the log.
   - They are also saved as `<name>.gaps.srt`. The file name follows the interface language: `.luecken.srt` in German, `.bosluklar.srt` in Turkish. Load it as a second subtitle track in VLC or Subtitle Edit to jump to each passage.
+- **Score check** (*Settings → Speech detection*, under the gap check; off in an INI from before 0.7.0):
+  - The log first shows the median and the 5 % quantile of all word scores, e.g. `Score: median 0.88 · 5% below 0.61 · 7 places below 0.40`, then the places with their words and scores. Files with such places get the status “⚠ unsure”.
+  - The places are also saved as `<name>.unsure.srt` (`.unsicher.srt` in German, `.belirsiz.srt` in Turkish), e.g. `unsure: Bundesverfassungsgericht 0.32 · Rafah 0.28`. Marked words at most 1 second apart are one entry.
+  - A higher threshold gives more entries. Names and foreign words land below it more often, even when they are right. Numbers are practically never marked, and words with fewer than 3 letters are not rated.
+  - It also works for a JSON saved with “Keep JSON”, not for lyrics. For a language without an alignment model there are no scores; the log says so.
 - **Hover over any control** to get a detailed explanation.
 
 ---
@@ -330,7 +336,7 @@ Install the plugin again after an update of the workbench, after moving its fold
 3. In the workbench the job appears as “*Timeline* · DaVinci Resolve”. It has its own countdown (*Settings → DaVinci Resolve*, 10 seconds by default). Language, mode and audio filter come from the plugin window; all other settings come from the INI: prompt, characters per line and lines, and all rules from *Settings → Subtitles*. The options of the main window do not apply to DaVinci jobs. The log shows both. Without the countdown, press *Start* yourself. Meanwhile the plugin window shows where the job stands: countdown, transcription in percent, done.
 4. When the job is done, check the subtitles and press **→ Hand over to DaVinci** (blue once the job is done). The SRT is moved to the position of the range in the timeline and saved as `resolve_temp\<Timeline>_<LANG>_<date-time>.srt`; this folder keeps the SRTs of the last 10 hand-overs, and the 11th deletes the oldest. The name is new every time, because Resolve does not read a file again that is already in its media pool – it would place the subtitles of the first import. The workbench then minimizes itself – it stays open, so its models stay loaded for the next job. In *Settings → DaVinci Resolve* you can let it hand over by itself as soon as the job is transcribed, and close instead of minimize.
 5. The plugin, still waiting in Resolve, switches back to the timeline of the job, imports the SRT into the media pool bin *WhisperX* and puts it onto the **first empty subtitle track** (ST1, ST2, …) – or onto a new one. The track is named `WhisperX DE` (`WhisperX DE 2` if the name exists) and stays the active subtitle track. Then the WAV and the job folder are deleted, and the plugin window comes to the front with the result until you press *OK*.
-6. If switched on (the default), two more subtitle tracks help with checking: **WhisperX gaps** marks loud passages without text from the gap check, **WhisperX too fast** marks subtitles with more than 17 characters per second (mode *Sentences*). Jump through them in Resolve, then delete the two tracks. The transcript track stays the active one.
+6. Up to three more subtitle tracks help with checking, each switched on or off in *Settings → DaVinci Resolve*: **WhisperX gaps** marks loud passages without text from the gap check, **WhisperX too fast** marks subtitles with more than 17 characters per second (mode *Sentences*), **WhisperX unsure** marks the words of the score check (whenever the score check is on – the row in *Settings → DaVinci Resolve* is the same setting as under *Speech detection*). Jump through them in Resolve, then delete the tracks. A track is only added when there is something to show, and the transcript track stays the active one.
 
 ![A DaVinci Resolve job in the workbench, ready to hand over](docs/images/resolve-job.png)
 
@@ -354,6 +360,8 @@ While the plugin waits, Resolve stays usable. Changes to the timeline in the tra
 - **Main window:** language, mode, layout, audio filter and prompt. *Save as default* stores them in the INI.
 - **Settings …** has seven tabs: Whisper, Speech detection, Subtitles, Audio & output, Languages, DaVinci Resolve and General. *Save* writes only the changed values to `whisper_tool.ini`, creates a `.bak` backup first and keeps all comments.
 - `whisper_tool.ini` can also be edited by hand. Every value is commented; the template is `whisper_tool.example.ini`.
+
+*Settings → Speech detection* also holds the two checks after the transcription: the gap check and the score check with its threshold. *Settings → DaVinci Resolve* decides which check tracks go along with a hand-over.
 
 *Settings → Subtitles* is ordered by the questions the tool answers one after the other: **1 · Splitting** – which words go together into one subtitle, **2 · Pauses** – how long a segment stays on screen, **3 · Lyrics** – own rules for song lines.
 
@@ -410,6 +418,8 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | A line of the system check is red | It names the missing part and which feature is affected. See [Known ways to break the setup](#known-ways-to-break-the-setup) |
 | “torch is a build without CUDA” | torch was installed from PyPI. Repeat step 4 of the installation |
 | Text is missing in quiet passages | Look at the gap check. Then lower the *Onset* or try *silero* (*Settings → Speech detection*) |
+| Wrong words in the subtitles | Switch on the score check (*Settings → Speech detection*) and listen to the places it lists. Fix recurring ones with a replacement or the prompt (*Settings → Languages*) |
+| The score check marks many names that are right | Names and foreign words often have a low score. Lower the threshold, e.g. to 0.30 |
 | Wrong language for the whole file | Set the language instead of *Automatic*; music or an intro at the start can mislead the detection |
 | Words from the prompt appear in silence or music | Shorten the prompt or choose *none* for this file |
 | The plugin is not listed under *Workspace → Scripts* in Resolve | Restart Resolve once; otherwise install the plugin again under *Settings → DaVinci Resolve* |
@@ -424,7 +434,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | File | Purpose |
 |---|---|
 | `whisper_tool.py` | User interface (Tkinter), settings dialog, comparison dialog, console mode |
-| `wt_core.py` | Audio loading, WhisperX, lyrics alignment, subtitle rules, gap check, system check, INI writer |
+| `wt_core.py` | Audio loading, WhisperX, lyrics alignment, subtitle rules, gap check, score check, system check, INI writer |
 | `wt_compare.py` | Word-by-word comparison and the HTML report (also usable on its own) |
 | `wt_i18n.py` | Loads the language files |
 | `wt_resolve.py` | DaVinci Resolve connection: job and result files, SRT shift, plugin installation |

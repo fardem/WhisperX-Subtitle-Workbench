@@ -611,6 +611,43 @@ def test_gaps_and_fast_subtitles_get_own_tracks_and_the_transcript_stays_active(
     assert h.job_dirs() == []                           # the extra SRTs are deleted with the job folder
 
 
+def test_three_check_tracks_in_their_order_and_the_transcript_stays_active(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        h.workbench_hands_over(cues=((1.0, 2.5, "Hallo Rafah"), (4.0, 4.5, "Viel zu viel Text für so wenig Zeit")),
+                               gaps=[(8.0, 9.5, -4.0)], fast_cps=17,
+                               score=[(1.6, 2.1, "unsicher: Rafah 0,28"), (12.0, 12.5, "unsicher: Gaza 0,31")])
+        h.tick()
+        seen["status"] = h.text("Status")
+
+    h.run(steps, timelines=[timeline()])
+    t = h.tracks()
+    assert [x["name"] for x in t] == ["WhisperX DE", h.T("track_gaps"), h.T("track_fast"), h.T("track_score")]
+    assert h.T("track_score") == "WhisperX unsicher"
+    assert [x["enabled"] for x in t] == [True, False, False, False]
+    assert t[3]["starts"] == [90000 + 40, 90000 + 12 * 25]                           # 1.6 s = 40 frames
+    assert h.T("placed_extra", n=2, track=4, name=h.T("track_score")) in seen["status"]
+    assert h.job_dirs() == []                           # the extra SRTs are deleted with the job folder
+
+
+def test_score_track_alone_takes_the_next_free_track(tmp_path):
+    h = Harness(tmp_path, lang="en")
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        h.workbench_hands_over(score=[(4.2, 4.7, "unsure: Welt 0.12")])
+        h.tick()
+
+    h.run(steps, timelines=[timeline()])
+    assert [x["name"] for x in h.tracks()] == ["WhisperX DE", "WhisperX unsure"]
+    assert [x["enabled"] for x in h.tracks()] == [True, False]
+
+
 def test_language_and_mode_chosen_in_the_plugin_go_into_the_job(tmp_path):
     h = Harness(tmp_path)
     seen = {}

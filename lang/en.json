@@ -123,6 +123,10 @@
       "one": "1 gap",
       "other": "{n} gaps"
     },
+    "unsure": {
+      "one": "1 unsure",
+      "other": "{n} unsure"
+    },
     "error": "error – see log",
     "running": "running …",
     "done": {
@@ -188,6 +192,10 @@
     "gap_min_hint": "ignore shorter passages · default 1.0",
     "gap_margin": "Gaps: above noise floor (dB)",
     "gap_margin_hint": "smaller = more sensitive · default 8",
+    "sw_score": "Score check: mark words with a score below",
+    "sw_score_unit": "after each transcription",
+    "score": "Score check: threshold",
+    "score_srt": "Also save the findings as <name>{suffix}",
     "orphan_limit": "Short words after a comma (characters)",
     "orphan_fill": "Short words after a comma: fill level (percent)",
     "max_duration": "Split long sentences (seconds of speech)",
@@ -304,7 +312,10 @@
     "resolve_countdown": "Countdown for DaVinci jobs",
     "resolve_countdown_off": "Without the tick: press Start yourself.",
     "resolve_auto_hand_over": "Hand over to DaVinci by itself when the job is transcribed",
-    "resolve_extra_tracks": "Also hand over gaps and subtitles that are too fast to read, each on its own subtitle track",
+    "resolve_track_gaps": "Gaps on their own track “WhisperX gaps” (needs the gap check)",
+    "resolve_track_fast": "Subtitles too fast to read on their own track “WhisperX too fast” (Sentences only)",
+    "sw_resolve_score": "Unsure words on their own track “WhisperX unsure”: score below",
+    "sw_resolve_score_unit": "(as under Speech detection)",
     "resolve_close_after": "Close the Workbench after the hand-over (otherwise it is minimized and the models stay loaded)"
   },
   "cmpdlg": {
@@ -411,6 +422,7 @@
     "done": "done",
     "check": "check",
     "gap": "gap",
+    "score": "unsure",
     "dnd": "dnd",
     "compare": "compare",
     "device": "device",
@@ -478,6 +490,14 @@
     "gap_more": "and {n} more",
     "gap_file": "Findings to jump to: {name}",
     "gap_tip": "Tip: if it is speech, lower the onset or try silero (Settings → Speech detection). Music, singing or applause can be ignored.",
+    "score_suffix": ".unsure.srt",
+    "score_cue": "unsure: {words}",
+    "score_found": {
+      "one": "Score: median {median} · 5% below {low} · 1 place below {threshold}",
+      "other": "Score: median {median} · 5% below {low} · {n} places below {threshold}"
+    },
+    "score_none": "Score check: no rated words (e.g. no alignment model for this language) – nothing to check",
+    "score_tip": "Tip: listen to these places. If a word is misrecognized, a replacement or the prompt helps (Settings → Languages). Names and foreign words are often right although their score is low.",
     "asr_done": {
       "one": "1 segment in {time}",
       "other": "{n} segments in {time}"
@@ -732,6 +752,7 @@
     "wb_cancelled": "Workbench: cancelled.",
     "track_gaps": "WhisperX gaps",
     "track_fast": "WhisperX too fast",
+    "track_score": "WhisperX unsure",
     "placed_extra": "+ {n} on subtitle track {track} “{name}” – to check, then delete the track.",
     "label_filter": "Audio filter",
     "count_off": "Resolve placed {placed} subtitles on ST{track}, the SRT has {cues}. Please check the track."
@@ -746,6 +767,7 @@
       "• JSON → SRT – a saved WhisperX result is only converted into subtitles again",
       "",
       "Status “⚠ gaps”: loud passages without text were found – details in the log",
+      "Status “⚠ unsure”: words with a low score (score check) – details in the log",
       "",
       "Double-click: show the finished SRT in Explorer",
       "Del key: remove selected files",
@@ -955,6 +977,20 @@
       "Larger (10–12): only clear cases.",
       "Default 8 dB."
     ],
+    "score": [
+      "Score check after each transcription: the word timestamps give every word a score from 0 to 1 – how well it fits the audio at its place. Clearly recognized words are high (often 0.8–1.0). A low score means the word was probably misrecognized or misplaced.",
+      "",
+      "Words below the threshold are marked. A higher threshold gives more entries. Recommended: 0.40.",
+      "",
+      "Names and foreign words land below it more often, even when they are right. Numbers are practically never marked; words with fewer than 3 letters are not rated.",
+      "",
+      "Findings appear in yellow in the log, the file gets “⚠ unsure” as status. The subtitles themselves do not change."
+    ],
+    "score_srt": [
+      "Also saves the findings as <name>{score_suffix}. Load it as a second subtitle track in VLC or Subtitle Edit – then you jump directly to the unsure words.",
+      "",
+      "If there are no findings any more, an old {score_suffix} is removed automatically."
+    ],
     "orphan_limit": [
       "A short word right after a comma starts the next subtitle instead of hanging alone at the end of a full line:",
       "",
@@ -1094,7 +1130,15 @@
     "resolve_countdown": "Seconds until a job from DaVinci Resolve is transcribed automatically. A click into the window stops the countdown.",
     "resolve_hand_over": "Moves the subtitles to the position of the transcribed range in the timeline and hands them to the waiting plugin in DaVinci Resolve. The SRT is read again from disk – changes made in the meantime count.",
     "resolve_auto_hand_over": "No need to press “Hand over to DaVinci”: as soon as the job is transcribed, the subtitles go to the waiting plugin. Useful when you check the subtitles in Resolve anyway.",
-    "resolve_extra_tracks": "Two extra subtitle tracks in Resolve: “WhisperX gaps” marks loud passages without text (gap check), “WhisperX too fast” marks subtitles with more than 17 characters per second (sentence mode only). They are for checking – delete the tracks afterwards. Nothing is added when there is nothing to show.",
+    "resolve_track_gaps": "An extra subtitle track in Resolve: “WhisperX gaps” marks loud passages without text. Needs the gap check (tab Speech detection). It is for checking – delete the track afterwards. Nothing is added when there is nothing to show.",
+    "resolve_track_fast": "An extra subtitle track in Resolve: “WhisperX too fast” marks subtitles with more than 17 characters per second. Mode “Sentences” only. It is for checking – delete the track afterwards. Nothing is added when there is nothing to show.",
+    "resolve_score": [
+      "An extra subtitle track in Resolve: “WhisperX unsure” marks words with a low score (score check). This is the same setting as on the tab Speech detection – a change shows up in both places.",
+      "",
+      "The score ranges from 0 to 1; clearly recognized words are high. A higher threshold gives more entries. Names and foreign words land below it more often. Numbers are practically never marked; words with fewer than 3 letters are not rated.",
+      "",
+      "It is for checking – delete the track afterwards. Nothing is added when there is nothing to show."
+    ],
     "resolve_close_after": "Without the tick the Workbench minimizes itself after the hand-over and keeps its models loaded – the next job starts without loading time. With the tick it closes."
   }
 }

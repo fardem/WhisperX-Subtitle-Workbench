@@ -123,6 +123,10 @@
       "one": "1 boşluk",
       "other": "{n} boşluk"
     },
+    "unsure": {
+      "one": "1 belirsiz",
+      "other": "{n} belirsiz"
+    },
     "error": "hata – günlüğe bakın",
     "running": "çalışıyor …",
     "done": {
@@ -188,6 +192,10 @@
     "gap_min_hint": "daha kısa yerleri yok say · varsayılan 1.0",
     "gap_margin": "Boşluklar: gürültü tabanının üstü (dB)",
     "gap_margin_hint": "küçük = daha hassas · varsayılan 8",
+    "sw_score": "Skor kontrolü: skoru",
+    "sw_score_unit": "altındaki kelimeleri işaretle",
+    "score": "Skor kontrolü: eşik",
+    "score_srt": "Bulunan yerleri ayrıca <name>{suffix} olarak kaydet",
     "orphan_limit": "Virgülden sonraki kısa kelimeler (karakter)",
     "orphan_fill": "Virgülden sonraki kısa kelimeler: doluluk (yüzde)",
     "max_duration": "Uzun cümleleri böl (saniye konuşma)",
@@ -304,7 +312,10 @@
     "resolve_countdown": "DaVinci işleri için geri sayım",
     "resolve_countdown_off": "İşaret yoksa Başlat'a kendiniz basın.",
     "resolve_auto_hand_over": "Yazıya dökme bitince otomatik olarak DaVinci'ye aktar",
-    "resolve_extra_tracks": "Boşlukları ve okunamayacak kadar hızlı altyazıları da aktar, her biri kendi altyazı izinde",
+    "resolve_track_gaps": "Boşluklar kendi izinde “WhisperX boşluklar” (boşluk kontrolü gerekir)",
+    "resolve_track_fast": "Çok hızlı altyazılar kendi izinde “WhisperX çok hızlı” (yalnızca cümle cümle)",
+    "sw_resolve_score": "Belirsiz kelimeler kendi izinde “WhisperX belirsiz”: skoru",
+    "sw_resolve_score_unit": "altında (Konuşma algılama sekmesindeki gibi)",
     "resolve_close_after": "Aktarımdan sonra Workbench'i kapat (aksi halde simge durumuna küçülür ve modeller yüklü kalır)"
   },
   "cmpdlg": {
@@ -411,6 +422,7 @@
     "done": "bitti",
     "check": "kontrol",
     "gap": "boşluk",
+    "score": "belirsiz",
     "dnd": "dnd",
     "compare": "kıyas",
     "device": "cihaz",
@@ -478,6 +490,14 @@
     "gap_more": "ve {n} tane daha",
     "gap_file": "Atlamak için bulunan yerler: {name}",
     "gap_tip": "İpucu: Konuşmaysa onset'i düşürün veya silero'yu deneyin (Ayarlar → Konuşma algılama). Müzik, şarkı veya alkış yok sayılabilir.",
+    "score_suffix": ".belirsiz.srt",
+    "score_cue": "belirsiz: {words}",
+    "score_found": {
+      "one": "Skor: medyan {median} · %5'i {low} altında · {threshold} altında 1 yer",
+      "other": "Skor: medyan {median} · %5'i {low} altında · {threshold} altında {n} yer"
+    },
+    "score_none": "Skor kontrolü: puanlanmış kelime yok (ör. bu dil için hizalama modeli yok) – kontrol edilecek bir şey yok",
+    "score_tip": "İpucu: Bu yerleri dinleyin. Bir kelime yanlış tanındıysa bir değiştirme veya prompt yardımcı olur (Ayarlar → Diller). Adlar ve yabancı kelimeler skorları düşük olsa da çoğu zaman doğrudur.",
     "asr_done": {
       "one": "{time} içinde 1 bölüm",
       "other": "{time} içinde {n} bölüm"
@@ -732,6 +752,7 @@
     "wb_cancelled": "Workbench: iptal edildi.",
     "track_gaps": "WhisperX boşluklar",
     "track_fast": "WhisperX çok hızlı",
+    "track_score": "WhisperX belirsiz",
     "placed_extra": "+ {n}, {track} numaralı “{name}” altyazı izinde – kontrol edin, sonra izi silin.",
     "label_filter": "Ses filtresi",
     "count_off": "Resolve ST{track} izine {placed} altyazı yerleştirdi, SRT'de {cues} var. Lütfen izi kontrol edin."
@@ -746,6 +767,7 @@
       "• JSON → SRT – kaydedilmiş bir WhisperX sonucu yalnızca yeniden altyazıya dönüştürülür",
       "",
       "“⚠ boşluk” durumu: metinsiz yüksek sesli yerler bulundu – ayrıntılar günlükte",
+      "“⚠ belirsiz” durumu: skoru düşük kelimeler (skor kontrolü) – ayrıntılar günlükte",
       "",
       "Çift tıklama: hazır SRT'yi Gezgin'de göster",
       "Del tuşu: seçili dosyaları kaldır",
@@ -955,6 +977,20 @@
       "Daha büyük (10–12): yalnızca belirgin durumlar.",
       "Varsayılan 8 dB."
     ],
+    "score": [
+      "Her transkripsiyondan sonra skor kontrolü: kelime zaman damgaları her kelimeye 0 ile 1 arasında bir skor verir – kelimenin kendi yerinde sese ne kadar iyi uyduğu. Net tanınan kelimeler yüksektir (çoğunlukla 0,8–1,0). Düşük skor, kelimenin büyük olasılıkla yanlış tanındığı veya yanlış yerleştirildiği anlamına gelir.",
+      "",
+      "Eşiğin altındaki kelimeler işaretlenir. Daha yüksek eşik = daha fazla kayıt. Öneri: 0,40.",
+      "",
+      "Adlar ve yabancı kelimeler doğru olsalar bile daha sık bunun altına düşer. Sayılar neredeyse hiç işaretlenmez; 3 harften kısa kelimeler puanlanmaz.",
+      "",
+      "Bulunan yerler günlükte sarı görünür, dosyanın durumu “⚠ belirsiz” olur. Altyazıların kendisi değişmez."
+    ],
+    "score_srt": [
+      "Bulunan yerleri ayrıca <name>{score_suffix} olarak kaydeder. VLC'de veya Subtitle Edit'te ikinci altyazı izi olarak yükleyin – böylece belirsiz kelimelere doğrudan atlarsınız.",
+      "",
+      "Artık bulunan yer yoksa eski bir {score_suffix} otomatik olarak silinir."
+    ],
     "orphan_limit": [
       "Virgülden hemen sonraki kısa bir kelime, dolu bir satırın sonunda yalnız kalmak yerine sonraki altyazıyı başlatır.",
       "",
@@ -1092,7 +1128,15 @@
     "resolve_countdown": "DaVinci Resolve'dan gelen bir işin otomatik olarak yazıya dökülmesine kadar geçen saniye. Pencereye bir tıklama geri sayımı durdurur.",
     "resolve_hand_over": "Altyazıları zaman çizelgesinde yazıya dökülen aralığın konumuna kaydırır ve DaVinci Resolve'da bekleyen eklentiye verir. SRT bunun için diskten yeniden okunur – bu arada yapılan değişiklikler de geçerlidir.",
     "resolve_auto_hand_over": "“DaVinci'ye aktar” düğmesine basmanız gerekmez: iş yazıya dökülür dökülmez altyazılar bekleyen eklentiye gider. Altyazıları zaten Resolve'da kontrol ediyorsanız kullanışlıdır.",
-    "resolve_extra_tracks": "Resolve'da iki ek altyazı izi: “WhisperX boşluklar” metinsiz yüksek sesli yerleri (boşluk kontrolü), “WhisperX çok hızlı” saniyede 17 karakterden fazla olan altyazıları işaretler (yalnızca cümle cümle). Kontrol içindir – sonra izleri silin. Gösterilecek bir şey yoksa iz eklenmez.",
+    "resolve_track_gaps": "Resolve'da ek bir altyazı izi: “WhisperX boşluklar” metinsiz yüksek sesli yerleri işaretler. Boşluk kontrolü gerekir (Konuşma algılama sekmesi). Kontrol içindir – sonra izi silin. Gösterilecek bir şey yoksa iz eklenmez.",
+    "resolve_track_fast": "Resolve'da ek bir altyazı izi: “WhisperX çok hızlı” saniyede 17 karakterden fazla olan altyazıları işaretler. Yalnızca cümle cümle modunda. Kontrol içindir – sonra izi silin. Gösterilecek bir şey yoksa iz eklenmez.",
+    "resolve_score": [
+      "Resolve'da ek bir altyazı izi: “WhisperX belirsiz” skoru düşük kelimeleri işaretler (skor kontrolü). Bu, Konuşma algılama sekmesindeki ayarın aynısıdır – bir değişiklik iki yerde birden geçerli olur.",
+      "",
+      "Skor 0 ile 1 arasındadır; net tanınan kelimeler yüksektir. Daha yüksek eşik = daha fazla kayıt. Adlar ve yabancı kelimeler daha sık bunun altına düşer. Sayılar neredeyse hiç işaretlenmez; 3 harften kısa kelimeler puanlanmaz.",
+      "",
+      "Kontrol içindir – sonra izi silin. Gösterilecek bir şey yoksa iz eklenmez."
+    ],
     "resolve_close_after": "İşaret yoksa Workbench aktarımdan sonra simge durumuna küçülür ve modellerini tutar – sonraki iş yükleme süresi olmadan başlar. İşaretliyse kapanır."
   }
 }

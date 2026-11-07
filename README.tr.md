@@ -8,7 +8,7 @@
 
 ![Ana pencere](docs/images/main-window.png)
 
-Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, uzun cümleler ve duraklamalar. Boşluk kontrolü metin almamış yüksek sesli yerleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla. DaVinci Resolve eklentisiyle bir zaman çizelgesini doğrudan Resolve içinden yazıya dökersiniz; altyazılar bir altyazı izine yerleşir.
+Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazıları oluşturur. Altyazı kuralları okunabilir bir sonuç için ayarlanmıştır: satır uzunluğu, yetim kelimeler, sarkan kelimeler, uzun cümleler ve duraklamalar. Boşluk kontrolü metin almamış yüksek sesli yerleri, skor kontrolü sese kötü uyan kelimeleri bulur. Karşılaştırma raporu hangi modelin veya ayarın daha iyi tanıdığını gösterir: hata oranları, zaman sapmaları ve tıklanınca o yeri çalan zamanlarla. DaVinci Resolve eklentisiyle bir zaman çizelgesini doğrudan Resolve içinden yazıya dökersiniz; altyazılar bir altyazı izine yerleşir.
 
 > Ekran görüntüleri İngilizce arayüzü gösterir; *Ayarlar → Genel* altında Türkçeye geçebilirsiniz.
 
@@ -47,6 +47,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, araç `.srt` altyazılar
 - **Şarkı sözü modu:** `sarki.mp3` dosyasının yanına `sarki.lyric.txt` koyarsanız şarkı metninin her satırı sese göre zamanlanır. Bu, zorlamalı hizalama (MMS_FA + uroman) ile çalışır ve her dilde işler.
 - **JSON → SRT:** WhisperX sonucunu saklayabilir ve altyazıları daha sonra saniyeler içinde farklı bir düzenle yeniden oluşturabilirsiniz.
 - **Boşluk kontrolü:** her transkripsiyondan sonra metin almamış, yüksek sesli ve insan sesine benzeyen yerleri, yani kaçırılmış konuşmayı bulur. Ayrıca her yere doğrudan atlamanızı sağlayan bir altyazı dosyası yazar.
+- **Skor kontrolü:** kelime zaman damgaları her kelimeye 0 ile 1 arasında bir skor verir – kelimenin kendi yerinde sese ne kadar iyi uyduğu. Bir eşiğin altındaki kelimeler (öneri 0,40) büyük olasılıkla yanlış tanınmış veya yanlış yerleştirilmiştir; kontrol bunları günlükte ve ayrı bir altyazı dosyasında listeler. Altyazıların kendisi değişmez.
 - **Karşılaştırma raporu** (HTML): A – B, A – referans veya A – B – referans.
   - Her farkta kimin haklı olduğunu gösterir.
   - Her dosyanın hata oranını (WER) ve iki dosyanın ortak hatalarını gösterir.
@@ -271,6 +272,11 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
   - Şüpheli boşlukları olan dosyalar listede “⚠ boşluk” durumunu alır.
   - Bu yerler günlükte sarı görünür.
   - Ayrıca `<name>.bosluklar.srt` olarak kaydedilir. Dosya adı arayüz diline göre değişir: İngilizcede `.gaps.srt`, Almancada `.luecken.srt`. Her yere atlamak için VLC'de veya Subtitle Edit'te ikinci altyazı izi olarak yükleyin.
+- **Skor kontrolü** (*Ayarlar → Konuşma algılama*, boşluk kontrolünün altında; 0.7.0'dan önceki bir INI'de kapalı):
+  - Günlük önce tüm kelime skorlarının medyanını ve %5'lik dilimini gösterir, örn. `Skor: medyan 0,88 · %5'i 0,61 altında · 0,40 altında 7 yer`, ardından yerleri kelimeleri ve skorlarıyla. Böyle yerleri olan dosyalar “⚠ belirsiz” durumunu alır.
+  - Yerler ayrıca `<name>.belirsiz.srt` olarak kaydedilir (İngilizcede `.unsure.srt`, Almancada `.unsicher.srt`), örn. `belirsiz: Bundesverfassungsgericht 0,32 · Rafah 0,28`. Aralarında en fazla 1 saniye olan işaretli kelimeler tek bir kayıttır.
+  - Daha yüksek eşik = daha fazla kayıt. Adlar ve yabancı kelimeler doğru olsalar bile daha sık bunun altına düşer. Sayılar neredeyse hiç işaretlenmez, 3 harften kısa kelimeler puanlanmaz.
+  - “JSON'u sakla” ile kaydedilmiş bir JSON için de çalışır, şarkı sözleri için çalışmaz. Hizalama modeli olmayan bir dil için skor yoktur; günlük bunu belirtir.
 - **Fareyi herhangi bir öğenin üzerinde tutarsanız** ayrıntılı bir açıklama görünür.
 
 ---
@@ -332,7 +338,7 @@ Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini deği�
 3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Dil, mod ve ses filtresi eklenti penceresinden, diğer tüm ayarlar INI'den gelir: prompt, satır başına karakter ve satır sayısı ile *Ayarlar → Altyazılar*'daki tüm kurallar. Ana penceredeki seçenekler DaVinci işleri için geçerli değildir. Günlük ikisini de gösterir. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız. Bu sırada eklenti penceresi işin nerede olduğunu gösterir: geri sayım, yüzde olarak transkripsiyon, bitti.
 4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın (iş bitince mavi olur). SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `resolve_temp\<ZamanÇizelgesi>_<DİL>_<tarih-saat>.srt` olarak kaydedilir; bu klasör son 10 aktarımın SRT'lerini saklar, 11. aktarım en eskisini siler. Ad her seferinde yenidir, çünkü Resolve medya havuzunda zaten bulunan bir dosyayı yeniden okumaz – ilk içe aktarmanın altyazılarını yerleştirirdi. Ardından Workbench kendini simge durumuna küçültür – açık kalır, modelleri bir sonraki iş için yüklü kalır. *Ayarlar → DaVinci Resolve* altında iş yazıya dökülür dökülmez otomatik aktarımı ve küçültmek yerine kapatmayı açabilirsiniz.
 5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir; eklenti penceresi sonuçla öne gelir ve *Tamam*'a basana kadar orada kalır.
-6. Açıksa (varsayılan) iki ek altyazı izi kontrole yardım eder: **WhisperX boşluklar** boşluk kontrolünden metinsiz yüksek sesli yerleri, **WhisperX çok hızlı** saniyede 17 karakterden fazla olan altyazıları işaretler (*Cümle cümle* modu). Resolve'da bunlar arasında gezinin, sonra iki izi silin. Transkript izi etkin iz olarak kalır.
+6. En fazla üç ek altyazı izi kontrole yardım eder; her biri *Ayarlar → DaVinci Resolve* altında ayrı ayrı açılıp kapatılır: **WhisperX boşluklar** boşluk kontrolünden metinsiz yüksek sesli yerleri, **WhisperX çok hızlı** saniyede 17 karakterden fazla olan altyazıları (*Cümle cümle* modu), **WhisperX belirsiz** skor kontrolünün kelimelerini işaretler (skor kontrolü açık olduğu sürece – *Ayarlar → DaVinci Resolve* altındaki satır, *Konuşma algılama* altındakiyle aynı ayardır). Resolve'da bunlar arasında gezinin, sonra izleri silin. Bir iz yalnızca gösterilecek bir şey varsa eklenir ve transkript izi etkin iz olarak kalır.
 
 ![Workbench'te aktarılmaya hazır bir DaVinci Resolve işi](docs/images/resolve-job.png)
 
@@ -356,6 +362,8 @@ Eklenti beklerken Resolve kullanılabilir kalır. Yazıya dökülen aralıkta za
 - **Ana pencere:** dil, mod, düzen, ses filtresi ve prompt. *Varsayılan olarak kaydet* bunları INI'ye yazar.
 - **Ayarlar …** yedi sekmeden oluşur: Whisper, Konuşma algılama, Altyazılar, Ses ve çıktı, Diller, DaVinci Resolve ve Genel. *Kaydet* yalnızca değişen değerleri `whisper_tool.ini` dosyasına yazar, önce bir `.bak` yedeği oluşturur ve tüm açıklamaları korur.
 - `whisper_tool.ini` elle de düzenlenebilir. Her değerin açıklaması vardır; şablon `whisper_tool.example.ini` dosyasıdır.
+
+*Ayarlar → Konuşma algılama* transkripsiyondan sonraki iki kontrolü de içerir: boşluk kontrolü ve eşiğiyle birlikte skor kontrolü. *Ayarlar → DaVinci Resolve* altında bir aktarımda hangi kontrol izlerinin gideceğini belirlersiniz.
 
 *Ayarlar → Altyazılar*, aracın sırayla yanıtladığı sorulara göre düzenlenmiştir: **1 · Bölme** – hangi kelimeler birlikte bir altyazıya girer, **2 · Duraklamalar** – bir bölüm ekranda ne kadar kalır, **3 · Şarkı sözleri** – şarkı satırları için ayrı kurallar.
 
@@ -412,6 +420,8 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | Sistem kontrolünde bir satır kırmızı | Eksik parçayı ve hangi işlevin etkilendiğini söyler. Bkz. [Kurulumu bozmanın bilinen yolları](#kurulumu-bozmanın-bilinen-yolları) |
 | “torch, CUDA'sız bir sürüm” | torch PyPI'dan kurulmuş. Kurulumun 4. adımını tekrarlayın |
 | Kısık sesli yerlerde metin eksik | Boşluk kontrolüne bakın. Sonra *Onset*'i düşürün veya *silero*'yu deneyin (*Ayarlar → Konuşma algılama*) |
+| Altyazılarda yanlış kelimeler | Skor kontrolünü açın (*Ayarlar → Konuşma algılama*) ve listelediği yerleri dinleyin. Tekrarlayan hataları bir değiştirme veya prompt ile düzeltin (*Ayarlar → Diller*) |
+| Skor kontrolü doğru olan birçok adı işaretliyor | Adlar ve yabancı kelimeler çoğu zaman düşük skor alır. Eşiği düşürün, örn. 0,30'a |
 | Tüm dosya için yanlış dil | *Otomatik* yerine dili belirleyin; baştaki müzik veya giriş algılamayı yanıltabilir |
 | Prompt kelimeleri sessizlikte veya müzikte çıkıyor | Prompt'u kısaltın veya bu dosya için *yok*'u seçin |
 | Eklenti Resolve'da *Workspace → Scripts* altında yok | Resolve'u bir kez yeniden başlatın; olmazsa eklentiyi *Ayarlar → DaVinci Resolve* altında yeniden kurun |
@@ -426,7 +436,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | Dosya | Görevi |
 |---|---|
 | `whisper_tool.py` | Arayüz (Tkinter), ayarlar penceresi, karşılaştırma penceresi, konsol modu |
-| `wt_core.py` | Ses yükleme, WhisperX, şarkı sözü hizalama, altyazı kuralları, boşluk kontrolü, sistem kontrolü, INI yazıcı |
+| `wt_core.py` | Ses yükleme, WhisperX, şarkı sözü hizalama, altyazı kuralları, boşluk kontrolü, skor kontrolü, sistem kontrolü, INI yazıcı |
 | `wt_compare.py` | Kelime kelime karşılaştırma ve HTML raporu (tek başına da kullanılabilir) |
 | `wt_i18n.py` | Dil dosyalarını yükler |
 | `wt_resolve.py` | DaVinci Resolve bağlantısı: iş ve sonuç dosyaları, SRT kaydırma, eklenti kurulumu |

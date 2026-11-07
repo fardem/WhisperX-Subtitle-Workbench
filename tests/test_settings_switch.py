@@ -68,3 +68,36 @@ def test_splitting_is_not_called_a_display_time():
         assert "teilen" in i18n.T("set.sw_max_duration") and "Sprache" in i18n.T("set.sw_max_duration_unit")
     finally:
         i18n.load("en")
+
+
+# ─── score check: one INI value, a row on two tabs ────────────────────────────
+
+def test_score_threshold_is_checked_on_saving():
+    assert wt.SettingsDialog.NUMERIC[("Score", "threshold")] == (float, 0.05, 0.95, "score")
+
+
+def test_second_row_reuses_the_switch_of_the_first():
+    first = wt.SwitchVar(Var(True), Var("0.4"))
+    dlg = type("Dlg", (), {"vars": {("Score", "threshold"): first}})()
+    assert wt.SettingsDialog._switch_var(dlg, "Score", "threshold", 0.4, 0.4) is first
+    assert dlg.vars == {("Score", "threshold"): first}
+
+
+@pytest.mark.parametrize("code", [c for c, _ in i18n.available()])
+def test_score_rows_and_tracks_have_their_texts(code):
+    i18n.load(code)
+    try:
+        keys = (["set.sw_score", "set.sw_score_unit", "set.score", "set.score_srt", "set.sw_resolve_score",
+                 "set.sw_resolve_score_unit", "set.resolve_track_gaps", "set.resolve_track_fast",
+                 "status.unsure.one", "status.unsure.other", "tag.score"]
+                + [f"tip.{k}" for k in ("score", "score_srt", "resolve_score", "resolve_track_gaps",
+                                        "resolve_track_fast")])
+        assert [k for k in keys if not i18n.has(k)] == []
+        # the rows name the tracks exactly as the plugin names them in Resolve
+        for row, track in (("set.resolve_track_gaps", "gaps"), ("set.resolve_track_fast", "fast"),
+                           ("set.sw_resolve_score", "score")):
+            assert i18n.T(f"plugin.track_{track}") in i18n.T(row), row
+        assert not i18n.has("set.resolve_extra_tracks") and not i18n.has("tip.resolve_extra_tracks")
+    finally:
+        i18n.load("en")
+

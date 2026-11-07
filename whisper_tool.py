@@ -231,7 +231,8 @@ class Tooltip:
 
 def tip(widgets, key: str, scale: float = 1.0):
     """Attach a tooltip (lang/<code>.json → "tip") to one or more widgets."""
-    text = T(f"tip.{key}", suffix=T("core.gap_suffix")) if i18n.has(f"tip.{key}") else ""
+    text = T(f"tip.{key}", suffix=T("core.gap_suffix"), score_suffix=T("core.score_suffix")) \
+        if i18n.has(f"tip.{key}") else ""
     if text:
         for w in widgets if isinstance(widgets, (list, tuple)) else (widgets,):
             Tooltip(w, text, scale)
@@ -663,9 +664,11 @@ class App(BaseTk):
         threading.Thread(target=work, daemon=True).start()
 
     def _compare_dialog(self):
-        """Suggest the SRTs of the selected file (oldest = A, newest = B) and the media file for listening."""
+        """Suggest the SRTs of the selected file (oldest = A, newest = B) and the media file for listening.
+        The lists of the gap and the score check (every language) are no transcripts – they are left out."""
         found, media = [], None
-        gap_suffixes = tuple(i18n.all_values("core.gap_suffix")) or (".gaps.srt",)
+        check_suffixes = (tuple(i18n.all_values("core.gap_suffix")) or (".gaps.srt",)) \
+            + (tuple(i18n.all_values("core.score_suffix")) or (".unsure.srt",))
         for iid in self.tree.selection():
             if iid not in self.items:
                 continue
@@ -676,7 +679,7 @@ class App(BaseTk):
             if media is None and src.suffix.lower() in core.MEDIA_EXT:
                 media = src
             found += [p for p in src.parent.glob(core.glob_escape(src.stem) + "*.srt")
-                      if not p.name.endswith(gap_suffixes) and p not in found]
+                      if not p.name.endswith(check_suffixes) and p not in found]
         found.sort(key=lambda p: p.stat().st_mtime)
         CompareDialog(self, str(found[0]) if found else "", str(found[-1]) if len(found) > 1 else "",
                       str(media) if media else "")
@@ -848,14 +851,16 @@ class App(BaseTk):
             job_opts = opts if job is None else self._resolve_options(job)
             try:
                 info = self.engine.process(item["path"], job_opts)
-                # suffix with {model} → actual name; language, mode and gaps go with a hand-over to DaVinci
+                # suffix with {model} → actual name; language, mode, gaps and unsure words go with a
+                # hand-over to DaVinci
                 self.q.put(("out", iid, info))
                 lang = f" · {info['language']}" if info.get("language", "-") != "-" else ""
-                gaps = info.get("gaps", 0)
+                gaps, unsure = info.get("gaps", 0), info.get("unsure", 0)
                 self.q.put(("state", iid, "done",
                             Tn("status.done", info["cues"], time=fmt_dur(time.perf_counter() - t)) + lang
-                            + (" · ⚠ " + Tn("status.gaps", gaps) if gaps else ""),
-                            "gaps" if gaps else None))
+                            + (" · ⚠ " + Tn("status.gaps", gaps) if gaps else "")
+                            + (" · ⚠ " + Tn("status.unsure", unsure) if unsure else ""),
+                            "gaps" if gaps or unsure else None))
                 ok += 1
             except core.Cancelled:
                 self.q.put(("state", iid, "cancel", T("status.cancelled")))
@@ -918,7 +923,7 @@ class App(BaseTk):
                 if msg[1] in self.items:
                     info, it = msg[2], self.items[msg[1]]
                     it.update(out=info["output"], lang=info.get("language"), mode=info.get("mode"),
-                              gap_list=info.get("gap_list") or [])
+                              gap_list=info.get("gap_list") or [], score_list=info.get("score_list") or [])
             elif kind == "dnd":
                 ok, text, parent = msg[1:]
                 (messagebox.showinfo if ok else messagebox.showerror)(
@@ -1083,9 +1088,9 @@ class App(BaseTk):
         """
         "Hand over to DaVinci": the given jobs (automatic hand-over), else the selected transcribed
         jobs – or all that were not handed over yet. The SRT is shifted to the position of the range
-        in the timeline and lands in resolve_temp/; gaps and too fast subtitles go along for own
-        tracks if switched on. Afterwards the window gets out of the way – minimized (the models
-        stay loaded) or closed – and the plugin in DaVinci Resolve comes to the front with the result.
+        in the timeline and lands in resolve_temp/; gaps, too fast subtitles and unsure words go along
+        for own tracks (_extra_tracks). Afterwards the window gets out of the way – minimized (the
+        models stay loaded) or closed – and the plugin in DaVinci Resolve comes to the front with the result.
         """
         done = [i for i, it in self.items.items() if it.get("job") and it["state"] == "done"]
         sel = [i for i in self.tree.selection() if i in done]
@@ -1093,7 +1098,6 @@ class App(BaseTk):
             targets = [i for i in iids if i in done and not self.items[i].get("handed")]
         else:
             targets = sel or [i for i in done if not self.items[i].get("handed")] or done
-        extra = self.cfg.resolve_extra
         handed = 0
         for iid in targets:
             it = self.items[iid]
@@ -1102,12 +1106,8 @@ class App(BaseTk):
                 lang = key_of(self.lang_choices, self.v_lang.get())
                 lang = "" if lang == "auto" else lang
             try:
-                res = wt_resolve.hand_over(
-                    it["job"], it["out"], lang, encoding=self.cfg.encoding,
-                    gaps=it.get("gap_list") if extra else None,
-                    gap_label=lambda s, e, rel: T("core.gap_cue", len=i18n.secs(e - s), db=f"{rel:+.0f}"),
-                    fast_cps=core.READING_CPS if extra and it.get("mode") == "sentence" else None,
-                    fast_label=lambda cps: T("resolve.fast_cue", cps=f"{cps:.0f}"))
+                res = wt_resolve.hand_over(it["job"], it["out"], lang, encoding=self.cfg.encoding,
+                                           **self._extra_tracks(it))
             except (wt_resolve.ResolveError, OSError) as e:
                 self._append_log(f"{i18n.tag('error')}{e}\n")
                 messagebox.showerror(T("resolve.hand_over_title"), str(e), parent=self)
@@ -1123,6 +1123,21 @@ class App(BaseTk):
             self.after(400, self._close_now)
         elif handed:
             self.after(150, self.iconify)
+
+    def _extra_tracks(self, it) -> dict:
+        """
+        Own subtitle tracks of a hand-over, to check in Resolve: gaps ([Resolve] track_gaps), too fast
+        subtitles ([Resolve] track_fast, mode "Sentences" only) and the unsure words of the score
+        check – these whenever the check is on ([Score] threshold). Nothing to show → no track.
+        """
+        cfg = self.cfg
+        score = it.get("score_list") if cfg.score_threshold > 0 else None
+        return dict(
+            gaps=it.get("gap_list") if cfg.resolve_gaps else None,
+            gap_label=lambda s, e, rel: T("core.gap_cue", len=i18n.secs(e - s), db=f"{rel:+.0f}"),
+            fast_cps=core.READING_CPS if cfg.resolve_fast and it.get("mode") == "sentence" else None,
+            fast_label=lambda cps: T("resolve.fast_cue", cps=f"{cps:.0f}"),
+            score=[(s, e, core.unsure_label(words)) for s, e, words in score] if score else None)
 
     def _close_now(self):
         """After a hand-over, if switched on: close without asking (nothing is running)."""
@@ -1231,7 +1246,7 @@ class App(BaseTk):
             return "error"
         if kind == "check":
             return "warn" if sym == "!" else ""
-        return {"error": "error", "done": "ok", "warn": "warn", "gap": "warn"}.get(kind, "")
+        return {"error": "error", "done": "ok", "warn": "warn", "gap": "warn", "score": "warn"}.get(kind, "")
 
     # ── Explorer / open files ──────────────────────────────────────────────────
 
@@ -1332,6 +1347,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         ("Resolve", "countdown"):      (int, 0, 600, "resolve_countdown"),
         ("Gaps", "min_length"):        (float, 0.3, 30, "gap_min"),
         ("Gaps", "margin_db"):         (float, 2, 30, "gap_margin"),
+        ("Score", "threshold"):        (float, core.SCORE_MIN, core.SCORE_MAX, "score"),
     }
 
     def __init__(self, app: "App"):
@@ -1398,19 +1414,29 @@ class SettingsDialog(tk.Toplevel if tk else object):
         return ttk.Spinbox(f, from_=lo, to=hi, increment=step, width=8,
                            textvariable=self._var(sec, key, value), **kw)
 
-    def _switch(self, f, r, key, sec, ini_key, value, default, lo, hi, step, fmt=None):
+    def _switch(self, f, r, key, sec, ini_key, value, default, lo, hi, step, fmt=None) -> SwitchVar:
         """
         Row "[x] text [number] unit": the number only counts with the tick. Without the tick
         the field is grey and shows the recommended value; the INI gets 0 (= off) as before.
+        The same INI value may have a row on two tabs: both share one SwitchVar, so a change
+        shows up at once in the other tab.
         """
-        on = tk.BooleanVar(value=value > 0)
-        val = tk.StringVar(value=f"{value if value > 0 else default:g}")
-        self.vars[(sec, ini_key)] = SwitchVar(on, val)
-        cb = ttk.Checkbutton(f, text=T(f"set.sw_{key}"), variable=on)
+        var = self._switch_var(sec, ini_key, value, default)
+        cb = ttk.Checkbutton(f, text=T(f"set.sw_{key}"), variable=var.on)
         cb.grid(row=r, column=0, sticky="w", pady=3)
-        sp, unit = self._number(f, r, key, val, lo, hi, step, fmt)
-        self._bind_state(on, [sp, unit])
+        sp, unit = self._number(f, r, key, var.value, lo, hi, step, fmt)
+        self._bind_state(var.on, [sp, unit])
         tip([cb, sp, unit], key, self.app.scale)
+        return var
+
+    def _switch_var(self, sec, ini_key, value, default) -> SwitchVar:
+        """The SwitchVar of an INI value – the one of an earlier row if there is one."""
+        var = self.vars.get((sec, ini_key))
+        if not isinstance(var, SwitchVar):
+            var = SwitchVar(tk.BooleanVar(value=value > 0),
+                            tk.StringVar(value=f"{value if value > 0 else default:g}"))
+            self.vars[(sec, ini_key)] = var
+        return var
 
     def _switch_head(self, f, r, key, on):
         """Tick box over a whole row – its numbers follow in indented rows below (_sub_row)."""
@@ -1521,6 +1547,19 @@ class SettingsDialog(tk.Toplevel if tk else object):
             tip(cb, tkey, self.app.scale)
         self._row(f, 9, "gap_min", self._spin(f, "Gaps", "min_length", f"{c.gap_min:g}", 0.5, 30, 0.5, "%.1f"))
         self._row(f, 10, "gap_margin", self._spin(f, "Gaps", "margin_db", f"{c.gap_margin:g}", 2, 30, 1))
+
+        ttk.Separator(f).grid(row=11, column=0, columnspan=3, sticky="ew", pady=12)
+        score = self._score_switch(f, 12)
+        cb = ttk.Checkbutton(f, text=T("set.score_srt", suffix=T("core.score_suffix")),
+                             variable=self._var("Score", "write_srt", c.score_srt, True))
+        cb.grid(row=13, column=0, columnspan=3, sticky="w", pady=3)
+        self._bind_state(score.on, [cb])
+        tip(cb, "score_srt", self.app.scale)
+
+    def _score_switch(self, f, r, key="score") -> SwitchVar:
+        """Score check: the same INI value ([Score] threshold) on the tabs Speech detection and DaVinci Resolve."""
+        return self._switch(f, r, key, "Score", "threshold", self.cfg.score_threshold, 0.4,
+                            core.SCORE_MIN, core.SCORE_MAX, 0.05, "%.2f")
 
     def _tab_subs(self, f):
         """
@@ -1671,8 +1710,13 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self._switch(f, r, "resolve_countdown", "Resolve", "countdown", c.resolve_countdown, 10, 1, 600, 1)
         ttk.Label(f, text=T("set.resolve_countdown_off"), foreground="#77767b").grid(
             row=r + 1, column=0, columnspan=3, sticky="w", pady=(2, 0))
-        for i, (key, value) in enumerate((("auto_hand_over", c.resolve_auto), ("extra_tracks", c.resolve_extra),
-                                          ("close_after", c.resolve_close))):
+        # own subtitle tracks to check: gaps, too fast subtitles, unsure words (= the score check itself)
+        rows = (("auto_hand_over", c.resolve_auto), ("track_gaps", c.resolve_gaps), ("track_fast", c.resolve_fast),
+                ("score", None), ("close_after", c.resolve_close))
+        for i, (key, value) in enumerate(rows):
+            if key == "score":
+                self._score_switch(f, r + 2 + i, "resolve_score")
+                continue
             cb = ttk.Checkbutton(f, text=T(f"set.resolve_{key}"), variable=self._var("Resolve", key, value, True))
             cb.grid(row=r + 2 + i, column=0, columnspan=3, sticky="w", pady=(8 if i == 0 else 3, 0))
             tip(cb, f"resolve_{key}", sc)
@@ -1798,7 +1842,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
                 v = var.get().strip()
                 if key == ("System", "ui_language"):
                     v = key_of(self.ui_langs, v)
-                if key in self.NUMERIC:
+                if key in self.NUMERIC and not (isinstance(var, SwitchVar) and not var.on.get()):   # off = "0"
                     cast, lo, hi, row = self.NUMERIC[key]
                     name = T(f"set.{row}")
                     try:

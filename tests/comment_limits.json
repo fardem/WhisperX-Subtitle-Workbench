@@ -1,0 +1,114 @@
+{
+  "resolve/WhisperX_Subtitles.lua": {
+    "lines": 91,
+    "long_blocks": 1
+  },
+  "resolve/tools/probe_subtitles.lua": {
+    "lines": 31,
+    "long_blocks": 2
+  },
+  "tests/conftest.py": {
+    "lines": 6,
+    "long_blocks": 0
+  },
+  "tests/helpers.py": {
+    "lines": 5,
+    "long_blocks": 0
+  },
+  "tests/resolve_mock.lua": {
+    "lines": 23,
+    "long_blocks": 1
+  },
+  "tests/test_abbreviations.py": {
+    "lines": 4,
+    "long_blocks": 0
+  },
+  "tests/test_balance.py": {
+    "lines": 3,
+    "long_blocks": 0
+  },
+  "tests/test_compare.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
+  "tests/test_config.py": {
+    "lines": 6,
+    "long_blocks": 0
+  },
+  "tests/test_gaps.py": {
+    "lines": 5,
+    "long_blocks": 0
+  },
+  "tests/test_i18n.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
+  "tests/test_pauses.py": {
+    "lines": 21,
+    "long_blocks": 0
+  },
+  "tests/test_reading_speed.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
+  "tests/test_requirements.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
+  "tests/test_resolve.py": {
+    "lines": 39,
+    "long_blocks": 0
+  },
+  "tests/test_resolve_plugin.py": {
+    "lines": 50,
+    "long_blocks": 0
+  },
+  "tests/test_score.py": {
+    "lines": 22,
+    "long_blocks": 0
+  },
+  "tests/test_settings_switch.py": {
+    "lines": 9,
+    "long_blocks": 0
+  },
+  "tests/test_subtitles.py": {
+    "lines": 9,
+    "long_blocks": 0
+  },
+  "tests/test_texts.py": {
+    "lines": 8,
+    "long_blocks": 0
+  },
+  "tools/comments.py": {
+    "lines": 7,
+    "long_blocks": 0
+  },
+  "whisper_tool.example.ini": {
+    "lines": 91,
+    "long_blocks": 2
+  },
+  "whisper_tool.py": {
+    "lines": 127,
+    "long_blocks": 0
+  },
+  "wt_compare.py": {
+    "lines": 68,
+    "long_blocks": 0
+  },
+  "wt_core.py": {
+    "lines": 180,
+    "long_blocks": 0
+  },
+  "wt_i18n.py": {
+    "lines": 16,
+    "long_blocks": 0
+  },
+  "wt_resolve.py": {
+    "lines": 87,
+    "long_blocks": 0
+  },
+  "wt_version.py": {
+    "lines": 1,
+    "long_blocks": 0
+  }
+}

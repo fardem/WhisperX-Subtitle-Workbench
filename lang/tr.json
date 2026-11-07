@@ -285,7 +285,7 @@
     "err_hold": "Tutma süresi ({hold} saniye), duraklama sınırından ({pause} saniye) kısa olmalıdır – aksi hâlde gerçek bir duraklama hiç görünmez.",
     "tab_resolve": "DaVinci Resolve",
     "sec_resolve_plugin": "1 · Eklenti",
-    "sec_resolve_plugin_info": "Eklenti DaVinci Resolve'da Workspace → Scripts → WhisperX_Subtitles altında görünür (her sayfada). Oradaki “Yazıya dök”, zaman çizelgesinin sesini render edip bu pencereye verir; “DaVinci'ye aktar” altyazıları bir altyazı izine geri gönderir.",
+    "sec_resolve_plugin_info": "Eklenti DaVinci Resolve'da Workspace → Scripts → WhisperX_Subtitles altındadır.",
     "resolve_status": "Eklenti",
     "resolve_not_installed": "kurulu değil",
     "resolve_installed": "kurulu – sürüm {version}",
@@ -305,7 +305,9 @@
       "Eklenti kurulamadı:",
       "{err}"
     ],
-    "sec_resolve_jobs": "2 · DaVinci Resolve'dan gelen işler",
+    "sec_resolve_analysis": "2 · Analiz",
+    "sec_resolve_analysis_info": "Kontrol izleri: kontrol edilecek yerleri işaretleyen ek altyazı izleri. Altyazıların parçası değildir. Bir iz yalnızca gösterilecek bir şey varsa eklenir. Kontrolden sonra izi Resolve'da silin.",
+    "sec_resolve_jobs": "3 · DaVinci Resolve'dan gelen işler",
     "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Dil, mod ve ses filtresi eklenti penceresinden, diğer tüm ayarlar INI'den gelir. Ana penceredeki seçenekler bu işler için geçerli değildir.",
     "sw_resolve_countdown": "DaVinci Resolve'dan gelen işleri otomatik başlat:",
     "sw_resolve_countdown_unit": "saniye sonra",
@@ -316,7 +318,7 @@
     "resolve_track_fast": "Çok hızlı altyazılar kendi izinde “WhisperX çok hızlı” (yalnızca cümle cümle)",
     "sw_resolve_score": "Belirsiz kelimeler kendi izinde “WhisperX belirsiz”: skoru",
     "sw_resolve_score_unit": "altında (Konuşma algılama sekmesindeki gibi)",
-    "resolve_close_after": "Aktarımdan sonra Workbench'i kapat (aksi halde simge durumuna küçülür ve modeller yüklü kalır)"
+    "resolve_close_after": "Aktarımdan sonra Workbench'i küçültmek yerine kapat"
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -370,7 +372,7 @@
     "python_old": "en az 3.10 gerekli",
     "pkg_missing": "{mod} eksik → {purpose} mümkün değil. Lütfen venv'deki WhisperX kurulumunu kontrol edin.",
     "pkg_optional": "{mod} kurulu değil → {purpose}: Ayarlar → Genel",
-    "whisperx_old": "whisperx {version}, 3.8'den eski – araç 3.8.x ile test edildi",
+    "whisperx_old": "whisperx {version}, 3.8'den eski – Workbench 3.8.x ile test edildi",
     "torch_mismatch": "torch {torch} ile torchaudio {torchaudio} uyumlu değil – şarkı sözü hizalama başarısız olabilir",
     "ffmpeg_missing": "ffmpeg bulunamadı: {path} → hiçbir ses dosyası okunamaz. Yolu Ayarlar → Ses ve çıktı altında girin.",
     "ct2_folder": "CTranslate2 klasörü",
@@ -479,7 +481,7 @@
       "other": "{n} altyazı saniyede {cps} karakterden hızlı – okunması zor:"
     },
     "fast_item": "{cps} karakter/sn",
-    "fast_tip": "İpucu: Araç metni asla değiştirmez – okunması zorsa bu altyazıları Subtitle Edit'te kısaltın.",
+    "fast_tip": "İpucu: Workbench metni değiştirmez. Okunması zor altyazıları Subtitle Edit'te kısaltın.",
     "gap_suffix": ".bosluklar.srt",
     "gap_none": "şüpheli boşluk yok",
     "gap_found": {
@@ -794,12 +796,12 @@
     "cmp_media": [
       "İsteğe bağlı: konuşmanın videosu veya sesi. O zaman rapordaki tüm zamanlar tıklanabilir olur ve ilgili yeri çalar (1,5 sn önceden) – böylece kimin haklı olduğunu hemen duyarsınız.",
       "",
-      "Araç bunun için raporun yanına her tarayıcının çalabildiği küçük bir ses izi (.m4a) koyar – kaynağın video biçimi ne olursa olsun."
+      "Workbench bunun için raporun yanına bir ses izi (.m4a) koyar. Kaynağın video biçimi ne olursa olsun her tarayıcıda çalar."
     ],
     "cmp_ref": [
       "İsteğe bağlı: aynı kaydın elle düzeltilmiş bir SRT'si (örn. Subtitle Edit'te iyileştirilmiş).",
       "",
-      "O zaman rapor her noktada kimin haklı olduğunu gösterir, A ve B için hata oranını (WER) hesaplar, ikisinin de yaptığı hataları listeler ve değiştirmeler önerir – en nesnel karşılaştırma. Raporda her zaman yeşil. 5–10 dakikalık düzeltilmiş bölüm bile iyi bir değerlendirme için yeterlidir."
+      "O zaman rapor her noktada kimin haklı olduğunu gösterir, A ve B için hata oranını (WER) hesaplar, ikisinin de yaptığı hataları listeler ve değiştirmeler önerir. Raporda her zaman yeşil. 5–10 dakikalık düzeltilmiş bölüm bir değerlendirme için yeterlidir."
     ],
     "remove": "Seçili dosyaları listeden çıkarır (dosyaların kendisi değişmez). Del tuşuyla da olur.",
     "clear": "Listeyi temizler (dosyaların kendisi değişmez).",
@@ -840,7 +842,7 @@
     "json": [
       "WhisperX sonucunu ayrıca <name>.json olarak kaydeder.",
       "",
-      "Daha sonra .json'u araca sürükleyin → farklı düzen, değiştirmeler veya kurallarla yeni SRT, saniyeler içinde ve yeni transkripsiyon olmadan."
+      "Daha sonra .json'u Workbench'e sürükleyin → farklı düzen, değiştirmeler veya kurallarla yeni SRT, saniyeler içinde ve yeni transkripsiyon olmadan."
     ],
     "hold": [
       "Yalnızca şarkı sözü: satır sonunu en fazla bu kadar saniye uzatır – ama asla sonraki satırın başlangıcını geçmez.",
@@ -929,7 +931,7 @@
       "",
       "pyannote – WhisperX varsayılanı. Sinirsel bölütleme modeli, konuşma sınırlarını hassas belirler, arka plan gürültüsüne dayanıklıdır.",
       "",
-      "silero – kendi algılaması olan küçük, çok hızlı bir model. pyannote kısık sesli konuşmayı yutuyorsa veya alkışı/müziği konuşma olarak algılıyorsa deneyin."
+      "silero – küçük, çok hızlı bir model. pyannote kısık sesli konuşmayı atlıyorsa veya alkışı ve müziği konuşma olarak algılıyorsa deneyin."
     ],
     "onset": [
       "Bir bölümün konuşma olarak başladığı eşik (0–1).",
@@ -955,11 +957,11 @@
       "Cümle cümle ve kelime kelime modlarında çoğu zaman önemsiz."
     ],
     "gap_enabled": [
-      "Her transkripsiyondan sonra boşluk kontrolü: yüksek sesli ve sese benzeyen ama metin almamış yerleri arar – konuşma algılama (VAD) kısık sesli konuşmayı yuttuğunda veya Whisper bir cümleyi atladığında tipiktir.",
+      "Her transkripsiyondan sonra boşluk kontrolü: yüksek sesli ve sese benzeyen ama metin almamış yerleri arar. Tipik neden: konuşma algılama (VAD) kısık sesli konuşmayı atlar veya Whisper bir cümleyi atlar.",
       "",
-      "Nasıl çalışır: seviye gürültü tabanının belirgin üstünde VE geniş bantlı gürültü (alkış, rüzgâr, trafik) yerine temel ton ve harmonikleri olan bir ses (insan sesi).",
+      "Bir yer, seviyesi gürültü tabanının belirgin üstündeyse ve geniş bantlı gürültü (alkış, rüzgâr, trafik) yerine temel ton ve harmonikleri varsa (insan sesi) bildirilir.",
       "",
-      "Bulunan yerler günlükte sarı görünür, dosyanın durumu “⚠ boşluk” olur. Bu, kontrol için bir ipucudur: müzik, şarkı veya slogan da bildirilebilir. 2 saatlik ses için yaklaşık 5 sn sürer."
+      "Bulunan yerler günlükte sarı görünür, dosyanın durumu “⚠ boşluk” olur. Müzik, şarkı veya slogan da bildirilebilir. 2 saatlik ses için yaklaşık 5 sn sürer."
     ],
     "gap_srt": [
       "Bulunan yerleri ayrıca <name>{suffix} olarak kaydeder. VLC'de veya Subtitle Edit'te ikinci altyazı izi olarak yükleyin – böylece şüpheli yerlere doğrudan atlarsınız.",
@@ -982,7 +984,7 @@
       "",
       "Eşiğin altındaki kelimeler işaretlenir. Daha yüksek eşik = daha fazla kayıt. Öneri: 0,40.",
       "",
-      "Adlar ve yabancı kelimeler doğru olsalar bile daha sık bunun altına düşer. Sayılar neredeyse hiç işaretlenmez; 3 harften kısa kelimeler puanlanmaz.",
+      "Adlar ve yabancı kelimeler doğru olsalar bile daha sık bunun altında kalır. Sayılar neredeyse hiç işaretlenmez; 3 harften kısa kelimeler puanlanmaz.",
       "",
       "Bulunan yerler günlükte sarı görünür, dosyanın durumu “⚠ belirsiz” olur. Altyazıların kendisi değişmez."
     ],
@@ -1000,7 +1002,7 @@
     "max_duration": [
       "Uzun cümleler bölünür: bir altyazı en fazla bu kadar saniyelik konuşma içerir, sonra yenisi başlar.",
       "",
-      "Bu bir gösterim süresi değildir – bir altyazının ne kadar ekranda kalacağını “2 · Gösterim süresi” altında ayarlarsınız.",
+      "Bu bir gösterim süresi değildir. Bir altyazının ne kadar ekranda kalacağını “2 · Duraklamalar” belirler.",
       "",
       "Önerilen: 7 saniye (yaygın üst sınır)."
     ],
@@ -1017,7 +1019,7 @@
       "",
       "0 = satırlar kesintisiz, titremeden birbirini izler – örn. DaVinci Resolve için."
     ],
-    "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular – geçici dosya olmadan doğrudan belleğe.",
+    "ffmpeg": "ffmpeg.exe'nin yolu. ffmpeg her ses ve video dosyasını okur, 16 kHz mono'ya dönüştürür ve ses filtresini uygular.",
     "filter_string": [
       "FFmpeg filtre zinciri, parçalar virgülle ayrılır. Orijinal filtre:",
       "",
@@ -1040,7 +1042,7 @@
       "Konuşma için altyazı dosyasının uzantısı: <name> + uzantı. Aynı adlı mevcut bir dosyanın üzerine yazılır.",
       "",
       "Yer tutucular: {model} = kullanılan model, {lang} = dil.",
-      "Örnek .{model}.srt → konusma.large-v3.srt veya konusma.whisper-large-v3-turkish-general.srt – böylece her model kendi SRT'sini alır, karşılaştırma için ideal (dosya listesinde “Karşılaştır …”)."
+      "Örnek .{model}.srt → konusma.large-v3.srt veya konusma.whisper-large-v3-turkish-general.srt – böylece her model kendi SRT'sini alır, karşılaştırma için (dosya listesinde “Karşılaştır …”)."
     ],
     "lyrics_input": "Medya dosyasının yanında <name> + bu uzantı varsa, transkripsiyon yerine şarkı metni hizalanır (şarkı sözü modu). Her satıra bir şarkı satırı, UTF-8.",
     "lyrics_suffix": "Şarkı sözü altyazılarının uzantısı: <name> + uzantı.",
@@ -1050,7 +1052,7 @@
     ],
     "lang_select": "Hangi dilin düzenlendiği. “Tüm diller” yalnızca her dilde geçerli olan değiştirmeleri içerir.",
     "lang_prompt": [
-      "Bu dil için prompt – mutlaka bu dilde yazın. Türkçe sese Almanca bir prompt, Whisper'ı çeviri yapmaya yöneltebilir.",
+      "Bu dil için prompt – bu dilde yazın. Türkçe sese Almanca bir prompt, Whisper'ın çeviri yapmasına yol açabilir.",
       "",
       "İyi: içerik hakkında kısa bir cümle artı nadir isim ve terimlerin istenen yazımla bir listesi.",
       "Çok uzun: yalnızca son ~220 token sayılır.",
@@ -1128,15 +1130,9 @@
     "resolve_countdown": "DaVinci Resolve'dan gelen bir işin otomatik olarak yazıya dökülmesine kadar geçen saniye. Pencereye bir tıklama geri sayımı durdurur.",
     "resolve_hand_over": "Altyazıları zaman çizelgesinde yazıya dökülen aralığın konumuna kaydırır ve DaVinci Resolve'da bekleyen eklentiye verir. SRT bunun için diskten yeniden okunur – bu arada yapılan değişiklikler de geçerlidir.",
     "resolve_auto_hand_over": "“DaVinci'ye aktar” düğmesine basmanız gerekmez: iş yazıya dökülür dökülmez altyazılar bekleyen eklentiye gider. Altyazıları zaten Resolve'da kontrol ediyorsanız kullanışlıdır.",
-    "resolve_track_gaps": "Resolve'da ek bir altyazı izi: “WhisperX boşluklar” metinsiz yüksek sesli yerleri işaretler. Boşluk kontrolü gerekir (Konuşma algılama sekmesi). Kontrol içindir – sonra izi silin. Gösterilecek bir şey yoksa iz eklenmez.",
-    "resolve_track_fast": "Resolve'da ek bir altyazı izi: “WhisperX çok hızlı” saniyede 17 karakterden fazla olan altyazıları işaretler. Yalnızca cümle cümle modunda. Kontrol içindir – sonra izi silin. Gösterilecek bir şey yoksa iz eklenmez.",
-    "resolve_score": [
-      "Resolve'da ek bir altyazı izi: “WhisperX belirsiz” skoru düşük kelimeleri işaretler (skor kontrolü). Bu, Konuşma algılama sekmesindeki ayarın aynısıdır – bir değişiklik iki yerde birden geçerli olur.",
-      "",
-      "Skor 0 ile 1 arasındadır; net tanınan kelimeler yüksektir. Daha yüksek eşik = daha fazla kayıt. Adlar ve yabancı kelimeler daha sık bunun altına düşer. Sayılar neredeyse hiç işaretlenmez; 3 harften kısa kelimeler puanlanmaz.",
-      "",
-      "Kontrol içindir – sonra izi silin. Gösterilecek bir şey yoksa iz eklenmez."
-    ],
-    "resolve_close_after": "İşaret yoksa Workbench aktarımdan sonra simge durumuna küçülür ve modellerini tutar – sonraki iş yükleme süresi olmadan başlar. İşaretliyse kapanır."
+    "resolve_track_gaps": "“WhisperX boşluklar” metinsiz yüksek sesli yerleri işaretler. Konuşma algılama sekmesindeki boşluk kontrolü gerekir.",
+    "resolve_track_fast": "“WhisperX çok hızlı” saniyede 17 karakterden fazla olan altyazıları işaretler. Yalnızca cümle cümle modunda.",
+    "resolve_score": "“WhisperX belirsiz” skoru düşük kelimeleri işaretler. Bu, Konuşma algılama sekmesindeki skor kontrolüdür; bir değişiklik iki yerde birden geçerli olur.",
+    "resolve_close_after": "Simge durumunda Workbench modellerini yüklü tutar. Sonraki iş böylece yükleme süresi olmadan başlar."
   }
 }

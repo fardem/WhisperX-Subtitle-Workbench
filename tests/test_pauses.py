@@ -69,7 +69,7 @@ def cfg_with(tmp_path, text):
 
 
 def test_defaults_for_an_ini_without_the_new_keys(tmp_path):
-    cfg = cfg_with(tmp_path, "[Layout]\nbridge_gaps = 1\nsplit_pause = 0\n")    # 0.3.x keys are ignored
+    cfg = cfg_with(tmp_path, "[Layout]\nbridge_gaps = 1\nsplit_pause = 0\n")    # keys of older versions are ignored
     assert (cfg.pause, cfg.smooth, cfg.pause_hold) == (2.0, True, 1.0)
 
 

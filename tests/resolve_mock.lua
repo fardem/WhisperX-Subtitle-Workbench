@@ -1,7 +1,7 @@
 -- resolve_mock.lua - a small fake of DaVinci Resolve for tests/test_resolve_plugin.py
 --
 -- It imitates only what the plugin uses, with the behaviour tested in Resolve Studio 21.1.2
--- (resolve/tools/probe_subtitles.lua): an SRT is appended to the ACTIVE subtitle track only,
+-- (resolve/tools/probe_subtitles.lua): an SRT is appended to the active subtitle track only,
 -- on an empty track it starts at the timeline start, new tracks are inactive, nothing is
 -- placed when no track is active, a locked track takes nothing.
 -- File system access goes through PY.* functions handed in by the Python test.

@@ -1,24 +1,7 @@
 """
-wt_resolve.py
-=============
-Connection to DaVinci Resolve – no user interface, no Resolve and no GPU needed here.
-
-How a job travels (the Lua plugin is resolve/WhisperX_Subtitles.lua):
-
-  1. The plugin renders the audio of the timeline into  resolve_temp/<JobID>/audio.wav
-     and writes  job.txt  next to it (timeline, frame rate, start frame, In/Out …).
-  2. The Workbench gets the WAV like any other file. A media file with the plugin's
-     job.txt next to it is a Resolve job ("Resolve mode", see find_job).
-  3. "Hand over to DaVinci" (hand_over): the SRT is shifted by the offset of the job,
-     kept directly in resolve_temp/ (<Timeline>_<LANG>_<date-time>.srt) next to the SRTs of the
-     previous hand-overs (KEEP_SRTS), and done.txt tells the plugin where it is and which
-     language it has. The name is new for every
-     hand-over: Resolve keeps using what it read the first time it imported a path.
-  4. The plugin puts the SRT on a subtitle track and deletes the job folder.
-
-Both directions use plain key=value files – Resolve's Lua has no JSON parser.
-Every file the plugin reads or writes has an ASCII path: Resolve's Lua cannot open
-other paths on Windows (io.open). The Workbench folder must therefore be ASCII too.
+Connection to DaVinci Resolve, without Resolve, GPU or user interface.
+Plugin and Workbench exchange key=value files in resolve_temp/<JobID>/ (Resolve's Lua has no JSON parser).
+Every path the plugin opens must be ASCII: Resolve's Lua cannot open other paths on Windows (io.open).
 """
 
 from __future__ import annotations
@@ -37,7 +20,7 @@ from wt_i18n import T
 
 HERE = Path(__file__).resolve().parent
 TEMP_DIR = HERE / "resolve_temp"              # job folders of the plugin + the SRTs of the last hand-overs
-LEGACY_DIR = HERE / "temp" / "resolve"         # the same in 0.5.0 (temp/resolve/letzte/ held the SRT)
+LEGACY_DIR = HERE / "temp" / "resolve"         # the same in older versions (temp/resolve/letzte/ held the SRT)
 
 JOB_FILE      = "job.txt"                      # plugin → Workbench
 DONE_FILE     = "done.txt"                     # Workbench → plugin (written atomically)
@@ -54,11 +37,9 @@ PLUGIN_TEMPLATE = HERE / "resolve" / PLUGIN_FILE
 CONFIG_BEGIN    = "-- >>> WX-CONFIG"
 CONFIG_END      = "-- <<< WX-CONFIG <<<"
 
-# Does the start timecode of the timeline belong into the offset of the subtitles?
-# Tested so far: an SRT appended to an EMPTY subtitle track starts at the timeline start,
-# its times stay relative – so only the In point counts. A test with a timeline starting
-# at 01:00:00:00 decides; if the subtitles land exactly one start timecode too early,
-# set this to True. Used only in srt_offset_seconds().
+# Start timecode in the subtitle offset? An SRT appended to an empty subtitle track starts at the timeline
+# start, so only the In point counts. If subtitles land one start timecode too early on a timeline starting
+# at 01:00:00:00, set True. Used only in srt_offset_seconds().
 INCLUDE_START_TC = False
 
 
@@ -66,7 +47,7 @@ class ResolveError(RuntimeError):
     """Expected problem with an understandable message (shown as it is)."""
 
 
-# ─── key=value FILES ──────────────────────────────────────────────────────────
+# ─── key=value files ──────────────────────────────────────────────────────────
 
 def parse_kv(text: str) -> dict[str, str]:
     """ "key=value" per line; empty lines and lines starting with # or ; are ignored."""
@@ -100,7 +81,7 @@ def write_kv(path, values: dict, header: str = ""):
     os.replace(tmp, path)
 
 
-# ─── FRAMES AND TIME ──────────────────────────────────────────────────────────
+# ─── Frames and time ──────────────────────────────────────────────────────────
 
 def exact_fps(fps) -> float:
     """29.97 → 30000/1001 (likewise 23.976, 47.952, 59.94, 119.88): Resolve counts NTSC rates exactly."""
@@ -130,7 +111,7 @@ def frames_to_seconds(frames: int, fps) -> float:
     return frames / exact_fps(fps)
 
 
-# ─── JOB ──────────────────────────────────────────────────────────────────────
+# ─── Job ──────────────────────────────────────────────────────────────────────
 
 @dataclass
 class ResolveJob:
@@ -205,7 +186,7 @@ class ResolveJob:
 def find_job(media) -> ResolveJob | None:
     """
     Resolve mode: only for a file with the plugin's job.txt next to it, written for exactly
-    this file. Everything else → None, and the Workbench behaves as before.
+    this file. Everything else → None (a normal file).
     """
     p = Path(media)
     job_file = p.parent / JOB_FILE
@@ -225,12 +206,9 @@ def find_job(media) -> ResolveJob | None:
 
 def srt_offset_seconds(job: ResolveJob) -> float:
     """
-    How far every subtitle must move so that second 0 of the rendered audio lands on the
-    frame where the audio was taken from. THE one place for this rule:
-      - the audio starts at the In point → the In offset relative to the timeline start counts
-      - the start timecode of the timeline counts only with INCLUDE_START_TC (open question,
-        see the constant)
-    Frames from the API, never timecode strings (drop frame at 29.97 would be wrong).
+    Seconds every subtitle moves so that second 0 of the audio lands on the frame it was rendered from:
+    the In offset from the timeline start, the start timecode only with INCLUDE_START_TC. The only place
+    for this rule. Frames from the API, never timecode strings (drop frame at 29.97 would be wrong).
     """
     frames = job.in_frame - job.start_frame
     if INCLUDE_START_TC:
@@ -318,7 +296,7 @@ def write_progress(job: "ResolveJob", state: str, **values) -> bool:
         return False
 
 
-# ─── FILE NAMES ───────────────────────────────────────────────────────────────
+# ─── File names ───────────────────────────────────────────────────────────────
 
 TRANSLIT = {"ä": "ae", "ö": "oe", "ü": "ue", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue", "ß": "ss",
             "ş": "s", "Ş": "S", "ğ": "g", "Ğ": "G", "ı": "i", "İ": "I", "ç": "c", "Ç": "C"}
@@ -350,7 +328,7 @@ def is_ascii_path(path) -> bool:
     return str(path).isascii()
 
 
-# ─── HAND OVER ────────────────────────────────────────────────────────────────
+# ─── Hand over ────────────────────────────────────────────────────────────────
 
 @dataclass
 class HandOver:
@@ -366,10 +344,8 @@ class HandOver:
 
 def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8", keep: int = KEEP_SRTS) -> Path:
     """
-    resolve_temp/ keeps the SRTs of the last `keep` hand-overs (job folders are subfolders, they
-    are not touched): the new SRT is written completely first (temp file, then rename) – only
-    then are the oldest SRTs deleted, so that at most `keep` remain. If writing fails, nothing
-    is deleted. "Oldest" goes by the time the file was last written.
+    Keep the SRTs of the last `keep` hand-overs in resolve_temp/; job folders are not touched. The new SRT
+    is written completely first (temp file, rename), only then the oldest by write time are deleted.
     """
     last_dir = Path(last_dir)
     last_dir.mkdir(parents=True, exist_ok=True)
@@ -401,15 +377,9 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
               gaps=None, gap_label=None, fast_cps: float | None = None, fast_label=None,
               score=None, stamp: str | None = None) -> HandOver:
     """
-    "Hand over to DaVinci": shift the SRT, keep it in resolve_temp/, write done.txt for the plugin.
-    The SRT is read again from disk, so changes made in the meantime (e.g. in Subtitle Edit) count.
-    Optional, each for an own subtitle track in Resolve (to check, then delete the track):
-      gaps      [(start, end, level_db)] of the gap check  → <Timeline>_<LANG>_<stamp>_gaps.srt
-      fast_cps  subtitles faster than this                 → <Timeline>_<LANG>_<stamp>_fast.srt
-      score     [(start, end, text)] of the score check    → <Timeline>_<LANG>_<stamp>_score.srt
-    They lie in the job folder, so the plugin deletes them after the import.
-    Every hand-over gets new file names (stamp = date and time): Resolve does not read a path
-    again that is already in the media pool – it would place the subtitles of the first import.
+    "Hand over to DaVinci": shift the SRT (read again from disk), keep it in resolve_temp/, write done.txt.
+    gaps, fast_cps and score each become an SRT for an own track in the job folder (_gaps/_fast/_score).
+    Names carry a date-time stamp: Resolve does not read a path again that is already in the media pool.
     """
     if not job.alive():
         raise ResolveError(T("resolve.err_gone"))
@@ -479,7 +449,7 @@ def cleanup_jobs(temp_dir=None, max_age_hours: float = JOB_MAX_AGE_H, now: float
 
 
 def remove_legacy_dir(legacy=None) -> bool:
-    """0.5.0 kept its job folders in temp/resolve/ (the SRT in temp/resolve/letzte/) – remove that."""
+    """Older versions kept their job folders in temp/resolve/ (the SRT in temp/resolve/letzte/) – remove that."""
     legacy = Path(legacy) if legacy else LEGACY_DIR
     if not legacy.is_dir():
         return False
@@ -491,7 +461,7 @@ def remove_legacy_dir(legacy=None) -> bool:
     return not legacy.exists()
 
 
-# ─── PLUGIN INSTALLATION ──────────────────────────────────────────────────────
+# ─── Plugin installation ──────────────────────────────────────────────────────
 
 def scripts_dir() -> Path:
     """Utility folder of Resolve's scripts: the plugin is listed on all pages (not only Edit)."""

@@ -361,7 +361,7 @@ def test_ini_resolve_section(tmp_path):
     cfg = core.Config(ROOT / "whisper_tool.example.ini")
     assert cfg.resolve_countdown == 10
     ini = tmp_path / "old.ini"
-    ini.write_text("[Menu]\ntimeout = 15\n", encoding="utf-8")                # 0.4.x INI without [Resolve]
+    ini.write_text("[Menu]\ntimeout = 15\n", encoding="utf-8")                # INI without [Resolve]
     assert core.Config(ini).resolve_countdown == 10
     ini.write_text("[Resolve]\ncountdown = -3\n", encoding="utf-8")
     assert core.Config(ini).resolve_countdown == 0
@@ -377,7 +377,7 @@ def test_language_and_mode_of_the_plugin(tmp_path):
 def test_audio_filter_of_the_plugin(tmp_path):
     make_job(tmp_path / "on", use_filter=True)
     make_job(tmp_path / "off", use_filter=False)
-    make_job(tmp_path / "old")                                   # plugin 0.6.0 and older: no key
+    make_job(tmp_path / "old")                                   # older plugin: no key
     on, off, old = (wr.find_job(tmp_path / d / "audio.wav") for d in ("on", "off", "old"))
     assert (on.use_filter, off.use_filter, old.use_filter) == (True, False, None)
     assert wr.read_kv(tmp_path / "off" / wr.JOB_FILE)["filter"] == "0"
@@ -456,7 +456,7 @@ def test_extra_tracks_follow_the_settings(tmp_path):
     assert (off["gaps"], off["fast_cps"], off["score"]) == (None, None, None)
     assert tracks("[Score]\nthreshold = 0.4\n", mode="word")["fast_cps"] is None     # Sentences only
     assert tracks("[Score]\nthreshold = 0.4\n", score_list=[])["score"] is None      # nothing to show
-    old = tracks("[Resolve]\nextra_tracks = 0\n[Score]\nthreshold = 0.4\n")      # 0.6.x INI
+    old = tracks("[Resolve]\nextra_tracks = 0\n[Score]\nthreshold = 0.4\n")      # INI with extra_tracks only
     assert (old["gaps"], old["fast_cps"]) == (None, None) and old["score"]
 
 

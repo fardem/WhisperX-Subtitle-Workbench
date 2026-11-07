@@ -71,7 +71,7 @@ def test_suffix_placeholders():
 
 def test_score_check_is_off_without_its_section(tmp_path):
     ini = tmp_path / "old.ini"
-    ini.write_text("[Gaps]\nenabled = 1\n", encoding="utf-8")                  # INI of 0.6.3
+    ini.write_text("[Gaps]\nenabled = 1\n", encoding="utf-8")                  # INI without [Score]
     cfg = core.Config(ini)
     assert (cfg.score_threshold, cfg.score_srt) == (0.0, True) and not_ffmpeg(cfg.warnings) == []
     assert core.Config(EXAMPLE).score_threshold == 0.4
@@ -96,7 +96,7 @@ def test_invalid_score_threshold_gives_a_warning_and_off(tmp_path, raw):
 
 @pytest.mark.parametrize("text, gaps, fast", [
     ("[Menu]\ntimeout = 15\n", True, True),                                    # no [Resolve] at all
-    ("[Resolve]\nextra_tracks = 1\n", True, True),                             # INI of 0.6.x
+    ("[Resolve]\nextra_tracks = 1\n", True, True),                             # INI with extra_tracks only
     ("[Resolve]\nextra_tracks = 0\n", False, False),
     ("[Resolve]\nextra_tracks = 0\ntrack_gaps = 1\n", True, False),            # a new key wins, the other follows
     ("[Resolve]\nextra_tracks = 1\ntrack_fast = 0\n", True, False),

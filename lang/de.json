@@ -285,7 +285,7 @@
     "err_hold": "Die Haltezeit ({hold} Sekunden) muss kürzer sein als die Pausengrenze ({pause} Sekunden) – sonst wäre eine echte Pause nie zu sehen.",
     "tab_resolve": "DaVinci Resolve",
     "sec_resolve_plugin": "1 · Plugin",
-    "sec_resolve_plugin_info": "Das Plugin erscheint in DaVinci Resolve unter Workspace → Scripts → WhisperX_Subtitles (auf jeder Seite). „Transkribieren“ rendert dort den Ton der Timeline und übergibt ihn an dieses Fenster; „An DaVinci übergeben“ schickt die Untertitel zurück auf eine Untertitelspur.",
+    "sec_resolve_plugin_info": "Das Plugin steht in DaVinci Resolve unter Workspace → Scripts → WhisperX_Subtitles.",
     "resolve_status": "Plugin",
     "resolve_not_installed": "nicht installiert",
     "resolve_installed": "installiert – Version {version}",
@@ -305,18 +305,20 @@
       "Das Plugin konnte nicht installiert werden:",
       "{err}"
     ],
-    "sec_resolve_jobs": "2 · Jobs aus DaVinci Resolve",
+    "sec_resolve_analysis": "2 · Analyse",
+    "sec_resolve_analysis_info": "Prüfspuren: zusätzliche Untertitelspuren, die Stellen zum Prüfen markieren. Sie gehören nicht zu den Untertiteln. Eine Spur kommt nur dazu, wenn es etwas zu zeigen gibt. Nach dem Prüfen die Spur in Resolve löschen.",
+    "sec_resolve_jobs": "3 · Jobs aus DaVinci Resolve",
     "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Sprache, Modus und Audiofilter kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI. Die Einstellungen im Hauptfenster gelten für diese Jobs nicht.",
     "sw_resolve_countdown": "Jobs aus DaVinci Resolve automatisch starten nach",
     "sw_resolve_countdown_unit": "Sekunden",
     "resolve_countdown": "Countdown für DaVinci-Jobs",
-    "resolve_countdown_off": "Ohne Haken startest du selbst mit „Start“.",
+    "resolve_countdown_off": "Ohne Häkchen startest du selbst mit „Start“.",
     "resolve_auto_hand_over": "Nach dem Transkribieren automatisch an DaVinci übergeben",
     "resolve_track_gaps": "Lücken auf eigener Spur „WhisperX Lücken“ (braucht den Lücken-Check)",
     "resolve_track_fast": "Zu schnelle Untertitel auf eigener Spur „WhisperX zu schnell“ (nur Satzweise)",
     "sw_resolve_score": "Unsichere Wörter auf eigener Spur „WhisperX unsicher“: Score unter",
     "sw_resolve_score_unit": "(wie unter Spracherkennung)",
-    "resolve_close_after": "Workbench nach der Übergabe schließen (sonst wird sie minimiert und die Modelle bleiben geladen)"
+    "resolve_close_after": "Workbench nach der Übergabe schließen statt minimieren"
   },
   "cmpdlg": {
     "title": "Text vergleichen",
@@ -370,7 +372,7 @@
     "python_old": "mindestens 3.10 nötig",
     "pkg_missing": "{mod} fehlt → {purpose} nicht möglich. Bitte die WhisperX-Installation im venv prüfen.",
     "pkg_optional": "{mod} nicht installiert → {purpose}: Einstellungen → Allgemein",
-    "whisperx_old": "whisperx {version} ist älter als 3.8 – das Tool ist mit 3.8.x getestet",
+    "whisperx_old": "whisperx {version} ist älter als 3.8 – die Workbench ist mit 3.8.x getestet",
     "torch_mismatch": "torch {torch} und torchaudio {torchaudio} passen nicht zusammen – Lyrics können fehlschlagen",
     "ffmpeg_missing": "ffmpeg nicht gefunden: {path} → keine Audiodateien lesbar. Pfad unter Einstellungen → Audio & Ausgabe eintragen.",
     "ct2_folder": "CTranslate2-Ordner",
@@ -387,7 +389,7 @@
       "Installiert das Paket {pkg} in:",
       "{prefix}",
       "",
-      "Mit --no-deps: es wird garantiert nur dieses eine Paket installiert, sonst wird nichts im venv verändert.",
+      "Mit --no-deps wird nur dieses Paket installiert. Sonst ändert sich nichts im venv.",
       "",
       "Fortfahren?"
     ],
@@ -479,7 +481,7 @@
       "other": "{n} Untertitel schneller als {cps} Zeichen pro Sekunde – schwer zu lesen:"
     },
     "fast_item": "{cps} Zeichen/s",
-    "fast_tip": "Tipp: Das Tool ändert nie den Text – diese Untertitel in Subtitle Edit kürzen, wenn sie schwer lesbar sind.",
+    "fast_tip": "Tipp: Die Workbench ändert den Text nicht. Schwer lesbare Untertitel in Subtitle Edit kürzen.",
     "gap_suffix": ".luecken.srt",
     "gap_none": "keine verdächtigen Lücken",
     "gap_found": {
@@ -794,12 +796,12 @@
     "cmp_media": [
       "Optional: das Video oder Audio der Rede. Dann sind alle Zeiten im Bericht anklickbar und spielen die Stelle ab (1,5 s davor) – so hörst du sofort, wer recht hat.",
       "",
-      "Das Tool legt dafür eine kleine Tonspur (.m4a) neben den Bericht, die jeder Browser abspielt – egal welches Videoformat die Quelle hat."
+      "Dafür legt die Workbench eine Tonspur (.m4a) neben den Bericht. Sie läuft in jedem Browser, egal welches Videoformat die Quelle hat."
     ],
     "cmp_ref": [
       "Optional: eine von Hand korrigierte SRT derselben Aufnahme (z.B. in Subtitle Edit verbessert).",
       "",
-      "Dann zeigt der Bericht an jeder Stelle, wer recht hat, rechnet für A und B die Fehlerquote (WER) aus, listet Fehler, die beide machen, und schlägt Ersetzungen vor – der objektivste Vergleich. Im Bericht immer grün. Schon 5–10 korrigierte Minuten reichen für eine gute Einschätzung."
+      "Dann zeigt der Bericht an jeder Stelle, wer recht hat, rechnet für A und B die Fehlerquote (WER) aus, listet Fehler, die beide machen, und schlägt Ersetzungen vor. Im Bericht immer grün. 5–10 korrigierte Minuten reichen für eine Einschätzung."
     ],
     "remove": "Markierte Dateien aus der Liste nehmen (die Dateien selbst bleiben unverändert). Auch mit der Entf-Taste.",
     "clear": "Liste leeren (die Dateien selbst bleiben unverändert).",
@@ -840,7 +842,7 @@
     "json": [
       "Speichert zusätzlich das WhisperX-Ergebnis als <name>.json.",
       "",
-      "Später die .json ins Tool ziehen → neue SRT mit anderem Layout, anderen Ersetzungen oder Regeln in Sekunden, ohne neue Transkription."
+      "Später die .json in die Workbench ziehen → neue SRT mit anderem Layout, anderen Ersetzungen oder Regeln in Sekunden, ohne neue Transkription."
     ],
     "hold": [
       "Nur für Lyrics: Zeilenende um bis zu so viele Sekunden verlängern – aber nie über den Beginn der nächsten Zeile hinaus.",
@@ -929,7 +931,7 @@
       "",
       "pyannote – Standard von WhisperX. Neuronales Segmentierungsmodell, setzt Sprachgrenzen präzise, robust bei Hintergrundgeräusch.",
       "",
-      "silero – kleines, sehr schnelles Modell mit eigener Erkennung. Ausprobieren, wenn pyannote leise Sprache verschluckt oder Applaus/Musik als Sprache erkennt."
+      "silero – kleines, sehr schnelles Modell. Ausprobieren, wenn pyannote leise Sprache auslässt oder Applaus und Musik als Sprache einstuft."
     ],
     "onset": [
       "Schwelle (0–1), ab der ein Abschnitt als Sprache beginnt.",
@@ -955,11 +957,11 @@
       "Für Satzweise und Wort-für-Wort meist ohne Bedeutung."
     ],
     "gap_enabled": [
-      "Lücken-Check nach jeder Transkription: sucht Stellen, die laut und stimmähnlich sind, aber keinen Text bekommen haben – typisch, wenn die Spracherkennung (VAD) leise Sprache verschluckt oder Whisper einen Satz auslässt.",
+      "Lücken-Check nach jeder Transkription: sucht Stellen, die laut und stimmähnlich sind, aber keinen Text bekommen haben. Typische Ursache: Die Spracherkennung (VAD) lässt leise Sprache aus, oder Whisper überspringt einen Satz.",
       "",
-      "So funktioniert es: Pegel deutlich über dem Grundrauschen UND ein Klang mit Grundton und Obertönen (Stimme) statt breitem Rauschen (Applaus, Wind, Lärm).",
+      "Gemeldet wird eine Stelle, wenn ihr Pegel deutlich über dem Grundrauschen liegt und sie einen Grundton mit Obertönen hat (Stimme) statt breitem Rauschen (Applaus, Wind, Lärm).",
       "",
-      "Fundstellen stehen gelb im Protokoll, die Datei bekommt „⚠ Lücken“ im Status. Es ist ein Hinweis zum Prüfen: auch Musik, Gesang oder Sprechchöre können gemeldet werden. Dauert ca. 5 s pro 2 h Audio."
+      "Fundstellen stehen gelb im Protokoll, die Datei bekommt „⚠ Lücken“ im Status. Auch Musik, Gesang oder Sprechchöre können gemeldet werden. Dauert ca. 5 s pro 2 h Audio."
     ],
     "gap_srt": [
       "Speichert die Fundstellen zusätzlich als <name>{suffix}. Als zweite Untertitelspur in VLC oder Subtitle Edit laden – dann springst du direkt zu den verdächtigen Stellen.",
@@ -982,7 +984,7 @@
       "",
       "Markiert werden Wörter unter der Schwelle. Höhere Schwelle = mehr Einträge. Empfehlung: 0,40.",
       "",
-      "Namen und Fremdwörter landen öfter darunter, auch wenn sie richtig sind. Zahlen werden praktisch nie markiert; Wörter mit weniger als 3 Buchstaben werden nicht bewertet.",
+      "Namen und Fremdwörter liegen öfter darunter, auch wenn sie richtig sind. Zahlen werden praktisch nie markiert; Wörter mit weniger als 3 Buchstaben werden nicht bewertet.",
       "",
       "Fundstellen stehen gelb im Protokoll, die Datei bekommt „⚠ unsicher“ im Status. Die Untertitel selbst ändern sich nicht."
     ],
@@ -1002,7 +1004,7 @@
     "max_duration": [
       "Lange Sätze werden geteilt: Ein Untertitel enthält höchstens so viele Sekunden Sprache, danach beginnt ein neuer.",
       "",
-      "Das ist keine Anzeigedauer – wie lange ein Untertitel stehen bleibt, stellst du unter „2 · Anzeigedauer“ ein.",
+      "Das ist keine Anzeigedauer. Wie lange ein Untertitel stehen bleibt, regelt „2 · Pausen“.",
       "",
       "Empfehlung: 7 Sekunden (gängige Obergrenze)."
     ],
@@ -1019,7 +1021,7 @@
       "",
       "0 = die Zeilen schließen nahtlos aneinander an, ohne Flackern – z.B. für DaVinci Resolve."
     ],
-    "ffmpeg": "Pfad zu ffmpeg.exe. ffmpeg liest jede Audio- und Videodatei, wandelt sie in 16 kHz Mono um und wendet den Audiofilter an – direkt in den Speicher, ohne Temp-Dateien.",
+    "ffmpeg": "Pfad zu ffmpeg.exe. ffmpeg liest jede Audio- und Videodatei, wandelt sie in 16 kHz Mono um und wendet den Audiofilter an.",
     "filter_string": [
       "FFmpeg-Filterkette, Bestandteile durch Komma getrennt. Der ursprüngliche Filter:",
       "",
@@ -1042,7 +1044,7 @@
       "Endung der Untertiteldatei für Reden: <name> + Endung. Eine vorhandene gleichnamige Datei wird überschrieben.",
       "",
       "Platzhalter: {model} = verwendetes Modell, {lang} = Sprache.",
-      "Beispiel .{model}.srt → rede.large-v3.srt bzw. rede.whisper-large-v3-turkish-general.srt – so bekommt jedes Modell seine eigene SRT, ideal zum Vergleichen („Vergleichen …“ in der Dateiliste)."
+      "Beispiel .{model}.srt → rede.large-v3.srt bzw. rede.whisper-large-v3-turkish-general.srt – so bekommt jedes Modell seine eigene SRT, zum Vergleichen („Vergleichen …“ in der Dateiliste)."
     ],
     "lyrics_input": "Liegt <name> + diese Endung neben der Mediendatei, wird statt transkribiert der Liedtext ausgerichtet (Lyrics-Modus). Eine Liedzeile pro Zeile, UTF-8.",
     "lyrics_suffix": "Endung der Lyrics-Untertitel: <name> + Endung.",
@@ -1052,7 +1054,7 @@
     ],
     "lang_select": "Welche Sprache bearbeitet wird. „Alle Sprachen“ enthält nur Ersetzungen, die in jeder Sprache gelten.",
     "lang_prompt": [
-      "Prompt für diese Sprache – unbedingt in dieser Sprache schreiben. Ein deutscher Prompt bei türkischem Audio kann Whisper zum Übersetzen verleiten.",
+      "Prompt für diese Sprache – in dieser Sprache schreiben. Ein deutscher Prompt bei türkischem Audio kann dazu führen, dass Whisper übersetzt.",
       "",
       "Gut: ein kurzer Satz zum Inhalt plus eine Liste seltener Namen und Begriffe in der gewünschten Schreibweise.",
       "Zu lang: Es zählen nur die letzten ca. 220 Tokens.",
@@ -1063,7 +1065,7 @@
       "Endet ein Füllwort mit Punkt („äh.“), bleibt das Satzende erhalten."
     ],
     "lang_dangling": [
-      "Wörter, die nie allein am Ende eines Untertitels stehen sollen (Artikel, Präpositionen) – sie wandern an den Anfang des nächsten.",
+      "Wörter, die nie allein am Ende eines Untertitels stehen sollen (Artikel, Präpositionen) – sie kommen an den Anfang des nächsten.",
       "",
       "Ausnahme: Mit Satzzeichen („Ich stimme zu.“) oder vor einer langen Pause bleiben sie stehen."
     ],
@@ -1130,15 +1132,9 @@
     "resolve_countdown": "Sekunden, bis ein Job aus DaVinci Resolve automatisch transkribiert wird. Ein Klick ins Fenster hält den Countdown an.",
     "resolve_hand_over": "Verschiebt die Untertitel an die Stelle des transkribierten Bereichs in der Timeline und übergibt sie an das wartende Plugin in DaVinci Resolve. Die SRT wird dafür neu von der Festplatte gelesen – Änderungen in der Zwischenzeit zählen.",
     "resolve_auto_hand_over": "„An DaVinci übergeben“ musst du nicht mehr drücken: Sobald der Job transkribiert ist, gehen die Untertitel an das wartende Plugin. Sinnvoll, wenn du die Untertitel ohnehin in Resolve prüfst.",
-    "resolve_track_gaps": "Eine zusätzliche Untertitelspur in Resolve: „WhisperX Lücken“ markiert laute Stellen ohne Text. Braucht den Lücken-Check (Reiter Spracherkennung). Sie ist zum Prüfen da – danach die Spur löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu.",
-    "resolve_track_fast": "Eine zusätzliche Untertitelspur in Resolve: „WhisperX zu schnell“ markiert Untertitel mit mehr als 17 Zeichen pro Sekunde. Nur im Modus Satzweise. Sie ist zum Prüfen da – danach die Spur löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu.",
-    "resolve_score": [
-      "Eine zusätzliche Untertitelspur in Resolve: „WhisperX unsicher“ markiert Wörter mit niedrigem Score (Score-Check). Das ist dieselbe Einstellung wie im Reiter Spracherkennung – eine Änderung gilt an beiden Stellen.",
-      "",
-      "Der Score reicht von 0 bis 1; klar erkannte Wörter liegen hoch. Höhere Schwelle = mehr Einträge. Namen und Fremdwörter landen öfter darunter. Zahlen werden praktisch nie markiert; Wörter mit weniger als 3 Buchstaben werden nicht bewertet.",
-      "",
-      "Sie ist zum Prüfen da – danach die Spur löschen. Gibt es nichts zu zeigen, kommt keine Spur dazu."
-    ],
-    "resolve_close_after": "Ohne Haken minimiert sich die Workbench nach der Übergabe und behält ihre Modelle – der nächste Job startet ohne Ladezeit. Mit Haken schließt sie sich."
+    "resolve_track_gaps": "„WhisperX Lücken“ markiert laute Stellen ohne Text. Braucht den Lücken-Check im Reiter Spracherkennung.",
+    "resolve_track_fast": "„WhisperX zu schnell“ markiert Untertitel mit mehr als 17 Zeichen pro Sekunde. Nur im Modus Satzweise.",
+    "resolve_score": "„WhisperX unsicher“ markiert Wörter mit niedrigem Score. Das ist der Score-Check aus dem Reiter Spracherkennung; eine Änderung gilt an beiden Stellen.",
+    "resolve_close_after": "Minimiert behält die Workbench ihre Modelle. Der nächste Job startet dann ohne Ladezeit."
   }
 }

@@ -1,15 +1,7 @@
 """
-wt_i18n.py
-==========
-Language files for the user interface, log messages and the comparison report.
-
-  lang/<code>.json   one file per language (de, en, tr, ...) - new languages: copy en.json,
-                     translate the values, set "_meta" -> "name". Nothing else to register.
-
-Values are plain strings or lists of lines (joined with line breaks). Keys may be nested;
-"a": {"b": "..."} is addressed as "a.b". Placeholders: {name}. Plural forms: {"one": ..., "other": ...}.
-Missing keys fall back to English, then German, then the key itself - a half-finished
-translation never breaks the tool.
+Language files lang/<code>.json for interface, log and comparison report. New language: copy en.json,
+translate the values and "_meta" → "name". Values are strings or lists of lines, nested keys are "a.b",
+plurals {"one", "other"}. A missing key falls back to English, then German, then the key itself.
 """
 
 from __future__ import annotations

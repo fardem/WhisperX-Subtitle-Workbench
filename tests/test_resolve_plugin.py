@@ -1,10 +1,6 @@
 """
-The Lua plugin, run against a fake DaVinci Resolve (tests/resolve_mock.lua).
-
-Needs the package "lupa" (LuaJIT for Python) – without it these tests are skipped:
-    venv\\Scripts\\python.exe -m pip install lupa
-The fake follows the behaviour tested in Resolve Studio 21.1.2; it cannot replace a test in
-Resolve itself (see the test guide in the README), but it catches mistakes in the plugin's logic.
+The Lua plugin against a fake DaVinci Resolve (tests/resolve_mock.lua) that behaves like Resolve Studio 21.1.2.
+Needs the package "lupa" (pip install lupa), otherwise the tests are skipped. It does not replace a test in Resolve.
 """
 
 import os
@@ -784,7 +780,7 @@ def test_unusable_saved_geometry_is_ignored(tmp_path):
     # Resolve 21.2 reported 505 wide although the minimum is 520 - restore it anyway
     assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,330", "layout": "2"})).values()) == \
         [260, 180, 505, 330]
-    # saved by 0.6.0 (no layout key): its start size was too big - start with the new one
+    # saved by an older plugin (no layout key): its start size was too big - start with the new one
     assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})) is None
 
 

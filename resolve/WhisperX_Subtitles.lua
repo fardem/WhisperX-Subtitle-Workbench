@@ -1,39 +1,22 @@
 --[[
-WhisperX_Subtitles.lua - DaVinci Resolve plugin of the WhisperX Subtitle Workbench
-=================================================================================
-Workspace -> Scripts -> WhisperX_Subtitles. Installed by the Workbench
-(Settings -> DaVinci Resolve -> Install / update plugin), which writes its folder,
-the interface language and all texts into the WX-CONFIG block below.
+WhisperX_Subtitles.lua - DaVinci Resolve plugin of the WhisperX Subtitle Workbench.
+The Workbench installs it and writes its folder, language and texts into the WX-CONFIG block.
 
-  Transcribe    renders the main mix of the timeline (In/Out if set, otherwise the whole
-                timeline) as WAV into <Workbench>\resolve_temp\<JobID>\audio.wav, writes
-                job.txt next to it and starts the Workbench with the WAV. When the Workbench
-                hands the result over (done.txt), the SRT goes onto a subtitle track.
-  Import SRT    puts any SRT onto a subtitle track the same way (e.g. a translation ..._EN.srt).
+Resolve Studio 21.1.2 (resolve/tools/probe_subtitles.lua checks it): MediaPool:AppendToTimeline puts an SRT
+only on the active subtitle track, after its last subtitle; on an empty track the SRT times stay relative to
+the timeline start. trackIndex/recordFrame are ignored. Only one subtitle track is active, new ones are not.
 
-Track rule: the first empty subtitle track (ST1, ST2, ...), otherwise a new one. The track
-is named "WhisperX <LANG>" ("WhisperX DE 2" if the name exists) and stays active.
-
-Tested with Resolve Studio 21.1.2 (resolve/tools/probe_subtitles.lua checks it again):
-  - MediaPool:AppendToTimeline({item}) puts an SRT on the ACTIVE subtitle track only and
-    appends it after the last subtitle there; on an empty track it starts at the timeline
-    start, the SRT times stay relative. trackIndex/recordFrame are ignored for subtitles.
-  - only one subtitle track is active; new tracks are created inactive; nothing is placed
-    when the target track is not active.
-  -> choose the track, deactivate all others, activate it, append, count the clips.
-
+io.open in Resolve's Lua cannot open non-ASCII paths on Windows, so every path here is ASCII.
 Every step is logged to Workspace -> Console (lines starting with "[WhisperX]").
-Files this script reads or writes have ASCII paths only: io.open in Resolve's Lua cannot
-open other paths on Windows.
 
-The render part follows the approach of AutoSubs (github.com/tmoroney/auto-subs, MIT License,
-Copyright (c) 2023 Tom Moroney): save the Deliver settings as a temporary preset, render, restore,
-check the job status by Error/CompletionPercentage, remove left-over jobs of its own. Own code.
+The render part follows AutoSubs (github.com/tmoroney/auto-subs, MIT License, Copyright (c) 2023 Tom Moroney):
+Deliver settings saved as a temporary preset, render, restore, job status by Error/CompletionPercentage,
+left-over own jobs removed. Own code.
 ]]
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.7.0",
+  version   = "0.7.1",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -366,7 +349,7 @@ local function copy_marks(marks)
   return out
 end
 
--- Range to render: In/Out if set (values of GetMarkInOut are RELATIVE to the timeline start),
+-- Range to render: In/Out if set (values of GetMarkInOut are relative to the timeline start),
 -- otherwise the whole timeline. -> first frame, last frame (absolute), whole?, marks
 local function render_range(tl, info)
   local marks = copy_marks(api(tl, "GetMarkInOut"))
@@ -409,7 +392,7 @@ local function job_progress(project, id)
   return type(st) == "table" and tonumber(st["CompletionPercentage"]) or nil
 end
 
--- Our render jobs write into <Workbench>\temp\resolve\ - that path is the unique prefix.
+-- Our render jobs write into <Workbench>\resolve_temp\ - that path marks them as ours.
 -- A left-over job of ours can keep IsRenderingInProgress() true forever. Jobs of others are never touched.
 local function remove_stale_jobs(project, only_stalled)
   local jobs = api(project, "GetRenderJobList")

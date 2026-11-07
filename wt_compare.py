@@ -1,17 +1,6 @@
 """
-wt_compare.py
-=============
-Text comparison of SRT files – timestamps, numbers and line breaks are ignored,
-only the plain text is compared word by word.
-
-  python wt_compare.py A.srt B.srt                    differences between A and B
-  python wt_compare.py A.srt B.srt reference.srt      + who is right, error rates, shared errors
-  python wt_compare.py A.srt --ref reference.srt      only A against the reference
-  ... --media video.mp4                               times in the report become clickable
-  ... --lang en|de|tr                                 language of the report
-
-Colors – the same everywhere: A = blue, B = purple, reference = green.
-All texts of the report are in lang/<code>.json ("rep").
+Text comparison of SRT files, word by word; timestamps, numbers and line breaks are ignored.
+Command line: python wt_compare.py --help. Colors everywhere: A blue, B purple, reference green.
 """
 
 import argparse
@@ -68,7 +57,7 @@ class Doc:
         return sum(t.raw[-1:] in PUNCT_END for t in self.tokens)
 
 
-# ─── READING ──────────────────────────────────────────────────────────────────
+# ─── Reading ──────────────────────────────────────────────────────────────────
 
 def _read_text(path) -> str:
     data = Path(path).read_bytes()
@@ -232,7 +221,7 @@ def secs(x: float, sign: bool = False, digits: int = 1) -> str:
     return i18n.secs(x, digits, sign)
 
 
-# ─── COMPARISON ───────────────────────────────────────────────────────────────
+# ─── Comparison ───────────────────────────────────────────────────────────────
 
 @dataclass
 class Group:
@@ -494,7 +483,7 @@ def _suggestions(rep: Report) -> list:
     return sorted((tuple(v) for v in found.values()), key=lambda e: (-e[2], e[0].lower()))
 
 
-# ─── AUDIO FOR LISTENING ──────────────────────────────────────────────────────
+# ─── Audio for listening ──────────────────────────────────────────────────────
 
 def make_audio_preview(media, out, ffmpeg="ffmpeg") -> Path | None:
     """Small AAC audio track (plays in every browser – whatever the video format of the source)."""
@@ -510,7 +499,7 @@ def make_audio_preview(media, out, ffmpeg="ffmpeg") -> Path | None:
         return None
 
 
-# ─── HTML REPORT ──────────────────────────────────────────────────────────────
+# ─── HTML report ──────────────────────────────────────────────────────────────
 
 CSS = """
 :root { --bg:#fff; --fg:#1f2328; --muted:#656d76; --line:#d0d7de; --card:#f6f8fa;
@@ -987,7 +976,7 @@ def main():
     media = args.media
     if media and Path(media).suffix.lower() not in AUDIO_EXT:
         ffmpeg = args.ffmpeg
-        if not ffmpeg:                       # like the tool: [System] ffmpeg_path from the INI next to it
+        if not ffmpeg:                       # like the Workbench: [System] ffmpeg_path from the INI next to it
             import configparser
             cp = configparser.ConfigParser(interpolation=None, strict=False)
             cp.read(ini, encoding="utf-8-sig")

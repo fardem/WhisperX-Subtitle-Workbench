@@ -2,6 +2,15 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.1] – 2026-11-07
+
+**Updating from 0.7.0:** install the plugin again under *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.
+
+- **Settings → DaVinci Resolve** in three sections: **1 · Plugin**, **2 · Analysis** with the check tracks (gaps, too fast, unsure words) and **3 · Jobs from DaVinci Resolve** with the behaviour at the end of a job (countdown, hand over by itself, close after the hand-over). The plugin status and the folder now stand directly next to their labels
+- Texts of the interface, the log, the INI template and the three READMEs revised: shorter, one fact per sentence, no metaphors. The program is called “the Workbench” everywhere. The tooltip of “Split long sentences” pointed to a section “2 · Display time” that no longer exists; it now names “2 · Pauses”
+- Comments in the code shortened, without own version numbers and without emphasis in capitals
+- `CLAUDE.md` with the writing rules of the project; `tests/test_texts.py` checks them, `tools/comments.py --write` sets the comment limits in `tests/comment_limits.json`
+
 ## [0.7.0] – 2026-11-07
 
 **Updating from 0.6.3:** close the workbench, update, then install the plugin again under *Settings → DaVinci Resolve*. In your `whisper_tool.ini` the score check is off – switch it on under *Settings → Speech detection* (recommended: 0.40). `[Resolve] extra_tracks` is taken over: as long as one of the new keys `track_gaps` and `track_fast` is missing, it takes the value of `extra_tracks`. The workbench no longer writes `extra_tracks`, and you can delete it – if it was 0, add `track_gaps = 0` and `track_fast = 0` instead. Python packages need no update.

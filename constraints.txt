@@ -1,15 +1,14 @@
-# WhisperX Subtitle Workbench - exact versions of ALL packages of a working installation
+# WhisperX Subtitle Workbench - exact versions of all packages of a working installation
 # (Windows 11, Python 3.10, RTX 5080 - pip freeze of the tested venv, 2026-11-03).
 #
-# requirements.txt says WHAT to install, this file pins every package (also the ones
-# pulled in indirectly) to the version that is known to work. Use it in step 5:
+# requirements.txt names what to install; this file pins every package, the indirect ones
+# included. Use it in step 5:
 #
 #   venv\Scripts\python.exe -m pip install -r requirements.txt -c constraints.txt
 #
-# A constraints file installs nothing by itself - it only fixes versions.
-# torch/torchaudio are listed WITHOUT "+cu128", so the CUDA build installed in step 4
-# (cu128 or cu126) is accepted and kept as it is.
-# After a deliberately tested update: regenerate it with "pip freeze".
+# A constraints file installs nothing by itself, it only fixes versions.
+# torch/torchaudio are listed without "+cu128", so the CUDA build from step 4 (cu128 or cu126)
+# is kept. After a tested update: regenerate it with "pip freeze".
 
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.5

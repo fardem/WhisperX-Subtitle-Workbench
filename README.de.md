@@ -2,13 +2,13 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.7.0** · [Änderungen](CHANGELOG.md)
+**Version 0.7.1** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
 ![Hauptfenster](docs/images/main-window.png)
 
-Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, lange Sätze und Pausen. Ein Lücken-Check findet laute Stellen ohne Text, ein Score-Check findet Wörter, die schlecht zum Ton passen. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen. Mit dem Plugin für DaVinci Resolve transkribierst du eine Timeline direkt aus Resolve heraus, und die Untertitel landen auf einer Untertitelspur.
+Du ziehst Video- oder Audiodateien ins Fenster, und die Workbench erstellt `.srt`-Untertitel. Die Untertitel-Regeln sind auf gute Lesbarkeit abgestimmt: Zeilenlänge, verwaiste Wörter, Dangling-Wörter, lange Sätze und Pausen. Ein Lücken-Check findet laute Stellen ohne Text, ein Score-Check findet Wörter, die schlecht zum Ton passen. Der Vergleichsbericht zeigt, welches Modell oder welche Einstellung besser erkennt, mit Fehlerquote, Zeitabweichung und Zeitstempeln, die beim Anklicken die Stelle abspielen. Mit dem Plugin für DaVinci Resolve transkribierst du eine Timeline direkt aus Resolve heraus, und die Untertitel kommen auf eine Untertitelspur.
 
 > Die Bildschirmfotos zeigen die englische Oberfläche; unter *Einstellungen → Allgemein* lässt sie sich auf Deutsch umstellen.
 
@@ -17,7 +17,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 ## Inhalt
 
 - [Funktionen](#funktionen)
-- [Voraussetzungen und Abhängigkeiten](#voraussetzungen-und-abhängigkeiten) ← **vor der Installation lesen**
+- [Voraussetzungen und Abhängigkeiten](#voraussetzungen-und-abhängigkeiten) – vor der Installation lesen
 - [Installation (Windows)](#installation-windows)
 - [Sicher aktualisieren](#sicher-aktualisieren)
 - [Bedienung](#bedienung)
@@ -46,7 +46,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 - **Sprache pro Datei:** Die Sprache wird pro Datei erkannt, oder du legst sie fest. Jede Sprache hat ihren eigenen Prompt, Füllwörter, Dangling-Wörter, Ersetzungen und optional ein eigenes Modell (z.B. ein türkisches Fine-Tune).
 - **Lyrics-Modus:** Liegt `lied.lyric.txt` neben `lied.mp3`, wird jede Zeile des Liedtexts zeitlich auf das Audio ausgerichtet. Das läuft über Forced Alignment (MMS_FA + uroman) und funktioniert für jede Sprache.
 - **JSON → SRT:** Du kannst das WhisperX-Ergebnis behalten und die Untertitel später in Sekunden mit anderem Layout neu bauen.
-- **Lücken-Check:** Findet nach jeder Transkription laute, stimmähnliche Stellen ohne Text, also verschluckte Sprache. Dazu wird eine eigene Untertiteldatei geschrieben, mit der du jede Stelle direkt anspringen kannst.
+- **Lücken-Check:** Findet nach jeder Transkription laute, stimmähnliche Stellen ohne Text, also nicht erkannte Sprache. Dazu wird eine eigene Untertiteldatei geschrieben, mit der du jede Stelle direkt anspringen kannst.
 - **Score-Check:** Die Wort-Zeitstempel geben jedem Wort einen Score von 0 bis 1 – wie gut es an seiner Stelle zum Ton passt. Wörter unter einer Schwelle (Empfehlung 0,40) sind wahrscheinlich falsch erkannt oder falsch platziert; der Check listet sie im Protokoll und in einer eigenen Untertiteldatei. Die Untertitel selbst bleiben unverändert.
 - **Vergleichsbericht** (HTML): A gegen B, A gegen Referenz oder A gegen B gegen Referenz.
   - Zeigt bei jedem Unterschied, wer recht hat.
@@ -68,7 +68,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 
 ## Voraussetzungen und Abhängigkeiten
 
-> **Der wichtigste Teil dieser Anleitung.** WhisperX baut auf PyTorch, CTranslate2, pyannote und mehreren kleineren Paketen auf, und die hängen jeweils von **exakten** Versionen der anderen ab. Ein unbedachtes `pip install` kann still dein CUDA-PyTorch durch eine CPU-Version oder eine unpassende Version ersetzen. Das Tool scheitert dann auf schwer verständliche Weise. Wenn du dich an die Reihenfolge unten hältst, bekommst du eine Kombination, die nachweislich funktioniert.
+> WhisperX baut auf PyTorch, CTranslate2, pyannote und weiteren Paketen auf, die jeweils **exakte** Versionen der anderen verlangen. Ein `pip install` außerhalb der Reihenfolge unten kann das CUDA-PyTorch ohne Meldung durch eine CPU-Version oder eine unpassende Version ersetzen. Die Workbench scheitert dann mit schwer verständlichen Fehlern. Die Reihenfolge unten ergibt die getestete Kombination.
 
 ### Was du brauchst
 
@@ -81,7 +81,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und das Tool erstellt `.srt`-Unt
 | ffmpeg | 6.x / 7.x | Eigenes Programm, kein pip-Paket. Jeder Full-Build, z.B. `winget install Gyan.FFmpeg` |
 | Internet | nur beim ersten Start | Whisper-Modell (~3 GB), Alignment-Modelle je Sprache, MMS_FA (~1,2 GB für Lyrics) |
 
-Ein Hugging-Face-Token ist nicht nötig, weil das Tool keine Sprechertrennung (Diarization) benutzt.
+Ein Hugging-Face-Token ist nicht nötig, weil die Workbench keine Sprechertrennung (Diarization) benutzt.
 
 ### Die getestete Paket-Kombination
 
@@ -93,7 +93,7 @@ Diese Versionen laufen produktiv zusammen (Python 3.10, Windows 11, RTX 5080):
 | `torchaudio` | **2.8.0+cu128** | Muss **genau** dieselbe Version und denselben CUDA-Build haben wie torch. Wird für Lyrics (MMS_FA) gebraucht |
 | `torchvision` | 0.23.0 | Gehört zu torch 2.8 (von WhisperX verlangt) |
 | `torchcodec` | 0.7.0 | WhisperX verlangt `<0.8`, pyannote-audio 4 verlangt `≥0.7`, also passt nur 0.7.x. Gehört zu torch 2.8 |
-| `whisperx` | **3.8.5** | Das Tool ist mit 3.8.x getestet; die Systemprüfung warnt unter 3.8 |
+| `whisperx` | **3.8.5** | Die Workbench ist mit 3.8.x getestet; die Systemprüfung warnt unter 3.8 |
 | `faster-whisper` | 1.2.1 | Verlangt `ctranslate2 <5` |
 | `ctranslate2` | 4.7.1 | Ab **4.5** wird CUDA 12 + **cuDNN 9** benutzt, das torch 2.8 mitbringt. Bis 4.4 wird cuDNN 8 erwartet, das scheitert |
 | `pyannote-audio` | 4.0.4 | Spracherkennung (VAD). Verlangt torch ≥ 2.8 und torchcodec ≥ 0.7 |
@@ -113,7 +113,7 @@ whisperx 3.8.x ── verlangt torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
                   torchcodec <0.8, ctranslate2 ≥4.5, faster-whisper ≥1.2, pyannote-audio ≥4, numpy ≥2.1
 ```
 
-### Bekannte Wege, die Installation kaputt zu machen
+### Häufige Installationsfehler
 
 | Was passiert | Typisches Zeichen | Vorbeugen / beheben |
 |---|---|---|
@@ -125,7 +125,7 @@ whisperx 3.8.x ── verlangt torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 | Der cu128-Build auf einer GTX 10xx, GTX 9xx oder Titan V | Warnung „… CUDA capability sm_61 is not compatible …“, danach `no kernel image is available` | Den cu126-Build benutzen (Schritt 4) |
 | `pip install -r requirements.txt` in einem **vorhandenen** venv mit anderem torch | pip ersetzt dieses torch durch die CPU-Version von PyPI, und das dort installierte WhisperX läuft auch nicht mehr | Nie in ein vorhandenes venv installieren; einen neuen Ordner mit eigenem venv nehmen |
 | Ein anderes KI-Tool ins selbe venv installiert | anderes torch oder `numpy<2` → verschiedenste Fehler | Anderen Tools ein eigenes venv geben |
-| Python ohne Tkinter | Das Tool meldet „Tkinter fehlt“ | Python-Installer → Modify → „tcl/tk and IDLE“ |
+| Python ohne Tkinter | Die Workbench meldet „Tkinter fehlt“ | Python-Installer → Modify → „tcl/tk and IDLE“ |
 
 ---
 
@@ -211,13 +211,13 @@ venv\Scripts\python.exe -m pip check
 venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
 ```
 
-**8. Starten:** `Whisper_Tool.bat`. Beim ersten Start legt das Tool `whisper_tool.ini` aus `whisper_tool.example.ini` an und führt die Systemprüfung durch. Jede Zeile der Prüfung sollte grün sein.
+**8. Starten:** `Whisper_Tool.bat`. Beim ersten Start legt die Workbench `whisper_tool.ini` aus `whisper_tool.example.ini` an und führt die Systemprüfung durch. Jede Zeile der Prüfung sollte grün sein.
 
 **Desktop-Verknüpfung:** Rechtsklick auf `Whisper_Tool.bat` → *Verknüpfung erstellen* → die Verknüpfung auf den Desktop ziehen. Du kannst Dateien und Ordner auf die Verknüpfung ziehen.
 
 ### Ein vorhandenes WhisperX-venv benutzen
 
-Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv`, kopiere die Dateien dieses Repositorys nach `C:\WhisperX`, neben den Ordner `venv`. Es wird nichts installiert; das Tool benutzt nur die Pakete, die schon da sind. Vor dem Kopieren das Tool schließen und die Dateien direkt nach `C:\WhisperX` entpacken, nicht in einen Unterordner.
+Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv`, kopiere die Dateien dieses Repositorys nach `C:\WhisperX`, neben den Ordner `venv`. Es wird nichts installiert; die Workbench benutzt nur die Pakete, die schon da sind. Vor dem Kopieren die Workbench schließen und die Dateien direkt nach `C:\WhisperX` entpacken, nicht in einen Unterordner.
 
 > **In diesem venv kein `pip install` ausführen, vor allem nicht `requirements.txt`.** Ist dort ein anderes torch als 2.8.x installiert, ersetzt pip es durch die CPU-Version von PyPI, und dein vorhandenes WhisperX läuft auch nicht mehr. Meldet die Systemprüfung WhisperX als zu alt, installiere die Workbench lieber in einen **neuen Ordner** mit eigenem venv (Schritte 1–8). Deine alte Installation bleibt dann unberührt.
 
@@ -225,11 +225,11 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 
 ## Sicher aktualisieren
 
-- **Zuerst das Tool schließen.** Die laufende Version steht in der Titelleiste (z.B. *WhisperX Subtitle Workbench 0.7.0*), in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
+- **Zuerst die Workbench schließen.** Die laufende Version steht in der Titelleiste hinter *WhisperX Subtitle Workbench*, in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
 - **Die Workbench selbst:** `git pull`, oder die neuen Dateien über die alten kopieren. Deine Einstellungen stehen in `whisper_tool.ini`. Diese Datei gehört nicht zum Repository, ein Update überschreibt sie also nie. Neue Optionen bekommen automatisch Standardwerte.
 - **Python-Pakete:** Nur aktualisieren, wenn du etwas Neues brauchst. So geht es sicher:
 
-1. **Das venv sichern:** das Tool schließen und den ganzen Ordner `venv` kopieren, z.B. nach `venv-backup`. Das ist die eigentliche Sicherung. Zum Zurückholen `venv` löschen und `venv-backup` wieder in `venv` umbenennen. Sie funktioniert nur am ursprünglichen Pfad.
+1. **Das venv sichern:** die Workbench schließen und den ganzen Ordner `venv` kopieren, z.B. nach `venv-backup`. Das ist die eigentliche Sicherung. Zum Zurückholen `venv` löschen und `venv-backup` wieder in `venv` umbenennen. Sie funktioniert nur am ursprünglichen Pfad.
 
 2. Den aktuellen Stand notieren, damit du später nachsehen kannst:
 
@@ -249,19 +249,19 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
    venv\Scripts\python.exe -m pip install --dry-run -U whisperx
    ```
 
-4. Steht in der Ausgabe des Probelaufs unter „Would install“ `torch`, `torchaudio`, `torchvision`, `torchcodec` oder `ctranslate2`, **abbrechen**. Dieses Update würde die Kombination zerstören.
+4. Steht in der Ausgabe des Probelaufs unter „Would install“ `torch`, `torchaudio`, `torchvision`, `torchcodec` oder `ctranslate2`, **abbrechen**. Dieses Update würde Pakete der getesteten Kombination ersetzen.
 
 ---
 
 ## Bedienung
 
-| Du ziehst … | Das Tool macht … | Ergebnis |
+| Du ziehst … | Die Workbench macht … | Ergebnis |
 |---|---|---|
 | eine Video-/Audiodatei (`.mp4 .mkv .mp3 .wav .m4a …`) | Transkription mit WhisperX | `<name>.srt` |
 | eine Mediendatei mit `<name>.lyric.txt` daneben | Lyrics-Alignment (eine Liedzeile pro Zeile, UTF-8) | `<name>.lyric.srt` |
 | eine WhisperX-`.json` (gespeichert mit „JSON behalten“) | baut nur die Untertitel neu | `<name>.srt` |
 | einen Ordner | alle Mediendateien darin | |
-| die WAV eines DaVinci-Resolve-Jobs – das Plugin startet das Tool damit | Transkription, dann **→ An DaVinci übergeben** | die Untertitel auf einer Untertitelspur in Resolve |
+| die WAV eines DaVinci-Resolve-Jobs – das Plugin startet die Workbench damit | Transkription, dann **→ An DaVinci übergeben** | die Untertitel auf einer Untertitelspur in Resolve |
 
 - **Start** verarbeitet die markierten Dateien. Ist nichts markiert, verarbeitet es alle Dateien, die noch nicht fertig sind. Ist alles fertig, verarbeitet es alle nochmal, z.B. mit anderem Layout.
 - **Sprache:**
@@ -272,10 +272,10 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
   - Dateien mit verdächtigen Lücken bekommen in der Liste den Status „⚠ Lücken“.
   - Die Stellen erscheinen gelb im Protokoll.
   - Sie werden außerdem als `<name>.luecken.srt` gespeichert. Der Dateiname folgt der Oberflächensprache: `.gaps.srt` auf Englisch, `.bosluklar.srt` auf Türkisch. In VLC oder Subtitle Edit als zweite Untertitelspur laden, um jede Stelle anzuspringen.
-- **Score-Check** (*Einstellungen → Spracherkennung*, unter dem Lücken-Check; in einer INI von vor 0.7.0 aus):
+- **Score-Check** (*Einstellungen → Spracherkennung*, unter dem Lücken-Check; aus, wenn die INI keinen Abschnitt `[Score]` hat):
   - Das Protokoll zeigt zuerst Median und 5-%-Quantil aller Wort-Scores, z. B. `Score: Median 0,88 · 5 % unter 0,61 · 7 Stellen unter 0,40`, danach die Stellen mit ihren Wörtern und Scores. Dateien mit solchen Stellen bekommen den Status „⚠ unsicher“.
   - Die Stellen werden außerdem als `<name>.unsicher.srt` gespeichert (`.unsure.srt` auf Englisch, `.belirsiz.srt` auf Türkisch), z. B. `unsicher: Bundesverfassungsgericht 0,32 · Rafah 0,28`. Markierte Wörter mit höchstens 1 Sekunde Abstand sind ein Eintrag.
-  - Höhere Schwelle = mehr Einträge. Namen und Fremdwörter landen öfter darunter, auch wenn sie richtig sind. Zahlen werden praktisch nie markiert, Wörter mit weniger als 3 Buchstaben werden nicht bewertet.
+  - Höhere Schwelle = mehr Einträge. Namen und Fremdwörter liegen öfter darunter, auch wenn sie richtig sind. Zahlen werden praktisch nie markiert, Wörter mit weniger als 3 Buchstaben werden nicht bewertet.
   - Er funktioniert auch für eine mit „JSON behalten“ gespeicherte JSON, nicht für Lyrics. Für eine Sprache ohne Ausrichtungsmodell gibt es keine Scores; das Protokoll sagt das.
 - **Maus auf ein Bedienelement halten** zeigt eine ausführliche Erklärung.
 
@@ -306,7 +306,7 @@ Der Bericht enthält außerdem:
 - **Nur Schreibweise:** Unterschiede bei Satzzeichen oder Groß-/Kleinschreibung, die nicht als Fehler zählen.
 - **Volltext:** der ganze Text mit allen Abweichungen markiert.
 
-**Anhören:** Gibst du das Video oder Audio mit an, legt das Tool neben den Bericht eine kleine Tonspur (`.m4a`). Jede Zeit im Bericht ist dann anklickbar und spielt ab 1,5 s vor der Stelle. Bericht und `.m4a`-Datei zusammen lassen.
+**Anhören:** Gibst du das Video oder Audio mit an, legt die Workbench neben den Bericht eine kleine Tonspur (`.m4a`). Jede Zeit im Bericht ist dann anklickbar und spielt ab 1,5 s vor der Stelle. Bericht und `.m4a`-Datei zusammen lassen.
 
 Tipp: Stelle *Endung Rede* auf `.{model}.srt` (*Einstellungen → Audio & Ausgabe*). Dann schreibt jedes Modell seine eigene SRT, und du kannst sie leicht vergleichen.
 
@@ -338,13 +338,13 @@ Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach ein
 3. In der Workbench steht der Job als „*Timeline* · DaVinci Resolve“ in der Liste. Er hat einen eigenen Countdown (*Einstellungen → DaVinci Resolve*, Vorgabe 10 Sekunden). Sprache, Modus und Audiofilter kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI: Prompt, Zeichen pro Zeile und Zeilen sowie alle Regeln aus *Einstellungen → Untertitel*. Die Einstellungen im Hauptfenster gelten für DaVinci-Jobs nicht. Das Protokoll zeigt beides an. Ohne Countdown startest du selbst mit *Start*. Währenddessen zeigt das Plugin-Fenster, wo der Job steht: Countdown, Transkription in Prozent, fertig.
 4. Ist der Job fertig, die Untertitel prüfen und **→ An DaVinci übergeben** drücken (blau, sobald der Job fertig ist). Die SRT wird an die Stelle des Bereichs in der Timeline verschoben und als `resolve_temp\<Timeline>_<SPRACHE>_<Datum-Uhrzeit>.srt` gespeichert; dieser Ordner behält die SRTs der letzten 10 Übergaben, bei der 11. wird die älteste gelöscht. Der Name ist jedes Mal neu, weil Resolve eine Datei, die schon im Media Pool liegt, nicht noch einmal liest – es würde die Untertitel des ersten Imports einsetzen. Danach minimiert sich die Workbench – sie bleibt offen, ihre Modelle bleiben für den nächsten Job geladen. Unter *Einstellungen → DaVinci Resolve* kannst du automatisch übergeben lassen, sobald der Job transkribiert ist, und schließen statt minimieren.
 5. Das Plugin wartet in Resolve, wechselt zurück zur Timeline des Jobs, importiert die SRT in den Media-Pool-Bin *WhisperX* und legt sie auf die **erste leere Untertitelspur** (ST1, ST2, …) – oder auf eine neue. Die Spur heißt `WhisperX DE` (`WhisperX DE 2`, wenn es den Namen schon gibt) und bleibt die aktive Untertitelspur. Danach werden WAV und Job-Ordner gelöscht, und das Plugin-Fenster kommt mit dem Ergebnis nach vorne, bis du *OK* drückst.
-6. Bis zu drei weitere Untertitelspuren helfen beim Prüfen, jede einzeln unter *Einstellungen → DaVinci Resolve* ein- oder ausgeschaltet: **WhisperX Lücken** markiert laute Stellen ohne Text aus dem Lücken-Check, **WhisperX zu schnell** markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (Modus *Satzweise*), **WhisperX unsicher** markiert die Wörter des Score-Checks (immer, wenn der Score-Check an ist – die Zeile unter *Einstellungen → DaVinci Resolve* ist dieselbe Einstellung wie unter *Spracherkennung*). Du springst in Resolve von Eintrag zu Eintrag und löschst danach die Spuren. Eine Spur kommt nur dazu, wenn es etwas zu zeigen gibt, und die Spur mit dem Transkript bleibt die aktive.
+6. Bis zu drei weitere Untertitelspuren helfen beim Prüfen, jede einzeln unter *Einstellungen → DaVinci Resolve → Analyse* ein- oder ausgeschaltet: **WhisperX Lücken** markiert laute Stellen ohne Text aus dem Lücken-Check, **WhisperX zu schnell** markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (Modus *Satzweise*), **WhisperX unsicher** markiert die Wörter des Score-Checks (immer, wenn der Score-Check an ist; die Zeile unter *Analyse* ist dieselbe Einstellung wie unter *Spracherkennung*). Du springst in Resolve von Eintrag zu Eintrag und löschst danach die Spuren. Eine Spur kommt nur dazu, wenn es etwas zu zeigen gibt, und die Spur mit dem Transkript bleibt die aktive.
 
 ![Ein DaVinci-Resolve-Job in der Workbench, bereit zur Übergabe](docs/images/resolve-job.png)
 
 **SRT importieren …** im Plugin legt eine beliebige SRT genauso auf eine Untertitelspur, z.B. eine Übersetzung. Es importiert eine Kopie mit neuem Namen aus `resolve_temp\`, damit eine inzwischen korrigierte Datei neu gelesen wird. Die Sprache für den Spurnamen kommt aus dem Dateinamen (`…_EN.srt`), sonst fragt das Plugin nach. Der Dateidialog startet in `resolve_temp\`.
 
-Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timeline im transkribierten Bereich können dazu führen, dass die Untertitel nicht mehr passen; hat sich das Ende der Timeline geändert, fragt das Plugin vor dem Import nach. Jeder Schritt steht unter *Workspace → Console* (Zeilen mit `[WhisperX]`) – diese Ausgabe hilft, wenn etwas nicht klappt.
+Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timeline im transkribierten Bereich können dazu führen, dass die Untertitel nicht mehr passen; hat sich das Ende der Timeline geändert, fragt das Plugin vor dem Import nach. Jeder Schritt steht unter *Workspace → Console* (Zeilen mit `[WhisperX]`); diese Ausgabe hilft bei der Fehlersuche.
 
 ### Bekannte Grenzen
 
@@ -363,9 +363,9 @@ Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timelin
 - **Einstellungen …** hat sieben Reiter: Whisper, Spracherkennung, Untertitel, Audio & Ausgabe, Sprachen, DaVinci Resolve und Allgemein. *Speichern* schreibt nur die geänderten Werte in `whisper_tool.ini`, legt vorher eine `.bak`-Sicherung an und lässt alle Kommentare stehen.
 - `whisper_tool.ini` kannst du auch von Hand bearbeiten. Jeder Wert ist kommentiert; die Vorlage ist `whisper_tool.example.ini`.
 
-*Einstellungen → Spracherkennung* enthält auch die beiden Checks nach der Transkription: den Lücken-Check und den Score-Check mit seiner Schwelle. Unter *Einstellungen → DaVinci Resolve* legst du fest, welche Prüfspuren bei einer Übergabe mitgehen.
+*Einstellungen → Spracherkennung* enthält auch die beiden Checks nach der Transkription: den Lücken-Check und den Score-Check mit seiner Schwelle. Unter *Einstellungen → DaVinci Resolve → Analyse* legst du fest, welche Prüfspuren bei einer Übergabe mitgehen.
 
-*Einstellungen → Untertitel* ist nach den Fragen geordnet, die das Tool nacheinander beantwortet: **1 · Aufteilen** – welche Wörter zusammen in einen Untertitel kommen, **2 · Pausen** – wie lange ein Segment stehen bleibt, **3 · Lyrics** – eigene Regeln für Liedzeilen.
+*Einstellungen → Untertitel* ist nach den Fragen geordnet, die die Workbench nacheinander beantwortet: **1 · Aufteilen** – welche Wörter zusammen in einen Untertitel kommen, **2 · Pausen** – wie lange ein Segment stehen bleibt, **3 · Lyrics** – eigene Regeln für Liedzeilen.
 
 ![Einstellungen – Untertitel](docs/images/settings-subtitles.png)
 
@@ -379,15 +379,15 @@ Oberfläche, Protokoll und Vergleichsbericht gibt es auf **Deutsch, Englisch und
 
 ![Einstellungen – Allgemein](docs/images/settings-general.png)
 
-- *Einstellungen → Allgemein → Sprache der Oberfläche*. Die Vorgabe „wie Windows“ nimmt die Systemsprache, wenn es dafür eine Sprachdatei gibt, sonst Englisch. Nach einer Änderung bietet das Tool an, das Fenster neu zu starten.
+- *Einstellungen → Allgemein → Sprache der Oberfläche*. Die Vorgabe „wie Windows“ nimmt die Systemsprache, wenn es dafür eine Sprachdatei gibt, sonst Englisch. Nach einer Änderung bietet die Workbench an, das Fenster neu zu starten.
 - In der INI: `[System] ui_language = auto | en | de | tr`.
 
 **Eine Sprache hinzufügen:**
 1. `lang/en.json` nach `lang/<code>.json` kopieren, z.B. `lang/fr.json`.
 2. Die Werte übersetzen und `"_meta" → "name"` setzen. Platzhalter wie `{n}` und `{path}` unverändert lassen.
-3. Das Tool neu starten. Die neue Sprache erscheint automatisch in der Liste.
+3. Die Workbench neu starten. Die neue Sprache erscheint automatisch in der Liste.
 
-Fehlende Einträge fallen auf Englisch zurück, eine halb fertige Übersetzung legt das Tool also nie lahm. Pull Requests mit neuen Sprachen sind willkommen.
+Fehlende Einträge fallen auf Englisch zurück; eine unvollständige Übersetzung führt also nicht zu Fehlern. Pull Requests mit neuen Sprachen sind willkommen.
 
 ---
 
@@ -416,8 +416,8 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | Problem | Lösung |
 |---|---|
 | Nach einem Update ist noch die alte Oberfläche zu sehen (Titel „Whisper Tool“) | Ein altes Fenster ist noch offen und hat den Start übernommen. Schließen – ist es nicht sichtbar, im Task-Manager `pythonw.exe` beenden – und neu starten |
-| Das Tool startet nicht | Ein Meldungsfenster zeigt die Ursache. Derselbe Text steht in `whisper_tool_error.log` |
-| Eine Zeile der Systemprüfung ist rot | Sie nennt das fehlende Teil und welche Funktion betroffen ist. Siehe [Bekannte Wege, die Installation kaputt zu machen](#bekannte-wege-die-installation-kaputt-zu-machen) |
+| Die Workbench startet nicht | Ein Meldungsfenster zeigt die Ursache. Derselbe Text steht in `whisper_tool_error.log` |
+| Eine Zeile der Systemprüfung ist rot | Sie nennt das fehlende Teil und welche Funktion betroffen ist. Siehe [Häufige Installationsfehler](#häufige-installationsfehler) |
 | „torch ist eine Version ohne CUDA“ | torch wurde von PyPI installiert. Schritt 4 der Installation wiederholen |
 | Text fehlt an leisen Stellen | Den Lücken-Check ansehen. Dann den *Onset* senken oder *silero* testen (*Einstellungen → Spracherkennung*) |
 | Falsche Wörter in den Untertiteln | Den Score-Check einschalten (*Einstellungen → Spracherkennung*) und die gemeldeten Stellen anhören. Wiederkehrende Fehler mit einer Ersetzung oder dem Prompt beheben (*Einstellungen → Sprachen*) |
@@ -446,9 +446,11 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | `lang/*.json` | Alle Texte von Oberfläche, Protokoll und Bericht (en, de, tr) |
 | `whisper_tool.example.ini` | Einstellungs-Vorlage; wird beim ersten Start zu `whisper_tool.ini` kopiert |
 | `Whisper_Tool.bat` | Starter: doppelklicken oder Dateien darauf ziehen |
-| `requirements.txt` | Die getesteten Paketversionen (torch zuerst installieren!) |
+| `requirements.txt` | Die getesteten Paketversionen (torch zuerst installieren, Schritt 4) |
 | `constraints.txt` | Exakte Versionen aller Pakete der getesteten Installation (`pip freeze`), wird in Schritt 5 mit `-c` benutzt |
 | `tests/` | Automatische Tests (pytest). Sie brauchen weder Grafikkarte noch WhisperX und laufen bei jedem Push auf GitHub. Die Tests des Resolve-Plugins laufen gegen ein nachgebautes Resolve und brauchen das Paket `lupa`; ohne es werden sie übersprungen |
+| `tools/comments.py` | Zählt Kommentarzeilen je Datei; `--write` setzt die Grenzen in `tests/comment_limits.json` |
+| `CLAUDE.md` | Regeln für Texte und Kommentare in diesem Projekt (liest Claude Code) |
 | `resolve_temp/` | Job-Ordner des Plugins und die SRTs der letzten 10 Übergaben (nicht im Repository) |
 
 ---
@@ -457,7 +459,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 
 [MIT-Lizenz](LICENSE) © 2026 fardem
 
-Dieses Tool baut auf der Arbeit anderer auf:
+Die Workbench baut auf der Arbeit anderer auf:
 - [WhisperX](https://github.com/m-bain/whisperX)
 - [faster-whisper](https://github.com/SYSTRAN/faster-whisper) und [CTranslate2](https://github.com/OpenNMT/CTranslate2)
 - [OpenAI Whisper](https://github.com/openai/whisper)

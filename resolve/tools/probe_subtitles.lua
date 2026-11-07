@@ -1,17 +1,15 @@
--- probe_subtitles.lua  (WX_Probe_Untertitel.lua v2, kept for checking new Resolve versions)
--- Checks whether a script can put an SRT onto a specific subtitle track in DaVinci Resolve.
--- The plugin (resolve/WhisperX_Subtitles.lua) relies on the results below - run this probe
--- again after a Resolve update before trusting the plugin with an important project.
+-- probe_subtitles.lua - checks the subtitle API again after a Resolve update.
+-- resolve/WhisperX_Subtitles.lua relies on the results below.
 --
 -- Place:  %APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Edit\
 -- Start:  Workspace -> Scripts -> probe_subtitles
 -- Output: Workspace -> Console (tab "Lua")
 --
--- ONE variant per run (set VARIANT below). The project is saved before the attempt.
+-- One variant per run (set VARIANT below). The project is saved before the attempt.
 --
 -- Results with Resolve Studio 21.1.2.10 on Windows:
 --   - MediaPool:ImportMedia({srtPath}) returns a MediaPoolItem of type "Subtitle".
---   - AppendToTimeline({item}) puts the SRT on the ACTIVE subtitle track and appends it after
+--   - AppendToTimeline({item}) puts the SRT on the active subtitle track and appends it after
 --     the last subtitle there. On an empty track it starts at the timeline start, the SRT
 --     times stay relative (subtitle at 00:00:01,000 -> frame 30 at 29.97 fps).
 --   - trackIndex and recordFrame in the clipInfo are ignored for subtitles (no crash).
@@ -22,13 +20,13 @@
 --   - Count clips with #GetItemListInTrack("subtitle", i); pairs() reports 1 on empty tracks.
 
 local VARIANT = 7
---   7 = ACTIVATE the target track (first empty / new), deactivate all others, then like 1
+--   7 = activate the target track (first empty / new), deactivate all others, then like 1
 --   1 = AppendToTimeline({item})                          -> tested: lands on the active track
 --   2 = {mediaPoolItem, recordFrame}                      -> tested: recordFrame is ignored
 --   6 = insert a new track at position 1                  -> tested: lands on the active track
 --   3 = {mediaPoolItem, recordFrame, trackIndex=target}   -> track selectable? (crash risk)
---   4 = like 2, all other subtitle tracks LOCKED
---   5 = like 2, all other subtitle tracks DISABLED
+--   4 = like 2, all other subtitle tracks locked
+--   5 = like 2, all other subtitle tracks disabled
 
 local REC_OFFSET_SEC = 3   -- test position: 3 s after the timeline start
 

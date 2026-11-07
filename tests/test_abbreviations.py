@@ -64,7 +64,7 @@ def test_word_mode_keeps_single_words():
 
 def test_missing_line_uses_built_in_list(tmp_path):
     ini = tmp_path / "old.ini"
-    ini.write_text("[Layout]\ndefault_chars = 42\n", encoding="utf-8")     # INI of version 0.1.0
+    ini.write_text("[Layout]\ndefault_chars = 42\n", encoding="utf-8")     # INI without [Abbreviations]
     rules = core.Config(ini).rules("de")
     assert ("dr.",) in rules.abbrev and ("z.", "b.") in rules.abbrev
 

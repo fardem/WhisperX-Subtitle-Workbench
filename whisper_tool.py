@@ -1,23 +1,7 @@
 #!/usr/bin/env python3
 """
-whisper_tool.py – WhisperX Subtitle Workbench
-=============================================
-Subtitles from speeches (WhisperX) and song lyrics (MMS_FA) – with a user interface.
-All texts of the interface are in lang/<code>.json (en, de, tr).
-
-Start:
-  Whisper_Tool.bat                  → open the window, add files with "Add …"
-  files dropped onto Whisper_Tool.bat → window with the files, auto start after a countdown
-  python whisper_tool.py --nogui …  → without window, defaults from the INI
-
-What happens per file:
-  <name>.lyric.txt is next to it    → lyrics alignment   → <name>.lyric.srt
-  WhisperX JSON (.json)             → rebuild the SRT    → <name>.srt
-  everything else                   → transcription      → <name>.srt
-
-Settings: whisper_tool.ini (re-read on every start; if it is missing,
-it is created from whisper_tool.example.ini).
-Optional: "pip install --no-deps tkinterdnd2" enables drag & drop directly into the window.
+WhisperX Subtitle Workbench: main window, settings dialog and the command line (--nogui).
+Texts of the interface in lang/<code>.json, settings in whisper_tool.ini.
 """
 
 from __future__ import annotations
@@ -146,10 +130,8 @@ def ensure_ini(path: Path):
         except OSError:
             pass
 
-# Only one window: further starts (files dropped onto the BAT) hand their
-# files to the window that is already open – local only (127.0.0.1).
-# Only to a window of the SAME version – a different (e.g. older) version that is
-# still open would otherwise silently take over, and the new start would be invisible.
+# Further starts hand their files to the open window (local only). Only a window of the
+# same version takes them: another version would take them without showing the new start.
 IPC_ADDR  = ("127.0.0.1", 47653)
 IPC_HELLO = f"WHISPERTOOL/2 {VERSION}\n".encode()
 IPC_OK    = b"WHISPERTOOL-OK"
@@ -268,8 +250,8 @@ class QueueWriter:
 
 def send_to_running(files) -> tuple[str, str]:
     """
-    Is a window already open? → ("ok", "") files were handed over to it,
-    ("other", version) a window of another version is open ("" = older than 0.1.0), ("none", "").
+    Is a window already open? → ("ok", "") files were handed over to it, ("none", "") no window,
+    ("other", version) a window of another version is open ("" if its reply names no version).
     """
     try:
         with socket.create_connection(IPC_ADDR, timeout=1.0) as s:
@@ -286,7 +268,7 @@ def send_to_running(files) -> tuple[str, str]:
     return "other", ""
 
 
-# ─── USER INTERFACE ───────────────────────────────────────────────────────────
+# ─── User interface ───────────────────────────────────────────────────────────
 
 BaseTk = TkinterDnD.Tk if TkinterDnD else (tk.Tk if tk else object)
 
@@ -851,8 +833,7 @@ class App(BaseTk):
             job_opts = opts if job is None else self._resolve_options(job)
             try:
                 info = self.engine.process(item["path"], job_opts)
-                # suffix with {model} → actual name; language, mode, gaps and unsure words go with a
-                # hand-over to DaVinci
+                # info: the real output name ({model} in the suffix) and what a hand-over to DaVinci needs
                 self.q.put(("out", iid, info))
                 lang = f" · {info['language']}" if info.get("language", "-") != "-" else ""
                 gaps, unsure = info.get("gaps", 0), info.get("unsure", 0)
@@ -1086,11 +1067,8 @@ class App(BaseTk):
 
     def _hand_over(self, iids=None):
         """
-        "Hand over to DaVinci": the given jobs (automatic hand-over), else the selected transcribed
-        jobs – or all that were not handed over yet. The SRT is shifted to the position of the range
-        in the timeline and lands in resolve_temp/; gaps, too fast subtitles and unsure words go along
-        for own tracks (_extra_tracks). Afterwards the window gets out of the way – minimized (the
-        models stay loaded) or closed – and the plugin in DaVinci Resolve comes to the front with the result.
+        "Hand over to DaVinci": the given jobs, else the selected transcribed ones, else all not handed over yet.
+        Afterwards the window is minimized (models stay loaded) or closed; the plugin comes to the front.
         """
         done = [i for i, it in self.items.items() if it.get("job") and it["state"] == "done"]
         sel = [i for i in self.tree.selection() if i in done]
@@ -1150,7 +1128,7 @@ class App(BaseTk):
     def _cleanup_resolve_jobs(self):
         """Background: remove job folders of the plugin that were cancelled, imported or left behind."""
         try:
-            wt_resolve.remove_legacy_dir()          # temp/resolve/ of 0.5.0
+            wt_resolve.remove_legacy_dir()          # temp/resolve/ of older versions
             n = wt_resolve.cleanup_jobs()
         except Exception:
             return
@@ -1299,7 +1277,7 @@ class App(BaseTk):
         os._exit(0)     # do not wait for running GPU work
 
 
-# ─── SETTINGS ─────────────────────────────────────────────────────────────────
+# ─── Settings ─────────────────────────────────────────────────────────────────
 
 ORIG_FILTER = "highpass=f=100,lowpass=f=8200,afftdn,dynaudnorm=f=150:g=15:p=1.0:m=10.0"
 
@@ -1318,7 +1296,7 @@ def clean_abbrev(text: str) -> str:
 
 
 class SwitchVar:
-    """Tick box + number as ONE INI value: without the tick "0" (= off, as in the INI), with it the number."""
+    """Tick box + number as one INI value: without the tick "0" (off), with it the number."""
 
     def __init__(self, on, value):
         self.on, self.value = on, value
@@ -1416,10 +1394,8 @@ class SettingsDialog(tk.Toplevel if tk else object):
 
     def _switch(self, f, r, key, sec, ini_key, value, default, lo, hi, step, fmt=None) -> SwitchVar:
         """
-        Row "[x] text [number] unit": the number only counts with the tick. Without the tick
-        the field is grey and shows the recommended value; the INI gets 0 (= off) as before.
-        The same INI value may have a row on two tabs: both share one SwitchVar, so a change
-        shows up at once in the other tab.
+        Row "[x] text [number] unit". Without the tick the field is grey, shows the recommended value
+        and the INI gets 0 (off). Rows of one INI value on two tabs share one SwitchVar.
         """
         var = self._switch_var(sec, ini_key, value, default)
         cb = ttk.Checkbutton(f, text=T(f"set.sw_{key}"), variable=var.on)
@@ -1475,7 +1451,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         return lbl
 
     def _section(self, f, r, key):
-        """Heading + line + explanation. The whole tab is ONE grid, so all number fields line up."""
+        """Heading + line + explanation. The whole tab is one grid, so all number fields line up."""
         if not hasattr(self, "_bold"):
             self._bold = tkfont.nametofont("TkDefaultFont").copy()
             self._bold.configure(weight="bold")
@@ -1693,30 +1669,34 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self._load_lang("de")
 
     def _tab_resolve(self, f):
-        """1 the plugin for DaVinci Resolve (installed right away, not with Save), 2 jobs from Resolve."""
+        """1 plugin (installs at once, not on Save), 2 analysis tracks, 3 jobs from Resolve."""
         c, sc = self.cfg, self.app.scale
         r = self._section(f, 0, "resolve_plugin")
-        pf = ttk.Frame(f)
+        # Own grid: the long tick box texts below would push column 1 far to the right.
+        pg = ttk.Frame(f)
+        pg.grid(row=r, column=0, columnspan=3, sticky="w")
+        pf = ttk.Frame(pg)
         self.l_plugin = ttk.Label(pf, text=self._plugin_state())
         self.l_plugin.pack(side="left")
         b = ttk.Button(pf, text=T("set.resolve_install"), command=self._install_plugin)
         b.pack(side="left", padx=(14, 0))
-        self._row(f, r, "resolve_status", pf, hint="", wide=True)
+        self._row(pg, 0, "resolve_status", pf, hint="")
         tip(b, "resolve_install", sc)
-        self._row(f, r + 1, "resolve_target", ttk.Label(f, text=str(wt_resolve.scripts_dir()), foreground="#77767b",
-                                                        wraplength=int(620 * sc), justify="left"), hint="", wide=True)
+        self._row(pg, 1, "resolve_target", ttk.Label(pg, text=str(wt_resolve.scripts_dir()), foreground="#77767b",
+                                                     wraplength=int(760 * sc), justify="left"), hint="")
 
-        r = self._section(f, r + 2, "resolve_jobs")
+        r = self._section(f, r + 1, "resolve_analysis")
+        for i, (key, value) in enumerate((("track_gaps", c.resolve_gaps), ("track_fast", c.resolve_fast))):
+            cb = ttk.Checkbutton(f, text=T(f"set.resolve_{key}"), variable=self._var("Resolve", key, value, True))
+            cb.grid(row=r + i, column=0, columnspan=3, sticky="w", pady=3)
+            tip(cb, f"resolve_{key}", sc)
+        self._score_switch(f, r + 2, "resolve_score")
+
+        r = self._section(f, r + 3, "resolve_jobs")
         self._switch(f, r, "resolve_countdown", "Resolve", "countdown", c.resolve_countdown, 10, 1, 600, 1)
         ttk.Label(f, text=T("set.resolve_countdown_off"), foreground="#77767b").grid(
             row=r + 1, column=0, columnspan=3, sticky="w", pady=(2, 0))
-        # own subtitle tracks to check: gaps, too fast subtitles, unsure words (= the score check itself)
-        rows = (("auto_hand_over", c.resolve_auto), ("track_gaps", c.resolve_gaps), ("track_fast", c.resolve_fast),
-                ("score", None), ("close_after", c.resolve_close))
-        for i, (key, value) in enumerate(rows):
-            if key == "score":
-                self._score_switch(f, r + 2 + i, "resolve_score")
-                continue
+        for i, (key, value) in enumerate((("auto_hand_over", c.resolve_auto), ("close_after", c.resolve_close))):
             cb = ttk.Checkbutton(f, text=T(f"set.resolve_{key}"), variable=self._var("Resolve", key, value, True))
             cb.grid(row=r + 2 + i, column=0, columnspan=3, sticky="w", pady=(8 if i == 0 else 3, 0))
             tip(cb, f"resolve_{key}", sc)
@@ -1906,7 +1886,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
             self.app.restart()
 
 
-# ─── TEXT COMPARISON ──────────────────────────────────────────────────────────
+# ─── Text comparison ──────────────────────────────────────────────────────────
 
 class CompareDialog(tk.Toplevel if tk else object):
     """Compare SRTs word by word: A ↔ B, A ↔ reference or A ↔ B ↔ reference → HTML report."""
@@ -2011,7 +1991,7 @@ class CompareDialog(tk.Toplevel if tk else object):
         self.app._open_path(out)
 
 
-# ─── WITHOUT WINDOW ───────────────────────────────────────────────────────────
+# ─── Without window ───────────────────────────────────────────────────────────
 
 def run_console(ini: Path, files: list[str]) -> int:
     ensure_ini(ini)

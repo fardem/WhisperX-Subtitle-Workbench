@@ -1,18 +1,6 @@
 """
-wt_core.py
-==========
-Core logic for whisper_tool.py (no user interface).
-
-  - settings from whisper_tool.ini, incl. rules per language (de/en/ar/tr)
-  - audio via ffmpeg directly into memory (optionally filtered, no temp files)
-  - transcription + alignment with WhisperX – models are loaded only once
-  - lyrics alignment with MMS_FA when <name>.lyric.txt is next to the file
-  - subtitle rules: sentences (orphan, dangling, long sentences), word by word, raw
-  - pauses: seamless up to X seconds, a short hold after a real pause (smooth display)
-  - checks: gaps (loud passages without text), score (words that fit the audio badly)
-
-Heavy libraries (torch, whisperx, torchaudio, uroman) are only imported
-when they are really needed.
+Core of the Workbench without user interface: INI, audio, WhisperX and MMS_FA, subtitle rules, checks.
+torch, whisperx, torchaudio and uroman are imported only when a step needs them.
 """
 
 import configparser
@@ -71,7 +59,7 @@ class ToolError(RuntimeError):
     """Expected error with an understandable message (no traceback needed)."""
 
 
-# ─── TEXT HELPERS ─────────────────────────────────────────────────────────────
+# ─── Text helpers ─────────────────────────────────────────────────────────────
 
 def abbr_key(token: str, lang: str) -> str:
     """Word for comparing with the abbreviation list: lower case, the dot stays."""
@@ -121,7 +109,7 @@ def fmt_time(seconds: float) -> str:
     return f"{h:02}:{m:02}:{s:02},{ms:03}"
 
 
-# ─── CONFIGURATION ────────────────────────────────────────────────────────────
+# ─── Configuration ────────────────────────────────────────────────────────────
 
 @dataclass
 class LangRules:
@@ -225,9 +213,7 @@ class Config:
         # Score check: words below the threshold fit the audio badly (0 = off – also without [Score])
         self.score_threshold   = g("Score", "threshold", 0.0, float)
         self.score_srt         = g("Score", "write_srt", True, _bool)
-        # DaVinci Resolve: own countdown for jobs of the plugin (0 = off), hand over by itself,
-        # gaps and fast subtitles as own tracks, close instead of minimize.
-        # track_gaps / track_fast replace extra_tracks (0.6.x) – a missing key takes its value
+        # DaVinci Resolve. A missing track_gaps / track_fast takes the value of the old key extra_tracks.
         self.resolve_countdown = max(g("Resolve", "countdown", 10, int), 0)
         self.resolve_auto      = g("Resolve", "auto_hand_over", False, _bool)
         extra                  = g("Resolve", "extra_tracks", True, _bool)
@@ -309,7 +295,7 @@ class Config:
         return self._rules[lang]
 
 
-# ─── AUDIO ────────────────────────────────────────────────────────────────────
+# ─── Audio ────────────────────────────────────────────────────────────────────
 
 def load_audio(path, ffmpeg: str, audio_filter: str | None = None) -> np.ndarray:
     """Any audio/video file → 16 kHz mono float32, directly in memory."""
@@ -330,7 +316,7 @@ def load_audio(path, ffmpeg: str, audio_filter: str | None = None) -> np.ndarray
     return audio
 
 
-# ─── SUBTITLE RULES ───────────────────────────────────────────────────────────
+# ─── Subtitle rules ───────────────────────────────────────────────────────────
 # Cue = (start, end, [line1, line2, ...])
 
 def fill_missing_times(words: list[dict], seg_start: float, seg_end: float) -> list[dict]:
@@ -397,15 +383,9 @@ LINE_BREAK_AFTER = (',', ';', ':', '،', '؛', '…') + SENTENCE_END   # not '-'
 
 def balance_lines(words: list[dict], n_lines: int, max_chars: int, is_dangling) -> list[list[dict]]:
     """
-    Distribute the words of ONE subtitle evenly over n_lines lines – instead of filling
-    the first line to the limit and leaving a lonely word in the last one:
-        "müssen und zwar ohne / Ende"  →  "müssen und / zwar ohne Ende"
-    Same words, same order, same number of lines – so the times of the subtitle stay
-    exactly the same. Every line keeps max_chars. Preferred, in this order:
-      - no article/preposition at the end of a line ("das / neue Haus" is fine,
-        "das neue / Haus" too, but not "… in / der Stadt")
-      - a break after a comma or sentence mark
-      - lines of similar length, the lower one rather longer than the upper one
+    Distribute the words of one subtitle evenly over n_lines lines ("müssen und / zwar ohne Ende");
+    words, line count and times stay, every line keeps max_chars. Preferred in this order: no article or
+    preposition at a line end, a break after a comma, similar lengths with the lower line rather longer.
     """
     n = len(words)
     if n_lines < 2:
@@ -472,10 +452,8 @@ def wrap_greedy(words: list[dict], max_chars: int) -> list[list[dict]]:
 
 def glue_words(words: list[dict], rules: LangRules) -> list[dict]:
     """
-    Abbreviations ("Dr.", "z. B.") and – in German/Turkish – ordinal numbers ("6.") belong
-    to the next word. They are merged into ONE unit ("Dr. Müller", "6. November") with the
-    start of the first and the end of the last word, so no rule can break between them:
-    no line break, no new subtitle, no sentence end. Chains work too ("Prof. Dr. Müller").
+    Merge abbreviations ("Dr.", "z. B.") and, in German/Turkish, ordinals ("6.") with the next word into
+    one unit, so no line break, new subtitle or sentence end falls between them ("Prof. Dr. Müller").
     """
     n = len(words)
     keys = [abbr_key(w['word'], rules.lang) for w in words]
@@ -501,16 +479,7 @@ def glue_words(words: list[dict], rules: LangRules) -> list[dict]:
 
 
 def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
-    """
-    Smart split with:
-    - filler filter
-    - replacements (single words per word, phrases on the finished line)
-    - orphan rule (short words after a comma move to the next segment)
-    - dangling word rule (article/preposition at the end of a full subtitle → starts the next one)
-    - pause rule (optional)
-    - line balancing (optional): even lines inside a subtitle, times unchanged
-    - abbreviations and ordinals stay with the next word ("Dr. Müller", "6. November")
-    """
+    """Mode "Sentences": fillers, replacements, abbreviations, orphan, dangling word and pause rule, line balancing."""
     lang = rules.lang
 
     def is_sentence_end(t):
@@ -560,10 +529,8 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
 
     def flush_block(next_word=None):
         """
-        Close the subtitle. With next_word (block closed because it is full or too long):
-        dangling word rule – articles/prepositions at the end ("… the") start the next
-        subtitle instead. Then the next subtitle is built normally from them, so every
-        following subtitle keeps all limits.
+        Close the subtitle. With next_word (block full or too long), articles and prepositions at the end
+        ("… the") start the next subtitle instead, which is then built with all limits.
         """
         nonlocal block, carried
         flush_line()
@@ -634,11 +601,9 @@ def cues_sentence(words: list[dict], rules: LangRules, layout: Layout) -> list:
     return cues
 
 
-# ─── PAUSES (speech) ──────────────────────────────────────────────────────────
-# One rule, only the length of the pause counts – inside a sentence or between two sentences:
-#   pause up to X seconds      → the segment stays until the next one starts (seamless)
-#   pause longer than X        → a real pause: the segment stays "hold" seconds, then the screen is empty
-# Lyrics keep their own rules ("hold line", gap to the next line).
+# ─── Pauses (speech) ──────────────────────────────────────────────────────────
+# Only the length of a pause counts. Up to `pause` seconds the segment stays until the next one starts;
+# after a longer (real) pause it stays `hold` seconds. Lyrics have their own rules.
 
 READING_CPS = 17        # characters per second – faster subtitles are listed in the log (sentence mode)
 
@@ -650,12 +615,9 @@ def cue_chars(lines) -> int:
 
 def smooth_cues(cues: list, pause: float, hold: float, duration: float | None = None) -> list:
     """
-    Flicker-free display, e.g. for the subtitle track of DaVinci Resolve:
-      - pause to the next segment at most `pause` seconds → the end becomes exactly the start of
-        the next one, so the screen is never empty for a moment (overlaps are cut the same way)
-      - longer pause (a real pause) → the segment stays `hold` seconds more, then the screen is
-        empty until the next one – never into the next segment, never beyond the end of the audio
-    Starts never move: every word and sentence still appears exactly when it is spoken.
+    Flicker-free display: up to `pause` seconds to the next segment the end becomes its start (overlaps too);
+    after a real pause the segment stays `hold` seconds, never into the next one or past the audio end.
+    Starts never move.
     """
     if not cues:
         return cues
@@ -710,9 +672,9 @@ def write_srt(path, cues, encoding="utf-8"):
     Path(path).write_text(text, encoding=encoding)
 
 
-# ─── GAP CHECK ────────────────────────────────────────────────────────────────
+# ─── Gap check ────────────────────────────────────────────────────────────────
 # Finds passages that are loud and voice-like but got no text –
-# e.g. because the VAD swallowed quiet speech or Whisper skipped a sentence.
+# e.g. because the VAD missed quiet speech or Whisper skipped a sentence.
 
 GAP_FRAME     = 0.05     # analysis window in seconds (800 samples, 20 Hz per FFT bin)
 GAP_TONAL     = 0.35     # spectral flatness below this = fundamental/overtones (voice, music)
@@ -794,11 +756,9 @@ def write_gap_srt(path, gaps, encoding="utf-8"):
                      for s, e, rel in gaps], encoding)
 
 
-# ─── SCORE CHECK ──────────────────────────────────────────────────────────────
-# whisperx.align() gives every word a "score" (0–1): the mean of its letters' scores, every
-# letter the mean frame probability on the alignment path. A low score means the word fits
-# the audio badly at this place – it was misrecognized or misplaced. Read only, never changed:
-# the subtitles stay exactly the same.
+# ─── Score check ──────────────────────────────────────────────────────────────
+# whisperx.align() gives every word a score (0–1): the mean frame probability of its letters on the
+# alignment path. A low score means the word fits the audio badly. Read only: the subtitles do not change.
 
 SCORE_MIN, SCORE_MAX = 0.05, 0.95  # allowed thresholds ([Score] threshold; 0 = off)
 SCORE_LETTERS = 3                  # words with fewer letters are not rated ("in", "z.B.")
@@ -833,10 +793,9 @@ def score_stats(result: dict) -> tuple[float, float] | None:
 
 def find_unsure(result: dict, threshold: float) -> list[tuple[float, float, list[tuple[str, float]]]]:
     """
-    → [(start, end, [(word, score), …])] for rated words with a score below `threshold`.
-    Flagged words at most SCORE_JOIN s apart (start of the next minus end of the previous)
-    become one entry. It starts exactly at the first word and ends at the end of the last one,
-    but lasts at least SCORE_MIN_LEN s – never beyond the start of the next entry.
+    → [(start, end, [(word, score), …])] for rated words below `threshold`. Words at most SCORE_JOIN s
+    apart form one entry from the first start to the last end, at least SCORE_MIN_LEN s long but never
+    past the start of the next entry.
     """
     flagged = []
     for w, s in _rated_words(result):
@@ -875,7 +834,7 @@ def write_score_srt(path, unsure, encoding="utf-8"):
     write_srt(path, [(s, e, [unsure_label(words)]) for s, e, words in unsure], encoding)
 
 
-# ─── LYRICS ───────────────────────────────────────────────────────────────────
+# ─── Lyrics ───────────────────────────────────────────────────────────────────
 
 def load_lyrics(path) -> list[str]:
     try:
@@ -901,7 +860,7 @@ def extend_line_ends(cues: list[list], duration: float, hold: float, gap: float)
     cues[-1][1] = max(cues[-1][1], min(cues[-1][1] + hold, duration))
 
 
-# ─── JOB / INPUT ──────────────────────────────────────────────────────────────
+# ─── Job / input ──────────────────────────────────────────────────────────────
 
 @dataclass
 class JobOptions:
@@ -925,12 +884,7 @@ class JobOptions:
 
 
 def resolve_input(path, cfg: Config) -> tuple[str, Path, Path]:
-    """
-    What should happen with the file?  → (kind, input, output)
-      lyrics : <name>.lyric.txt is next to it (or the .lyric.txt itself was chosen)
-      json   : WhisperX JSON → only rebuild the SRT
-      speech : everything else → transcribe
-    """
+    """→ (kind, input, output): "lyrics" with <name>.lyric.txt next to it, "json" (rebuild the SRT), else "speech"."""
     p = Path(path)
     name_l = p.name.lower()
     if name_l.endswith(cfg.lyrics_input.lower()):
@@ -951,7 +905,7 @@ def glob_escape(s: str) -> str:
     return re.sub(r'([\[\]*?])', r'[\1]', s)
 
 
-# ─── ENGINE ───────────────────────────────────────────────────────────────────
+# ─── Engine ───────────────────────────────────────────────────────────────────
 
 class Engine:
     """Keeps the models in memory and processes files one after another."""
@@ -1293,7 +1247,7 @@ def _json_default(o):
     return o.item() if hasattr(o, "item") else str(o)
 
 
-# ─── SYSTEM CHECK ─────────────────────────────────────────────────────────────
+# ─── System check ─────────────────────────────────────────────────────────────
 
 # (module, package name, purpose → check.purpose_<module>, required)
 REQUIRED = [
@@ -1444,7 +1398,7 @@ def quiet_library_logs():
         logging.getLogger(name).setLevel(logging.WARNING)
 
 
-# ─── WRITING THE INI (comments are kept) ──────────────────────────────────────
+# ─── Writing the INI (comments are kept) ──────────────────────────────────────
 
 _HEADER_RE    = re.compile(r'^\s*\[([^\]]+)\]\s*$')
 WRAP_SECTIONS = {"prompt", "filler", "dangling", "abbreviations"}     # wrap long values onto continuation lines here
@@ -1508,10 +1462,8 @@ def _content_end(lines, start, end) -> int:
 
 def save_ini(path, values: dict | None = None, sections: dict | None = None):
     """
-    Write values into the INI – comments, order and alignment are kept.
-      values:   {(section, key): value}                set/add single values
-      sections: {section: [(key, value), ...]}         refill a whole section
-    A backup <name>.bak is created first.
+    Write into the INI; comments, order and alignment stay, <name>.bak is written first.
+    values: {(section, key): value} for single values, sections: {section: [(key, value), …]} refills one.
     """
     path = Path(path)
     raw = path.read_bytes().decode("utf-8-sig") if path.exists() else ""

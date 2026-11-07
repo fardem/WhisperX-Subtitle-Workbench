@@ -325,7 +325,7 @@ Bir eklenti, Workbench'i **DaVinci Resolve Studio** ile bağlar: Resolve zaman �
 1. Workbench'te: *Ayarlar → DaVinci Resolve → Eklentiyi kur / güncelle*. Bu, `WhisperX_Subtitles.lua` dosyasını `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Utility\` klasörüne yazar; böylece eklenti Resolve'un her sayfasında listelenir. Workbench'in klasörü, arayüz dili ve eklentinin tüm metinleri dosyaya yazılır – ayarlanacak bir şey yoktur.
 2. Resolve'da: *Workspace → Scripts → WhisperX_Subtitles*. Orada görünmüyorsa Resolve'u bir kez yeniden başlatın.
 
-Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini değiştirdikten sonra eklentiyi yeniden kurun; sekme, kurulu eklentinin güncel olup olmadığını gösterir.
+Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini değiştirdikten sonra eklentiyi yeniden kurun; sekme, kurulu eklentinin güncel olup olmadığını gösterir. Eklenti eskiyse Workbench açılışta sorar: *Evet* eklentiyi günceller, *Sonra* bir sonraki açılışta yeniden sorar, *Hayır* ancak bir sonraki sürümde sorar. Workbench dosyalarla veya Resolve'dan gelen bir işle açılırsa not yalnızca günlükte görünür.
 
 ![Ayarlar – DaVinci Resolve](docs/images/settings-resolve.png)
 

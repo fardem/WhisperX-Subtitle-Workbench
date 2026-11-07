@@ -644,6 +644,18 @@
   },
   "resolve": {
     "kind": "DaVinci",
+    "update_ask": [
+      "Das installierte Plugin für DaVinci Resolve passt nicht zu dieser Workbench.",
+      "",
+      "Plugin: {plugin}",
+      "Workbench: {workbench}",
+      "",
+      "Jetzt aktualisieren? „Später“ fragt beim nächsten Start wieder, „Nein“ erst bei der nächsten Version."
+    ],
+    "update_yes": "Ja",
+    "update_later": "Später",
+    "update_no": "Nein",
+    "update_log": "Plugin für DaVinci Resolve: {state} → Einstellungen → DaVinci Resolve",
     "item": "{timeline} · DaVinci Resolve",
     "hand_over": "→ An DaVinci übergeben",
     "hand_over_title": "An DaVinci übergeben",

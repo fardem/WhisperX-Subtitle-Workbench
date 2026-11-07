@@ -229,6 +229,7 @@ class Config:
         self.resolve_gaps      = g("Resolve", "track_gaps", extra, _bool)
         self.resolve_fast      = g("Resolve", "track_fast", extra, _bool)
         self.resolve_close     = g("Resolve", "close_after", False, _bool)
+        self.resolve_skip      = g("Resolve", "skip_plugin_update", "")
 
         if self.score_threshold != 0 and not SCORE_MIN <= self.score_threshold <= SCORE_MAX:
             self.warnings.append(T("core.ini_invalid", entry=f"[Score] threshold={self.score_threshold:g}",

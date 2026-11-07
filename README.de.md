@@ -325,7 +325,7 @@ Ein Plugin verbindet die Workbench mit **DaVinci Resolve Studio**: Resolve rende
 1. In der Workbench: *Einstellungen → DaVinci Resolve → Plugin installieren / aktualisieren*. Das schreibt `WhisperX_Subtitles.lua` nach `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Utility\`; damit steht das Plugin auf jeder Seite von Resolve zur Verfügung. Der Ordner der Workbench, die Oberflächensprache und alle Texte des Plugins werden fest eingetragen – es gibt nichts einzustellen.
 2. In Resolve: *Workspace → Scripts → WhisperX_Subtitles*. Fehlt es dort, Resolve einmal neu starten.
 
-Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach einem Wechsel der Oberflächensprache das Plugin neu installieren; der Reiter zeigt, ob das installierte Plugin aktuell ist.
+Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach einem Wechsel der Oberflächensprache das Plugin neu installieren; der Reiter zeigt, ob das installierte Plugin aktuell ist. Ist das Plugin veraltet, fragt die Workbench beim Start: *Ja* aktualisiert es, *Später* fragt beim nächsten Start wieder, *Nein* erst bei der nächsten Version. Startet die Workbench mit Dateien oder mit einem Job aus Resolve, steht der Hinweis nur im Protokoll.
 
 ![Einstellungen – DaVinci Resolve](docs/images/settings-resolve.png)
 

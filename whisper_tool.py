@@ -220,6 +220,45 @@ def tip(widgets, key: str, scale: float = 1.0):
             Tooltip(w, text, scale)
 
 
+def ask_buttons(parent, title: str, text: str, buttons: list[tuple[str, str]]) -> str | None:
+    """Modal question with own buttons (messagebox has fixed ones) → key of the button, None = window closed."""
+    dlg = tk.Toplevel(parent)
+    dlg.title(title)
+    dlg.transient(parent)
+    dlg.resizable(False, False)
+    dlg.geometry(f"+{parent.winfo_rootx() + 80}+{parent.winfo_rooty() + 80}")
+    ttk.Label(dlg, text=text, justify="left", wraplength=int(480 * parent.scale), padding=16).pack(fill="x")
+    bar = ttk.Frame(dlg, padding=(16, 0, 16, 16))
+    bar.pack(fill="x")
+    answer = []
+    for i, (key, label) in reversed(list(enumerate(buttons))):
+        b = ttk.Button(bar, text=label, style="Accent.TButton" if i == 0 else "TButton",
+                       command=lambda k=key: (answer.append(k), dlg.destroy()))
+        b.pack(side="right", padx=(8, 0))
+        if i == 0:
+            b.focus_set()
+    dlg.bind("<Escape>", lambda e: dlg.destroy())
+    dlg.grab_set()
+    dlg.wait_window()
+    return answer[0] if answer else None
+
+
+def plugin_state_text(status: str, info: dict | None) -> str:
+    if status == "missing":
+        return T("set.resolve_not_installed")
+    if status == "other":
+        return T("set.resolve_other", path=info["workbench"])
+    if status == "outdated":
+        return T("set.resolve_outdated", version=info.get("version") or "?")
+    return T("set.resolve_installed", version=info["version"])
+
+
+def plugin_start_action(status: str, skip: str, can_ask: bool) -> str:
+    if status in ("missing", "current"):
+        return ""
+    return "ask" if status == "outdated" and can_ask and skip != VERSION else "log"
+
+
 class QueueWriter:
     """Redirects print()/logging of the libraries into the log window."""
     encoding = "utf-8"
@@ -619,6 +658,8 @@ class App(BaseTk):
             head = T("check.head_errors" if errors else "check.head_ok") + "\n\n"
             (messagebox.showerror if errors else messagebox.showinfo)(
                 T("check.title"), head + text, parent=parent if parent and parent.winfo_exists() else self)
+        if not manual and wt_resolve:       # after the message of the check, so two dialogs do not overlap
+            self._plugin_on_start()
 
     # ── Add drag & drop later ──────────────────────────────────────────────────
 
@@ -1021,6 +1062,44 @@ class App(BaseTk):
         self.after(600, lambda: self.attributes("-topmost", False))
 
     # ── DaVinci Resolve ────────────────────────────────────────────────────────
+
+    def install_plugin(self, parent, on_done=None) -> bool:
+        try:
+            path = wt_resolve.install_plugin(VERSION, i18n.current())
+        except wt_resolve.ResolveError as e:
+            messagebox.showerror(T("set.tab_resolve"), str(e), parent=parent)
+            return False
+        except OSError as e:
+            messagebox.showerror(T("set.tab_resolve"), T("set.resolve_install_failed", err=e), parent=parent)
+            return False
+        if on_done:
+            on_done()
+        self._append_log(i18n.tag("info") + T("set.resolve_installed", version=VERSION) + f" – {path}\n")
+        messagebox.showinfo(T("set.tab_resolve"), T("set.resolve_installed_msg", path=path), parent=parent)
+        return True
+
+    def _plugin_on_start(self):
+        status, info = wt_resolve.plugin_status(VERSION, i18n.current())
+        can_ask = not self.items and not self._running() and self.countdown is None
+        action = plugin_start_action(status, self.cfg.resolve_skip, can_ask)
+        if action == "log":
+            self._append_log(i18n.line("warn", "resolve.update_log", state=plugin_state_text(status, info)) + "\n")
+        if action != "ask":
+            return
+        names = dict(i18n.available())
+        answer = ask_buttons(self, T("set.tab_resolve"), T(
+            "resolve.update_ask",
+            plugin=f"{info.get('version') or '?'} · {names.get(info.get('lang'), info.get('lang') or '?')}",
+            workbench=f"{VERSION} · {names.get(i18n.current(), i18n.current())}"),
+            [("yes", T("resolve.update_yes")), ("later", T("resolve.update_later")), ("no", T("resolve.update_no"))])
+        if answer == "yes":
+            self.install_plugin(self)
+        elif answer == "no":
+            try:
+                core.save_ini(self.ini_path, {("Resolve", "skip_plugin_update"): VERSION})
+                self.cfg.resolve_skip = VERSION
+            except OSError as e:
+                self._append_log(i18n.tag("warn") + T("main.save_failed", err=e) + "\n")
 
     def _update_resolve_ui(self):
         """The hand-over button exists only in Resolve mode and works once a job is transcribed."""
@@ -1730,28 +1809,10 @@ class SettingsDialog(tk.Toplevel if tk else object):
             tip(cb, f"resolve_{key}", sc)
 
     def _plugin_state(self) -> str:
-        info = wt_resolve.installed_plugin()
-        if not info:
-            return T("set.resolve_not_installed")
-        folder = info.get("workbench") or ""
-        if folder and os.path.normcase(os.path.abspath(folder)) != os.path.normcase(str(HERE)):
-            return T("set.resolve_other", path=folder)
-        if not folder or info.get("version") != VERSION or info.get("lang") != i18n.current():
-            return T("set.resolve_outdated", version=info.get("version") or "?")
-        return T("set.resolve_installed", version=info["version"])
+        return plugin_state_text(*wt_resolve.plugin_status(VERSION, i18n.current()))
 
     def _install_plugin(self):
-        try:
-            path = wt_resolve.install_plugin(VERSION, i18n.current())
-        except wt_resolve.ResolveError as e:
-            messagebox.showerror(T("set.tab_resolve"), str(e), parent=self)
-            return
-        except OSError as e:
-            messagebox.showerror(T("set.tab_resolve"), T("set.resolve_install_failed", err=e), parent=self)
-            return
-        self.l_plugin.config(text=self._plugin_state())
-        self.app._append_log(i18n.tag("info") + T("set.resolve_installed", version=VERSION) + f" – {path}\n")
-        messagebox.showinfo(T("set.tab_resolve"), T("set.resolve_installed_msg", path=path), parent=self)
+        self.app.install_plugin(self, on_done=lambda: self.l_plugin.config(text=self._plugin_state()))
 
     def _tab_general(self, f):
         c = self.cfg

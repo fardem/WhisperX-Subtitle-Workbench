@@ -2,6 +2,13 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.6] – 2026-11-07
+
+**Updating from 0.7.5:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.
+
+- **Fixed:** the lyrics file was not found when a letter of the file names was stored in two different Unicode forms, e.g. “ç” as one character in `Kaçtım.lyric.txt` and as “c” plus cedilla in `Kaçtım.mp3`. Windows shows both alike. The Workbench now compares file names in one form (NFC) and without case, the Turkish I/ı and İ/i included. This applies to ç, ş, ğ, ö, ü, İ, â, î, û, the German umlauts and all other letters, in both directions (lyrics file → media file and back), and to the SRTs the comparison dialog suggests
+- A `<name>.lyric.txt` no longer takes `<name>.<something>.mp3` as its media file (e.g. `Song.vocal.mp3`); such a file was then transcribed as speech. `Song.vocal.mp3` takes `Song.vocal.lyric.txt`
+
 ## [0.7.5] – 2026-11-07
 
 **Updating from 0.7.4:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.

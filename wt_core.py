@@ -14,6 +14,7 @@ import subprocess
 import textwrap
 import threading
 import time
+import unicodedata
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
@@ -915,26 +916,50 @@ class JobOptions:
                    line_hold=cfg.line_hold, live_lines=cfg.live_lines)
 
 
+def name_key(name: str) -> str:
+    """File name for comparing: one form per letter (NFC: "c" + cedilla = "ç"), no case, I/ı/İ/i alike."""
+    return unicodedata.normalize("NFC", name).replace("İ", "i").replace("ı", "i").casefold()
+
+
+def folder_names(folder: Path) -> list[str]:
+    try:
+        with os.scandir(folder) as entries:
+            return sorted(e.name for e in entries)
+    except OSError:
+        return []
+
+
+def sibling_files(src: Path, suffix: str) -> list[Path]:
+    stem, suffix = name_key(src.stem), name_key(suffix)
+    return [src.parent / n for n in folder_names(src.parent)
+            if (k := name_key(n)).startswith(stem) and k.endswith(suffix)]
+
+
+def lyrics_for(media: Path, cfg: Config) -> Path | None:
+    exact = media.with_name(media.stem + cfg.lyrics_input)
+    if exact.is_file():
+        return exact
+    key = name_key(exact.name)
+    return next((media.parent / n for n in folder_names(media.parent)
+                 if name_key(n) == key and (media.parent / n).is_file()), None)
+
+
 def resolve_input(path, cfg: Config) -> tuple[str, Path, Path]:
     """→ (kind, input, output): "lyrics" with <name>.lyric.txt next to it, "json" (rebuild the SRT), else "speech"."""
     p = Path(path)
-    name_l = p.name.lower()
-    if name_l.endswith(cfg.lyrics_input.lower()):
-        base = p.name[:-len(cfg.lyrics_input)]
-        media = sorted(c for c in p.parent.glob(f"{glob_escape(base)}.*") if c.suffix.lower() in MEDIA_EXT)
+    key, lyrics_key = name_key(p.name), name_key(cfg.lyrics_input)
+    if key.endswith(lyrics_key):
+        base = key[:-len(lyrics_key)]
+        media = [p.parent / n for n in folder_names(p.parent)
+                 if Path(n).suffix.lower() in MEDIA_EXT and name_key(Path(n).stem) == base]
         if not media:
             raise ToolError(T("core.no_media", name=p.name))
         p = media[0]
-    lyrics = p.with_name(p.stem + cfg.lyrics_input)
-    if lyrics.is_file():
+    if lyrics_for(p, cfg):
         return "lyrics", p, p.with_name(p.stem + cfg.lyrics_suffix)
     if p.suffix.lower() == ".json":
         return "json", p, p.with_name(p.stem + cfg.speech_suffix)
     return "speech", p, p.with_name(p.stem + cfg.speech_suffix)
-
-
-def glob_escape(s: str) -> str:
-    return re.sub(r'([\[\]*?])', r'[\1]', s)
 
 
 def effective_compute(compute: str, device: str, capability: tuple | None) -> tuple[str, str]:
@@ -1210,7 +1235,7 @@ class Engine:
                 out = src.with_name(src.stem + fill_suffix(cfg.speech_suffix, result.get("model", "json"), lang))
 
         elif kind == "lyrics":
-            lyrics_file = src.with_name(src.stem + cfg.lyrics_input)
+            lyrics_file = lyrics_for(src, cfg)
             lines = load_lyrics(lyrics_file)
             self.log(i18n.tag("lyrics") + Tn("core.lyrics_lines", len(lines), name=lyrics_file.name))
             audio = load_audio(src, cfg.ffmpeg)

@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.7.2** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.7.3** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -43,7 +43,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, Workbench `.srt` altyaz�
   - **Kelime kelime:** her kelime için bir altyazı, örn. karaoke efektleri için.
   - **Ham:** WhisperX bölümleri değiştirilmeden – yalnızca gerçek bir duraklamada bölünür.
 - **Duraklamalar, DaVinci Resolve için titremesiz** (*Ayarlar → Altyazılar → Duraklamalar*): yalnızca duraklamanın uzunluğu önemlidir. Ayarlanan sınıra kadar (örn. 2 saniye) bir bölüm, bir sonraki başlayana kadar ekranda kalır; DaVinci'nin altyazı izi arada hiç boş an göstermez. Daha uzun, gerçek bir duraklamadan (alkış, müzik) sonra kısa bir tutma süresi kadar kalır, sonra ekran boş olur. Başlangıçlar tam kalır. Cümle cümle, Kelime kelime ve Ham için geçerlidir; şarkı sözlerinde *Sonraki şarkı satırına mesafe* değerini 0 yapın.
-- **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model).
+- **Dosya başına dil:** dil her dosya için algılanır ya da siz belirlersiniz. Her dilin kendi prompt'u, dolgu kelimeleri, sarkan kelimeleri, değiştirmeleri ve isteğe bağlı olarak kendi modeli vardır (örn. Türkçe ince ayarlı bir model). Kendi modelin ayrı bir hassasiyeti (örn. `bfloat16`) olabilir ve prompt ile daha kötü tanıyorsa prompt olmadan çalışabilir.
 - **Şarkı sözü modu:** `sarki.mp3` dosyasının yanına `sarki.lyric.txt` koyarsanız şarkı metninin her satırı sese göre zamanlanır. Bu, zorlamalı hizalama (MMS_FA + uroman) ile çalışır ve her dilde işler.
 - **JSON → SRT:** WhisperX sonucunu saklayabilir ve altyazıları daha sonra saniyeler içinde farklı bir düzenle yeniden oluşturabilirsiniz.
 - **Boşluk kontrolü:** her transkripsiyondan sonra metin almamış, yüksek sesli ve insan sesine benzeyen yerleri, yani kaçırılmış konuşmayı bulur. Ayrıca her yere doğrudan atlamanızı sağlayan bir altyazı dosyası yazar.

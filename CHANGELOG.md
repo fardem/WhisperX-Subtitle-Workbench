@@ -2,6 +2,16 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.4] – 2026-11-07
+
+**Updating from 0.7.3:** install the plugin again under *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.
+
+- **Own model on and off.** *Settings → Languages* has the tick **Use own model** above the rows of the own model (`use_model.<lang> = 0` = off). Without the tick the language uses the default model, and *Model*, *Precision* and the prompt tick are greyed out; they stay in the INI. Without the key the own model is on. The row of the path is now called *Model*. The system check lists a switched-off own model as “off”
+- **Cancel during a step.** *Cancel* takes effect after the current batch of the transcription or of the word timestamps. Before, a long file was transcribed to the end first
+- **Lyrics of long recordings.** If the whole recording does not fit into graphics memory, also after the other models are unloaded, the Workbench computes the emissions in sections of 30 seconds, with 2 seconds of overlap on each side. Files that fit keep the result of one pass
+- With full graphics memory, the second attempt starts after the memory of the first one is freed. Before, the failed attempt still held its tensors during the retry
+- The sound at the end of a batch takes the Windows folder from `%SystemRoot%` instead of `C:\Windows`
+
 ## [0.7.3] – 2026-11-07
 
 **Updating from 0.7.2:** install the plugin again under *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.

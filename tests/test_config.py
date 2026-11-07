@@ -142,6 +142,20 @@ def test_own_model_without_prompt_gets_none_not_even_a_custom_one(tmp_path):
     assert core.job_prompt(cfg, "tr", core.JobOptions(prompt_mode="none"))[0] == ""
 
 
+def test_own_model_is_on_without_use_model(tmp_path):
+    assert own_models(tmp_path).models_off == set()
+
+
+def test_own_model_switched_off_keeps_its_entries_but_uses_the_default(tmp_path):
+    ini = own_models(tmp_path).path
+    ini.write_text(ini.read_text(encoding="utf-8").replace("use_prompt.de = 0\n", "use_prompt.de = 0\nuse_model.de = 0\n"),
+                   encoding="utf-8")
+    cfg = core.Config(ini)
+    assert cfg.models["de"] == "primeline/whisper-large-v3-german"
+    assert cfg.model_for("de") == ("large-v3", "float16", True)
+    assert core.job_prompt(cfg, "de", core.JobOptions(prompt_mode="ini"))[0] == "Rede im Bundestag."
+
+
 @pytest.mark.parametrize("compute, device, cap, expected", [
     ("bfloat16", "cuda", (8, 9), ("bfloat16", "")),             # RTX 40xx
     ("bfloat16", "cuda", (7, 5), ("float16", "core.bf16_gpu")),  # RTX 20xx

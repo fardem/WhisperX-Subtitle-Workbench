@@ -113,3 +113,45 @@ def test_example_ini_has_the_new_track_keys_only():
     text = EXAMPLE.read_text(encoding="utf-8")
     assert "track_gaps = 1" in text and "track_fast = 1" in text
     assert not any(line.startswith("extra_tracks") for line in text.splitlines())
+
+
+# ─── own model per language: precision and prompt ─────────────────────────────
+
+def own_models(tmp_path):
+    ini = tmp_path / "whisper_tool.ini"
+    ini.write_text("[Whisper]\nmodel = large-v3\ncompute_type = float16\n"
+                   "model.de = primeline/whisper-large-v3-german\ncompute_type.de = bfloat16\nuse_prompt.de = 0\n"
+                   "compute_type.tr = int8\nuse_prompt.tr = 0\n"                 # without model.tr: no effect
+                   "[Prompt]\nde = Rede im Bundestag.\ntr = Türkçe konuşma.\n", encoding="utf-8")
+    return core.Config(ini)
+
+
+def test_precision_and_prompt_belong_to_the_own_model(tmp_path):
+    cfg = own_models(tmp_path)
+    assert cfg.model_for("de") == ("primeline/whisper-large-v3-german", "bfloat16", False)
+    assert cfg.model_for("tr") == ("large-v3", "float16", True)
+    assert cfg.model_for("en") == ("large-v3", "float16", True)
+
+
+def test_own_model_without_prompt_gets_none_not_even_a_custom_one(tmp_path):
+    cfg = own_models(tmp_path)
+    for mode in ("ini", "custom"):
+        opts = core.JobOptions(prompt_mode=mode, custom_prompt="Eigener Text")
+        assert core.job_prompt(cfg, "de", opts)[0] == ""
+    assert core.job_prompt(cfg, "tr", core.JobOptions(prompt_mode="ini"))[0] == "Türkçe konuşma."
+    assert core.job_prompt(cfg, "tr", core.JobOptions(prompt_mode="none"))[0] == ""
+
+
+@pytest.mark.parametrize("compute, device, cap, expected", [
+    ("bfloat16", "cuda", (8, 9), ("bfloat16", "")),             # RTX 40xx
+    ("bfloat16", "cuda", (7, 5), ("float16", "core.bf16_gpu")),  # RTX 20xx
+    ("bfloat16", "cpu", None, ("float32", "core.bf16_cpu")),
+    ("float16", "cpu", None, ("float32", "")),
+    ("int8_float16", "cuda", (6, 1), ("int8_float16", "")),
+])
+def test_compute_type_that_the_device_can_run(compute, device, cap, expected):
+    assert core.effective_compute(compute, device, cap) == expected
+
+
+def test_both_compute_lists_offer_bfloat16():
+    assert "bfloat16" in core.COMPUTE_TYPES and "bfloat16" in EXAMPLE.read_text(encoding="utf-8")

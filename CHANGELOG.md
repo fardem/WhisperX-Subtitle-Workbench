@@ -2,6 +2,15 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.3] – 2026-11-07
+
+**Updating from 0.7.2:** install the plugin again under *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.
+
+- **Own model per language: precision and prompt.** *Settings → Languages* has two new rows under *Own model*: **Precision** (`compute_type.<lang>`, “as under Whisper” = `[Whisper] compute_type`) and **Use this model without a prompt** (`use_prompt.<lang> = 0`). Both count only when the language has its own model and are greyed out without one. Without a prompt the own model gets none at all, not even a custom prompt from the main window; the default model and the other languages keep theirs. For fine-tunes that were converted with another precision or recognize worse with a prompt
+- **bfloat16** in the precision lists of *Whisper* and *Languages*. CTranslate2 runs it from RTX 30xx on (sm_80); on an older card the Workbench loads float16 and writes a warning into the log, on the CPU float32. The system check warns when bfloat16 is set and the card is older
+- The system check names the precision and “without prompt” of an own model
+- Switching between two languages loads the model again when the model or its precision differs
+
 ## [0.7.2] – 2026-11-07
 
 **Updating from 0.7.1:** install the plugin again under *Settings → DaVinci Resolve*. The plugin window starts once with its new size. Your `whisper_tool.ini` and the Python packages need no change.

@@ -29,6 +29,7 @@ MODES = ("sentence", "word", "raw")
 # Characters per line and lines per subtitle; the plugin has the same limits (resolve/WhisperX_Subtitles.lua).
 CHARS_RANGE = (10, 200)
 LINES_RANGE = (1, 5)
+COMPUTE_TYPES = ("float16", "bfloat16", "float32", "int8_float16", "int8")
 MEDIA_EXT = (".mp3", ".mp4", ".wav", ".flac", ".m4a", ".aac", ".ogg", ".opus",
              ".mkv", ".avi", ".mov", ".webm", ".wma")
 
@@ -175,8 +176,12 @@ class Config:
         self.live_lines        = g("Menu", "live_lines", True, _bool)
         # Whisper
         self.model             = g("Whisper", "model", "large-v3")
-        self.models            = {k[6:]: v.strip() for k, v in self._section("Whisper").items()
-                                  if k.startswith("model.") and v.strip()}
+        whisper = self._section("Whisper")
+        per_lang = lambda prefix: {k[len(prefix):]: v.strip() for k, v in whisper.items()
+                                   if k.startswith(prefix) and v.strip()}
+        self.models            = per_lang("model.")
+        self.computes          = per_lang("compute_type.")
+        self.no_prompt         = {lang for lang, v in per_lang("use_prompt.").items() if not _bool(v)}
         self.beam_size         = g("Whisper", "beam_size", 5, int)
         self.compute_type      = g("Whisper", "compute_type", "float16")
         self.batch_size        = g("Whisper", "batch_size", 8, int)
@@ -267,6 +272,12 @@ class Config:
         self.warnings.append(T("core.ffmpeg_fallback", path=configured, found=fallback) if fallback
                              else T("core.ffmpeg_check", path=configured))
         return fallback or configured
+
+    def model_for(self, lang: str) -> tuple[str, str, bool]:
+        """(model, compute type, takes a prompt?) – compute_type.<lang> and use_prompt.<lang> need model.<lang>."""
+        if lang in self.models:
+            return self.models[lang], self.computes.get(lang, self.compute_type), lang not in self.no_prompt
+        return self.model, self.compute_type, True
 
     def model_signature(self) -> tuple:
         """If this changes, loaded Whisper models must be reloaded."""
@@ -908,6 +919,26 @@ def glob_escape(s: str) -> str:
     return re.sub(r'([\[\]*?])', r'[\1]', s)
 
 
+def effective_compute(compute: str, device: str, capability: tuple | None) -> tuple[str, str]:
+    """→ (compute type to load, text key of the warning or ""). CTranslate2 runs bfloat16 only from sm_80 on."""
+    if device == "cpu" and compute in ("float16", "bfloat16"):
+        return "float32", "core.bf16_cpu" if compute == "bfloat16" else ""
+    if compute == "bfloat16" and capability is not None and tuple(capability) < (8, 0):
+        return "float16", "core.bf16_gpu"
+    return compute, ""
+
+
+def job_prompt(cfg: Config, lang: str, opts: JobOptions) -> tuple[str, str]:
+    """→ (prompt, text for the log); an own model with use_prompt.<lang> = 0 gets none."""
+    if not cfg.model_for(lang)[2]:
+        return "", T("core.prompt_model_off", lang=lang)
+    prompt = {"ini": cfg.rules(lang).prompt, "custom": opts.custom_prompt.strip(), "none": ""}.get(opts.prompt_mode, "")
+    if not prompt:
+        return "", T("core.prompt_off")
+    source = "INI/" + lang if opts.prompt_mode == "ini" else T("core.prompt_custom")
+    return prompt, f"{source} – {prompt[:70]}{'…' if len(prompt) > 70 else ''}"
+
+
 # ─── Engine ───────────────────────────────────────────────────────────────────
 
 class Engine:
@@ -920,6 +951,8 @@ class Engine:
         self.cancel    = threading.Event()
         self._whisper  = None
         self._wname    = None
+        self._wcompute = None
+        self._capability = None
         self._align: dict = {}
         self._mms      = None
         self._uroman   = None
@@ -958,6 +991,7 @@ class Engine:
                 self._device = "cpu"
             if self._device == "cuda":
                 self.log(i18n.tag("device") + torch.cuda.get_device_name(0))
+                self._capability = torch.cuda.get_device_capability(0)
         return self._device
 
     def _check_cancel(self):
@@ -977,8 +1011,9 @@ class Engine:
 
     # ── Models ─────────────────────────────────────────────────────────────────
 
-    def whisper(self, name: str):
-        if self._whisper is not None and self._wname == name:
+    def whisper(self, name: str, compute: str | None = None):
+        compute = compute or self.cfg.compute_type
+        if self._whisper is not None and (self._wname, self._wcompute) == (name, compute):
             return self._whisper
         import whisperx
         import whisperx.asr     # loads pyannote/lightning – quiet their loggers afterwards
@@ -987,9 +1022,11 @@ class Engine:
             self.log(i18n.line("model", "core.model_switch", name=name))
             self.unload(keep=("align", "mms"))
         cfg     = self.cfg
-        compute = cfg.compute_type
-        if self.device == "cpu" and compute == "float16":
-            compute = "float32"
+        wanted  = compute
+        compute, warning = effective_compute(compute, self.device, self._capability)
+        if warning:
+            cap = self._capability or (0, 0)
+            self.log(i18n.line("warn", warning, cap=f"{cap[0]}{cap[1]}"))
         problem, hint = check_model(name)
         if problem:
             raise ToolError(problem)
@@ -1008,7 +1045,7 @@ class Engine:
             if "/" in name and not Path(name).exists():        # Hugging Face repo
                 raise ToolError(T("core.model_hf_failed", name=name, err=f"{e.__class__.__name__}: {e}")) from e
             raise
-        self._wname = name
+        self._wname, self._wcompute = name, wanted
         self.log(i18n.line("model", "core.model_ready", time=i18n.secs(time.perf_counter() - t)))
         return self._whisper
 
@@ -1053,14 +1090,13 @@ class Engine:
                                name=T(f"speechlang.{lang}") if lang in LANGS else T("core.no_rules")))
         else:
             lang = opts.language
-        model = self.whisper(cfg.models.get(lang, cfg.model))
+        name, compute, _ = cfg.model_for(lang)
+        model = self.whisper(name, compute)
 
-        rules  = cfg.rules(lang)
-        prompt = {"ini": rules.prompt, "custom": opts.custom_prompt.strip(), "none": ""}.get(opts.prompt_mode, "")
+        rules = cfg.rules(lang)
+        prompt, shown = job_prompt(cfg, lang, opts)
         model.options = replace(model.options, initial_prompt=prompt or None)
-        self.log(i18n.tag("prompt") + (T("core.prompt_off") if not prompt else
-                                       "INI/" + lang if opts.prompt_mode == "ini" else T("core.prompt_custom"))
-                 + (f" – {prompt[:70]}{'…' if len(prompt) > 70 else ''}" if prompt else ""))
+        self.log(i18n.tag("prompt") + shown)
 
         self.log(i18n.line("asr", "core.asr_running"))
         t = time.perf_counter()
@@ -1366,17 +1402,20 @@ def check_environment(cfg: Config) -> list[tuple[str, str]]:
 
     for lang, name in [("", cfg.model)] + sorted(cfg.models.items()):
         label = T("set.model") + (f" {lang}" if lang else "")
+        _, compute, takes_prompt = cfg.model_for(lang)
+        extra = (f" · {compute}" if lang and compute != cfg.compute_type else "") + \
+                ("" if takes_prompt else f" · {T('check.no_prompt')}")
         problem, hint = check_model(name)
         if problem:
             res.append(("error", f"{label}: {problem}"))
         elif hint:
             res.append(("warn", f"{label}: {hint}"))
         elif name in _standard_models():
-            res.append(("ok", f"{label}: {name}"))
+            res.append(("ok", f"{label}: {name}{extra}"))
         elif Path(name).is_dir():
-            res.append(("ok", f"{label}: {name} ({T('check.ct2_folder')})"))
+            res.append(("ok", f"{label}: {name} ({T('check.ct2_folder')}){extra}"))
         else:
-            res.append(("info", f"{label}: {name} ({T('check.hf_download')})"))
+            res.append(("info", f"{label}: {name} ({T('check.hf_download')}){extra}"))
 
     if found.get("torch"):       # loading torch takes a few seconds – therefore last
         try:
@@ -1385,6 +1424,9 @@ def check_environment(cfg: Config) -> list[tuple[str, str]]:
                 cap = torch.cuda.get_device_capability(0)
                 res.append(("ok", f"{T('check.gpu')}: {torch.cuda.get_device_name(0)} · CUDA {torch.version.cuda} · "
                                   f"sm_{cap[0]}{cap[1]}"))
+                used = {cfg.model_for(lang)[1] for lang in ("", *cfg.models)}
+                if cfg.device == "cuda" and effective_compute("bfloat16", "cuda", cap)[1] and "bfloat16" in used:
+                    res.append(("warn", T("core.bf16_gpu", cap=f"{cap[0]}{cap[1]}")))
             else:
                 cpu_build = "+cpu" in torch.__version__ or torch.version.cuda is None
                 reason = (T("check.torch_cpu", version=torch.__version__) if cpu_build else T("check.no_driver"))

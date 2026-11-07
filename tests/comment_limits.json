@@ -32,7 +32,7 @@
     "long_blocks": 0
   },
   "tests/test_config.py": {
-    "lines": 6,
+    "lines": 10,
     "long_blocks": 0
   },
   "tests/test_gaps.py": {
@@ -84,11 +84,11 @@
     "long_blocks": 0
   },
   "whisper_tool.example.ini": {
-    "lines": 91,
+    "lines": 94,
     "long_blocks": 2
   },
   "whisper_tool.py": {
-    "lines": 127,
+    "lines": 128,
     "long_blocks": 0
   },
   "wt_compare.py": {
@@ -96,7 +96,7 @@
     "long_blocks": 0
   },
   "wt_core.py": {
-    "lines": 181,
+    "lines": 184,
     "long_blocks": 0
   },
   "wt_i18n.py": {

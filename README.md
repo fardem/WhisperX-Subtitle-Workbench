@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.7.2** · [Changelog](CHANGELOG.md)
+**Version 0.7.3** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word** – with a **plugin for DaVinci Resolve** and a user interface in English, German and Turkish.
 
@@ -41,7 +41,7 @@ You drop video or audio files into the window, and the Workbench creates `.srt` 
   - **Word by word:** one cue per word, e.g. for karaoke effects.
   - **Raw:** the WhisperX segments unchanged – only split at a real pause.
 - **Pauses, flicker-free for DaVinci Resolve** (*Settings → Subtitles → Pauses*): only the length of a pause counts. Up to the set limit (e.g. 2 seconds) a segment stays until the next one starts, so the subtitle track of DaVinci never shows an empty moment. After a longer, real pause (applause, music) it stays for a short hold time, then the screen is empty. Starts stay exact. Works for Sentences, Word by word and Raw; for lyrics set *Gap to the next song line* to 0.
-- **Language per file:** the language is detected per file, or you set it. Each language has its own prompt, filler words, dangling words, replacements and optionally its own model (for example a Turkish fine-tune).
+- **Language per file:** the language is detected per file, or you set it. Each language has its own prompt, filler words, dangling words, replacements and optionally its own model (for example a Turkish fine-tune). The own model can have its own precision (e.g. `bfloat16`) and run without a prompt if it recognizes worse with one.
 - **Lyrics mode:** put `song.lyric.txt` next to `song.mp3`, and every line of the song text is aligned to the audio. This uses forced alignment (MMS_FA + uroman) and works for any language.
 - **JSON → SRT:** you can keep the WhisperX result and later rebuild the subtitles with a different layout in seconds.
 - **Gap check:** after each transcription it finds loud, voice-like passages without text, i.e. speech that was missed. It writes an extra subtitle file you can load to jump to each passage.

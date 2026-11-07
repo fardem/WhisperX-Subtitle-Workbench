@@ -663,7 +663,7 @@ class App(BaseTk):
 
     # ── Add drag & drop later ──────────────────────────────────────────────────
 
-    DND_REQ = "tkinterdnd2==0.6.3"
+    DND_REQ = "tkinterdnd2==0.7.0"
 
     def install_dnd(self, parent):
         if not messagebox.askyesno(T("dnd.title"), T("dnd.confirm", pkg=self.DND_REQ, prefix=sys.prefix),

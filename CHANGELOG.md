@@ -2,6 +2,15 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.7] – 2026-11-07
+
+**Updating from 0.7.6:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. Your `whisper_tool.ini` needs no change. The Python packages need no change either; to get the newly tested versions: `venv\Scripts\python.exe -m pip install --no-deps whisperx==3.8.6 pyannote-audio==4.0.7 tkinterdnd2==0.7.0`. An existing venv with Python 3.10 keeps working.
+
+- **Tested versions:** Python 3.13.17, whisperx 3.8.6, pyannote-audio 4.0.7 and tkinterdnd2 0.7.0 in `requirements.txt`, `constraints.txt` and the three READMEs; all other packages stay the same. The installation guide uses Python 3.13 (`py -3.13`); Python 3.10 has had no security updates since October 2026
+- ffmpeg 6.x to 8.x in the requirements: the Workbench only runs the ffmpeg program (decoding, audio filter, AAC for the comparison report)
+- *Settings → General → Drag & drop into the window* installs tkinterdnd2 0.7.0
+- The tests on GitHub run under Windows with Python 3.13 instead of 3.10
+
 ## [0.7.6] – 2026-11-07
 
 **Updating from 0.7.5:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.

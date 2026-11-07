@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.7.6** · [Änderungen](CHANGELOG.md)
+**Version 0.7.7** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -77,15 +77,15 @@ Du ziehst Video- oder Audiodateien ins Fenster, und die Workbench erstellt `.srt
 | Windows | Windows 10/11, 64 Bit | Die Oberfläche ist Tkinter; der Kern läuft auch unter Linux, der BAT-Starter ist für Windows |
 | NVIDIA-Grafikkarte | RTX 5080 (16 GB) | ≥ 8 GB Grafikspeicher empfohlen für `large-v3`. RTX 20xx oder neuer; GTX 10xx und älter brauchen einen anderen PyTorch-Build (Schritt 4). Mit der CPU geht es, aber sehr langsam |
 | NVIDIA-Treiber | R570 oder neuer | Nötig für die CUDA-12.8-Pakete. Es reicht der Treiber; das CUDA-Toolkit musst du **nicht** installieren |
-| Python | **3.10.11** (WhisperX erlaubt 3.10–3.13) | Von python.org, mit „tcl/tk and IDLE“ (Tkinter), das ist standardmäßig angehakt. 3.10.11 ist die letzte 3.10-Version mit Windows-Installer. Python 3.10 bekommt seit Oktober 2026 keine Sicherheitsupdates mehr; die Paket-Kombination ist mit 3.10 getestet |
-| ffmpeg | 6.x / 7.x | Eigenes Programm, kein pip-Paket. Jeder Full-Build, z.B. `winget install Gyan.FFmpeg` |
+| Python | **3.13** (getestet: 3.13.17; WhisperX erlaubt 3.10–3.13) | Von python.org, mit „tcl/tk and IDLE“ (Tkinter), das ist standardmäßig angehakt. Nicht 3.14: WhisperX 3.8 verlangt eine Version unter 3.14. Ein vorhandenes venv mit Python 3.10 läuft weiter; 3.10 bekommt aber seit Oktober 2026 keine Sicherheitsupdates mehr |
+| ffmpeg | 6.x bis 8.x | Eigenes Programm, kein pip-Paket. Jeder Full-Build, z.B. `winget install Gyan.FFmpeg` |
 | Internet | nur beim ersten Start | Whisper-Modell (~3 GB), Alignment-Modelle je Sprache, MMS_FA (~1,2 GB für Lyrics) |
 
 Ein Hugging-Face-Token ist nicht nötig, weil die Workbench keine Sprechertrennung (Diarization) benutzt.
 
 ### Die getestete Paket-Kombination
 
-Diese Versionen laufen produktiv zusammen (Python 3.10, Windows 11, RTX 5080):
+Diese Versionen laufen produktiv zusammen (Python 3.13, Windows 11, RTX 5080):
 
 | Paket | Version | Warum genau diese |
 |---|---|---|
@@ -93,13 +93,13 @@ Diese Versionen laufen produktiv zusammen (Python 3.10, Windows 11, RTX 5080):
 | `torchaudio` | **2.8.0+cu128** | Muss **genau** dieselbe Version und denselben CUDA-Build haben wie torch. Wird für Lyrics (MMS_FA) gebraucht |
 | `torchvision` | 0.23.0 | Gehört zu torch 2.8 (von WhisperX verlangt) |
 | `torchcodec` | 0.7.0 | WhisperX verlangt `<0.8`, pyannote-audio 4 verlangt `≥0.7`, also passt nur 0.7.x. Gehört zu torch 2.8 |
-| `whisperx` | **3.8.5** | Die Workbench ist mit 3.8.x getestet; die Systemprüfung warnt unter 3.8 |
+| `whisperx` | **3.8.6** | Die Workbench ist mit 3.8.x getestet; die Systemprüfung warnt unter 3.8 |
 | `faster-whisper` | 1.2.1 | Verlangt `ctranslate2 <5` |
 | `ctranslate2` | 4.7.1 | Ab **4.5** wird CUDA 12 + **cuDNN 9** benutzt, das torch 2.8 mitbringt. Bis 4.4 wird cuDNN 8 erwartet, das scheitert |
-| `pyannote-audio` | 4.0.4 | Spracherkennung (VAD). Verlangt torch ≥ 2.8 und torchcodec ≥ 0.7 |
+| `pyannote-audio` | 4.0.7 | Spracherkennung (VAD). Verlangt torch ≥ 2.8 und torchcodec ≥ 0.7 |
 | `numpy` | ≥ 2.1 (installiert WhisperX) | Pakete, die `numpy<2` brauchen, passen nicht ins selbe venv |
 | `uroman` | 1.3.1.1 | Nur für den Lyrics-Modus (Umschrift für das Alignment) |
-| `tkinterdnd2` | 0.6.3, *optional* | Drag & Drop direkt ins Fenster. Hat keine Abhängigkeiten; mit `--no-deps` installieren |
+| `tkinterdnd2` | 0.7.0, *optional* | Drag & Drop direkt ins Fenster. Hat keine Abhängigkeiten; mit `--no-deps` installieren |
 
 ### Wie die Abhängigkeiten zusammenhängen
 
@@ -133,10 +133,10 @@ whisperx 3.8.x ── verlangt torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 
 Alle Befehle sind für `cmd.exe`. Der Beispielordner ist `C:\WhisperX-Subtitle-Workbench`. Jeder andere Ordner geht auch, solange `venv` **darin** liegt, denn `Whisper_Tool.bat` sucht es dort.
 
-**1. Python 3.10.11 installieren** von [python.org](https://www.python.org/downloads/release/python-31011/) (*Windows installer (64-bit)*). Neuere 3.10-Versionen gibt es nur als Quellcode, ohne Installer.
+**1. Python 3.13 installieren** von [python.org](https://www.python.org/downloads/windows/): die neueste 3.13-Version mit *Windows installer (64-bit)*.
 
 - „tcl/tk and IDLE“ angehakt lassen.
-- Benutzt du schon ein anderes Python, „Add python.exe to PATH“ **nicht** anhaken. Diese Anleitung braucht es nicht (`py -3.10`), und dein anderes Python bleibt das Standard-Python.
+- Benutzt du schon ein anderes Python, „Add python.exe to PATH“ **nicht** anhaken. Diese Anleitung braucht es nicht (`py -3.13`), und dein anderes Python bleibt das Standard-Python.
 
 **2. ffmpeg installieren**, zum Beispiel:
 
@@ -167,7 +167,7 @@ cd /d C:\WhisperX-Subtitle-Workbench
 ```
 
 ```bash
-py -3.10 -m venv venv
+py -3.13 -m venv venv
 ```
 
 ```bash
@@ -208,7 +208,7 @@ venv\Scripts\python.exe -m pip check
 **7. Optional: Drag & Drop direkt ins Fenster.** Das geht auch später mit einem Klick unter *Einstellungen → Allgemein*:
 
 ```bash
-venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
+venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.7.0
 ```
 
 **8. Starten:** `Whisper_Tool.bat`. Beim ersten Start legt die Workbench `whisper_tool.ini` aus `whisper_tool.example.ini` an und führt die Systemprüfung durch. Jede Zeile der Prüfung sollte grün sein.

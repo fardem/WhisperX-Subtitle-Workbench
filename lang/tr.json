@@ -308,7 +308,7 @@
     "sec_resolve_analysis": "2 · Analiz",
     "sec_resolve_analysis_info": "Kontrol izleri: kontrol edilecek yerleri işaretleyen ek altyazı izleri. Altyazıların parçası değildir. Bir iz yalnızca gösterilecek bir şey varsa eklenir. Kontrolden sonra izi Resolve'da silin.",
     "sec_resolve_jobs": "3 · DaVinci Resolve'dan gelen işler",
-    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Dil, mod ve ses filtresi eklenti penceresinden, diğer tüm ayarlar INI'den gelir. Ana penceredeki seçenekler bu işler için geçerli değildir.",
+    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Dil, mod, ses filtresi, satır başına karakter ve blok başına satır eklenti penceresinden, diğer tüm ayarlar INI'den gelir. Ana penceredeki seçenekler bu işler için geçerli değildir.",
     "sw_resolve_countdown": "DaVinci Resolve'dan gelen işleri otomatik başlat:",
     "sw_resolve_countdown_unit": "saniye sonra",
     "resolve_countdown": "DaVinci işleri için geri sayım",
@@ -664,10 +664,11 @@
       "other": "{n} eski DaVinci Resolve iş klasörü kaldırıldı"
     },
     "fast_cue": "çok hızlı: saniyede {cps} karakter",
-    "log_job_options": "DaVinci Resolve eklentisinden: {lang} · {mode} · {filter}",
+    "log_job_options": "DaVinci Resolve eklentisinden: {lang} · {mode} · {filter} · {layout}",
+    "layout": "{chars} karakter × {lines} satır",
     "filter_on": "ses filtresi açık",
     "filter_off": "ses filtresi kapalı",
-    "log_job_ini": "Diğer ayarlar INI'den: {prompt} · {chars} karakter × {lines} satır · kurallar Ayarlar → Altyazılar'dan",
+    "log_job_ini": "Diğer ayarlar INI'den: {prompt} · kurallar Ayarlar → Altyazılar'dan",
     "from_ini": "INI",
     "prompt_ini": "dile göre prompt",
     "prompt_custom": "özel prompt",
@@ -757,6 +758,9 @@
     "track_score": "WhisperX belirsiz",
     "placed_extra": "+ {n}, {track} numaralı “{name}” altyazı izinde – kontrol edin, sonra izi silin.",
     "label_filter": "Ses filtresi",
+    "label_chars": "Karakter/satır",
+    "label_lines": "Satır/blok",
+    "err_numbers": "Karakter/satır için {chars_lo} ile {chars_hi} arasında, satır/blok için {lines_lo} ile {lines_hi} arasında bir tam sayı gerekir.",
     "count_off": "Resolve ST{track} izine {placed} altyazı yerleştirdi, SRT'de {cues} var. Lütfen izi kontrol edin."
   },
   "tip": {

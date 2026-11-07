@@ -2,6 +2,14 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.2] – 2026-11-07
+
+**Updating from 0.7.1:** install the plugin again under *Settings → DaVinci Resolve*. The plugin window starts once with its new size. Your `whisper_tool.ini` and the Python packages need no change.
+
+- **Chars/line and Lines/cue in the plugin window**, in a row under language and mode. They go to the Workbench with the job and win over `[Layout] default_chars` and `default_lines` of the INI, with the same limits as the main window (10–200 characters, 1–5 lines). Greyed out for *Word by word* and *Raw*. The plugin remembers them; on the first start they take the values of the INI
+- The log of a DaVinci job shows characters and lines with the other choices of the plugin; “(INI)” marks values that come from the INI, e.g. for a job of an older plugin
+- Placeholders with an underscore (`{chars_lo}`) are replaced in the plugin texts too
+
 ## [0.7.1] – 2026-11-07
 
 **Updating from 0.7.0:** install the plugin again under *Settings → DaVinci Resolve*. Your `whisper_tool.ini` and the Python packages need no change.

@@ -308,7 +308,7 @@
     "sec_resolve_analysis": "2 · Analysis",
     "sec_resolve_analysis_info": "Check tracks: extra subtitle tracks that mark places to check. They are not part of the subtitles. A track is only added when there is something to show. Delete it in Resolve after checking.",
     "sec_resolve_jobs": "3 · Jobs from DaVinci Resolve",
-    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. Language, mode and audio filter come from the plugin window, all other settings from the INI. The options of the main window do not apply to these jobs.",
+    "sec_resolve_jobs_info": "A job from DaVinci Resolve has its own countdown, independent of the one for dropped files. Language, mode, audio filter, characters per line and lines per cue come from the plugin window, all other settings from the INI. The options of the main window do not apply to these jobs.",
     "sw_resolve_countdown": "Start jobs from DaVinci Resolve automatically after",
     "sw_resolve_countdown_unit": "seconds",
     "resolve_countdown": "Countdown for DaVinci jobs",
@@ -664,10 +664,11 @@
       "other": "{n} old DaVinci Resolve job folders removed"
     },
     "fast_cue": "too fast: {cps} characters/s",
-    "log_job_options": "From the DaVinci Resolve plugin: {lang} · {mode} · {filter}",
+    "log_job_options": "From the DaVinci Resolve plugin: {lang} · {mode} · {filter} · {layout}",
+    "layout": "{chars} characters × {lines} lines",
     "filter_on": "audio filter on",
     "filter_off": "audio filter off",
-    "log_job_ini": "Other settings from the INI: {prompt} · {chars} characters × {lines} lines · rules from Settings → Subtitles",
+    "log_job_ini": "Other settings from the INI: {prompt} · rules from Settings → Subtitles",
     "from_ini": "INI",
     "prompt_ini": "prompt per language",
     "prompt_custom": "custom prompt",
@@ -757,6 +758,9 @@
     "track_score": "WhisperX unsure",
     "placed_extra": "+ {n} on subtitle track {track} “{name}” – to check, then delete the track.",
     "label_filter": "Audio filter",
+    "label_chars": "Chars/line",
+    "label_lines": "Lines/cue",
+    "err_numbers": "Chars/line needs a whole number from {chars_lo} to {chars_hi}, lines/cue one from {lines_lo} to {lines_hi}.",
     "count_off": "Resolve placed {placed} subtitles on ST{track}, the SRT has {cues}. Please check the track."
   },
   "tip": {

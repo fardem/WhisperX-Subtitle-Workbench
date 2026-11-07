@@ -426,11 +426,13 @@ class App(BaseTk):
         cb_mode.grid(row=0, column=3, sticky="ew", **px)
         l_chars = ttk.Label(of, text=T("main.chars"))
         l_chars.grid(row=0, column=4, sticky="w", padx=(12, 6))
-        self.sp_chars = ttk.Spinbox(of, from_=10, to=200, textvariable=self.v_chars, width=6)
+        self.sp_chars = ttk.Spinbox(of, from_=core.CHARS_RANGE[0], to=core.CHARS_RANGE[1], textvariable=self.v_chars,
+                                    width=6)
         self.sp_chars.grid(row=0, column=5, sticky="w", **px)
         l_lines = ttk.Label(of, text=T("main.lines"))
         l_lines.grid(row=0, column=6, sticky="w", padx=(12, 6))
-        self.sp_lines = ttk.Spinbox(of, from_=1, to=5, textvariable=self.v_lines, width=4)
+        self.sp_lines = ttk.Spinbox(of, from_=core.LINES_RANGE[0], to=core.LINES_RANGE[1], textvariable=self.v_lines,
+                                    width=4)
         self.sp_lines.grid(row=0, column=7, sticky="w", **px)
 
         c_filter = ttk.Checkbutton(of, text=T("main.filter"), variable=self.v_filter)
@@ -719,8 +721,8 @@ class App(BaseTk):
             use_filter    = self.v_filter.get(),
             prompt_mode   = pmode,
             custom_prompt = self.v_ptext.get() if pmode == "custom" else "",
-            max_chars     = num(self.v_chars, int, 10, 200, T("main.chars")),
-            max_lines     = num(self.v_lines, int, 1, 5, T("main.lines")),
+            max_chars     = num(self.v_chars, int, *core.CHARS_RANGE, T("main.chars")),
+            max_lines     = num(self.v_lines, int, *core.LINES_RANGE, T("main.lines")),
             keep_json     = self.v_json.get(),
             line_hold     = num(self.v_hold, float, 0, 10, T("main.hold")),
             live_lines    = self.cfg.live_lines,
@@ -1042,14 +1044,18 @@ class App(BaseTk):
 
     def _resolve_options(self, job, cfg: core.Config | None = None) -> core.JobOptions:
         """
-        Options of a DaVinci Resolve job: language, mode and audio filter as chosen in the plugin,
-        all other settings from the INI. The options of the main window do not apply to these jobs.
+        Options of a DaVinci Resolve job: language, mode, audio filter, characters and lines as chosen in the
+        plugin, all other settings from the INI. The options of the main window do not apply to these jobs.
         """
         o = core.JobOptions.from_config(cfg or self.cfg)
+        def within(n, limits, default):
+            return n if limits[0] <= n <= limits[1] else default
         return replace(o,
                        language=job.language if job.language in ("auto",) + core.LANGS else o.language,
                        mode=job.mode if job.mode in core.MODES else o.mode,
-                       use_filter=o.use_filter if job.use_filter is None else job.use_filter)
+                       use_filter=o.use_filter if job.use_filter is None else job.use_filter,
+                       max_chars=within(job.chars, core.CHARS_RANGE, o.max_chars),
+                       max_lines=within(job.lines, core.LINES_RANGE, o.max_lines))
 
     def _log_resolve_options(self, job):
         o = self._resolve_options(job)
@@ -1059,11 +1065,12 @@ class App(BaseTk):
             lang=label_of(self.lang_choices, o.language) + ("" if job.language else ini),
             mode=label_of(self.mode_choices, o.mode) + ("" if job.mode else ini),
             filter=T("resolve.filter_on" if o.use_filter else "resolve.filter_off")
-            + ("" if job.use_filter is not None else ini)) + "\n")
+            + ("" if job.use_filter is not None else ini),
+            layout=T("resolve.layout", chars=o.max_chars, lines=o.max_lines)
+            + ("" if (job.chars, job.lines) == (o.max_chars, o.max_lines) else ini)) + "\n")
         prompt = {"ini": "resolve.prompt_ini", "custom": "resolve.prompt_custom"}.get(o.prompt_mode,
                                                                                      "resolve.prompt_none")
-        self._append_log(i18n.line("info", "resolve.log_job_ini", prompt=T(prompt), chars=o.max_chars,
-                                   lines=o.max_lines) + "\n")
+        self._append_log(i18n.line("info", "resolve.log_job_ini", prompt=T(prompt)) + "\n")
 
     def _hand_over(self, iids=None):
         """

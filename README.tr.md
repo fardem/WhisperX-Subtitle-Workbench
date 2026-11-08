@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.7.6** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.7.7** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -77,15 +77,15 @@ Video veya ses dosyalarını pencereye sürüklersiniz, Workbench `.srt` altyaz�
 | Windows | Windows 10/11, 64 bit | Arayüz Tkinter'dır; çekirdek Linux'ta da çalışır, BAT başlatıcısı Windows içindir |
 | NVIDIA ekran kartı | RTX 5080 (16 GB) | `large-v3` için ≥ 8 GB ekran kartı belleği önerilir. RTX 20xx veya daha yenisi; GTX 10xx ve daha eskileri başka bir PyTorch derlemesi gerektirir (4. adım). CPU ile de çalışır ama çok yavaştır |
 | NVIDIA sürücüsü | R570 veya daha yeni | CUDA 12.8 paketleri için gerekli. Yalnızca sürücü yeterli; CUDA araç setini kurmanız **gerekmez** |
-| Python | **3.10.11** (WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir. 3.10.11, Windows kurulum programı olan son 3.10 sürümüdür. Python 3.10 Ekim 2026'dan beri güvenlik güncellemesi almıyor; paket kombinasyonu 3.10 ile test edilmiştir |
-| ffmpeg | 6.x / 7.x | Ayrı bir program, pip paketi değil. Herhangi bir tam sürüm, örn. `winget install Gyan.FFmpeg` |
+| Python | **3.13** (test edilen: 3.13.17; WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir. 3.14 değil: WhisperX 3.8, 3.14'ün altında bir sürüm ister. Python 3.10 ile kurulmuş mevcut bir venv çalışmaya devam eder; ancak 3.10 Ekim 2026'dan beri güvenlik güncellemesi almıyor |
+| ffmpeg | 6.x – 8.x | Ayrı bir program, pip paketi değil. Herhangi bir tam sürüm, örn. `winget install Gyan.FFmpeg` |
 | İnternet | yalnızca ilk başlatmada | Whisper modeli (~3 GB), dile göre hizalama modelleri, MMS_FA (şarkı sözleri için ~1,2 GB) |
 
 Hugging Face token'ı gerekmez, çünkü Workbench konuşmacı ayrımı (diarization) kullanmaz.
 
 ### Test edilmiş paket kombinasyonu
 
-Bu sürümler gerçek kullanımda birlikte çalışıyor (Python 3.10, Windows 11, RTX 5080):
+Bu sürümler gerçek kullanımda birlikte çalışıyor (Python 3.13, Windows 11, RTX 5080):
 
 | Paket | Sürüm | Neden tam olarak bu |
 |---|---|---|
@@ -93,13 +93,13 @@ Bu sürümler gerçek kullanımda birlikte çalışıyor (Python 3.10, Windows 1
 | `torchaudio` | **2.8.0+cu128** | torch ile **tam olarak** aynı sürüm ve aynı CUDA derlemesi olmalı. Şarkı sözleri (MMS_FA) için kullanılır |
 | `torchvision` | 0.23.0 | torch 2.8'e aittir (WhisperX gerektirir) |
 | `torchcodec` | 0.7.0 | WhisperX `<0.8`, pyannote-audio 4 `≥0.7` ister, yani yalnızca 0.7.x uyar. torch 2.8'e aittir |
-| `whisperx` | **3.8.5** | Workbench 3.8.x ile test edildi; sistem kontrolü 3.8'in altında uyarır |
+| `whisperx` | **3.8.6** | Workbench 3.8.x ile test edildi; sistem kontrolü 3.8'in altında uyarır |
 | `faster-whisper` | 1.2.1 | `ctranslate2 <5` ister |
 | `ctranslate2` | 4.7.1 | **4.5'ten** itibaren CUDA 12 + **cuDNN 9** kullanılır, bunu torch 2.8 birlikte getirir. 4.4 ve öncesi cuDNN 8 bekler ve başarısız olur |
-| `pyannote-audio` | 4.0.4 | Konuşma algılama (VAD). torch ≥ 2.8 ve torchcodec ≥ 0.7 ister |
+| `pyannote-audio` | 4.0.7 | Konuşma algılama (VAD). torch ≥ 2.8 ve torchcodec ≥ 0.7 ister |
 | `numpy` | ≥ 2.1 (WhisperX kurar) | `numpy<2` isteyen paketler aynı venv'de olamaz |
 | `uroman` | 1.3.1.1 | Yalnızca şarkı sözü modu için (hizalama için Latin harflerine çevirme) |
-| `tkinterdnd2` | 0.6.3, *isteğe bağlı* | Doğrudan pencereye sürükle-bırak. Bağımlılığı yoktur; `--no-deps` ile kurun |
+| `tkinterdnd2` | 0.7.0, *isteğe bağlı* | Doğrudan pencereye sürükle-bırak. Bağımlılığı yoktur; `--no-deps` ile kurun |
 
 ### Bağımlılıklar nasıl birbirine bağlı
 
@@ -133,10 +133,10 @@ whisperx 3.8.x ── ister: torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.23.
 
 Tüm komutlar `cmd.exe` içindir. Örnek klasör `C:\WhisperX-Subtitle-Workbench`. Başka bir klasör de olur, yeter ki `venv` onun **içinde** olsun; çünkü `Whisper_Tool.bat` onu orada arar.
 
-**1. Python 3.10.11'i kurun**, [python.org](https://www.python.org/downloads/release/python-31011/) adresinden (*Windows installer (64-bit)*). Daha yeni 3.10 sürümleri yalnızca kaynak kod olarak, kurulum programı olmadan sunulur.
+**1. Python 3.13'ü kurun**, [python.org](https://www.python.org/downloads/windows/) adresinden: *Windows installer (64-bit)* bulunan en yeni 3.13 sürümü.
 
 - “tcl/tk and IDLE” seçili kalsın.
-- Zaten başka bir Python kullanıyorsanız “Add python.exe to PATH” seçeneğini **işaretlemeyin**. Bu kılavuzun buna ihtiyacı yoktur (`py -3.10`), ve diğer Python'unuz varsayılan olarak kalır.
+- Zaten başka bir Python kullanıyorsanız “Add python.exe to PATH” seçeneğini **işaretlemeyin**. Bu kılavuzun buna ihtiyacı yoktur (`py -3.13`), ve diğer Python'unuz varsayılan olarak kalır.
 
 **2. ffmpeg'i kurun**, örneğin:
 
@@ -167,7 +167,7 @@ cd /d C:\WhisperX-Subtitle-Workbench
 ```
 
 ```bash
-py -3.10 -m venv venv
+py -3.13 -m venv venv
 ```
 
 ```bash
@@ -208,7 +208,7 @@ venv\Scripts\python.exe -m pip check
 **7. İsteğe bağlı: doğrudan pencereye sürükle-bırak.** Bunu daha sonra *Ayarlar → Genel* altında tek tıkla da yapabilirsiniz:
 
 ```bash
-venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
+venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.7.0
 ```
 
 **8. Başlatın:** `Whisper_Tool.bat`. İlk başlatmada Workbench `whisper_tool.example.ini` dosyasından `whisper_tool.ini` oluşturur ve sistem kontrolünü çalıştırır. Kontrolün her satırı yeşil olmalıdır.

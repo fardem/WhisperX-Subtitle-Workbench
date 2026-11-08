@@ -1,5 +1,5 @@
 # WhisperX Subtitle Workbench - tested package versions
-# (Windows 11, Python 3.10, NVIDIA RTX 5080, CUDA 12.8 wheels)
+# (Windows 11, Python 3.13, NVIDIA RTX 5080, CUDA 12.8 wheels)
 #
 # Install PyTorch first from the PyTorch CUDA index: the torch wheel on PyPI is CPU-only
 # on Windows, and whisperx would install it otherwise.
@@ -14,12 +14,12 @@
 # constraints.txt pins all other packages, the indirect ones included.
 # See README -> "Requirements and dependencies" for how the packages depend on each other.
 
-whisperx==3.8.5
+whisperx==3.8.6
 faster-whisper==1.2.1
 ctranslate2==4.7.1
-pyannote-audio==4.0.4
+pyannote-audio==4.0.7
 torchcodec==0.7.0
 uroman==1.3.1.1
 
 # Optional - drag & drop directly into the window (no dependencies, install with --no-deps):
-#   venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.6.3
+#   venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.7.0

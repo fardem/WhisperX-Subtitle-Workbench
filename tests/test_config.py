@@ -169,3 +169,21 @@ def test_compute_type_that_the_device_can_run(compute, device, cap, expected):
 
 def test_both_compute_lists_offer_bfloat16():
     assert "bfloat16" in core.COMPUTE_TYPES and "bfloat16" in EXAMPLE.read_text(encoding="utf-8")
+
+
+def test_system_check_lists_only_own_models_that_are_on(tmp_path):
+    ini = own_models(tmp_path).path
+    ini.write_text(ini.read_text(encoding="utf-8").replace("use_prompt.de = 0\n", "use_prompt.de = 0\nuse_model.de = 0\n")
+                   + "[System]\nffmpeg_path = ffmpeg\n", encoding="utf-8")
+    texts = [text for _, text in core.check_environment(core.Config(ini))]
+    assert not any("primeline" in t for t in texts)
+    assert any(t.startswith(core.T("set.model") + ":") for t in texts)
+
+
+def test_ini_without_close_plugin_closes_the_plugin_window_after_10_seconds(tmp_path):
+    ini = tmp_path / "old.ini"
+    ini.write_text("[Resolve]\ncountdown = 10\n", encoding="utf-8")
+    cfg = core.Config(ini)
+    assert (cfg.resolve_close_plugin, cfg.resolve_close_warning) == (10, False)
+    template = core.Config(EXAMPLE)
+    assert (template.resolve_close_plugin, template.resolve_close_warning) == (10, False)

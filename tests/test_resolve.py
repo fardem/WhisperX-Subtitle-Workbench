@@ -185,6 +185,16 @@ def test_hand_over_writes_shifted_srt_and_done_file(tmp_path):
     done = wr.read_kv(job.done_path)
     assert done["srt"] == str(res.srt) and done["lang"] == "DE" and done["first"] == "11.000"
     assert done["files"] == "audio.gaps.srt;audio.srt"
+    assert (done["close_window"], done["close_on_warning"]) == ("0", "0")
+
+
+def test_hand_over_tells_the_plugin_when_to_close(tmp_path):
+    job = make_job(tmp_path / "job")
+    (job.folder / "audio.srt").write_text(srt(("00:00:01,000", "00:00:02,000", "x")), encoding="utf-8")
+    wr.hand_over(job, job.folder / "audio.srt", "de", last_dir=tmp_path / "letzte", close_window=10,
+                 close_on_warning=True)
+    done = wr.read_kv(job.done_path)
+    assert (done["close_window"], done["close_on_warning"]) == ("10", "1")
 
 
 def test_the_srts_of_the_last_10_hand_overs_stay(tmp_path):
@@ -490,6 +500,15 @@ def test_resolve_job_options_come_from_the_plugin_and_the_ini(tmp_path):
     assert (chosen.prompt_mode, chosen.max_chars, chosen.max_lines) == ("none", 37, 2)
     default = wt.App._resolve_options(app, make_job(tmp_path / "b"))                  # "Workbench default"
     assert (default.language, default.mode, default.use_filter) == ("de", "sentence", False)
+
+
+def test_smooth_display_comes_from_the_plugin(tmp_path):
+    wt = pytest.importorskip("whisper_tool")
+    app = type("App", (), {"cfg": core.Config(ROOT / "whisper_tool.example.ini")})()
+    for chosen in (True, False, None):
+        job = make_job(tmp_path / str(chosen), smooth=chosen)
+        assert wr.find_job(tmp_path / str(chosen) / "audio.wav").smooth is chosen
+        assert wt.App._resolve_options(app, job).smooth is chosen
 
 
 def test_characters_and_lines_come_from_the_plugin(tmp_path):

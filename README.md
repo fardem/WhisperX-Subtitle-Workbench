@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.7.7** · [Changelog](CHANGELOG.md)
+**Version 0.7.8** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word** – with a **plugin for DaVinci Resolve** and a user interface in English, German and Turkish.
 
@@ -93,7 +93,7 @@ These versions run together in production (Python 3.13, Windows 11, RTX 5080):
 | `torchcodec` | 0.7.0 | WhisperX requires `<0.8`, pyannote-audio 4 requires `≥0.7`, so only 0.7.x fits. It belongs to torch 2.8 |
 | `whisperx` | **3.8.6** | The Workbench is tested with 3.8.x; the system check warns below 3.8 |
 | `faster-whisper` | 1.2.1 | Requires `ctranslate2 <5` |
-| `ctranslate2` | 4.7.1 | Versions **≥ 4.5** use CUDA 12 + **cuDNN 9**, which torch 2.8 brings along. Versions ≤ 4.4 expect cuDNN 8 and fail |
+| `ctranslate2` | 4.8.5 | Versions **≥ 4.5** use CUDA 12 + **cuDNN 9**, which torch 2.8 brings along. Versions ≤ 4.4 expect cuDNN 8 and fail |
 | `pyannote-audio` | 4.0.7 | Speech detection (VAD). Requires torch ≥ 2.8 and torchcodec ≥ 0.7 |
 | `numpy` | ≥ 2.1 (installed by WhisperX) | Packages that need `numpy<2` cannot live in the same venv |
 | `uroman` | 1.3.1.1 | Lyrics mode only (romanizes text for the alignment) |
@@ -118,7 +118,7 @@ whisperx 3.8.x ── requires torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 | `pip install whisperx` **before** torch | torch comes from PyPI as a CPU build → system check: “torch is a build without CUDA” | Always install torch first from the PyTorch index (step 4 below) |
 | `pip install -U whisperx` or another package pulls a different torch | torch/torchaudio replaced, lyrics or VAD fail, CUDA gone | Run `pip install --dry-run …` first and abort if `torch`, `torchaudio`, `torchvision`, `torchcodec` or `ctranslate2` would change |
 | torch and torchaudio from different versions or builds | Import errors in torchaudio (`DLL load failed`, `WinError 127`), lyrics fail; the system check warns | Reinstall both together with the same version and `--index-url` |
-| `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | Use ctranslate2 ≥ 4.5 (tested: 4.7.1) |
+| `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | Use ctranslate2 ≥ 4.5 (tested: 4.8.5) |
 | An older CUDA build (cu121/cu124) on an RTX 50xx | `no kernel image is available for execution on the device` | Use the cu128 build |
 | The cu128 build on a GTX 10xx, GTX 9xx or Titan V | Warning “… CUDA capability sm_61 is not compatible …”, then `no kernel image is available` | Use the cu126 build (step 4) |
 | `pip install -r requirements.txt` in an **existing** venv with a different torch | pip replaces that torch with the CPU build from PyPI, and the WhisperX that was installed there stops working too | Never install into an existing venv; use a new folder with its own venv |
@@ -331,11 +331,11 @@ Install the plugin again after an update of the workbench, after moving its fold
 
 ### Workflow
 
-1. Open the timeline in Resolve. Set In and Out if only a part should be transcribed, otherwise the whole timeline is used. Start the plugin, choose **Language** and **Mode** if this job needs other ones than the workbench window (“Workbench default” takes the default from the INI), switch the **Audio filter** on or off, set **Chars/line** and **Lines/cue** for mode *Sentences* (greyed out for the other modes), and press **Transcribe**. The plugin window remembers its position, its size and these choices. The two numbers start with the values of the INI.
+1. Open the timeline in Resolve. Set In and Out if only a part should be transcribed, otherwise the whole timeline is used. Start the plugin, choose **Language** and **Mode** if this job needs other ones than the workbench window (“Workbench default” takes the default from the INI), switch the **Audio filter** on or off, set **Chars/line** and **Lines/cue** for mode *Sentences* (greyed out for the other modes), choose **Smooth display** (Workbench default, on or off) and press **Transcribe**. The plugin window remembers its position, its size and these choices. The two numbers start with the values of the INI.
 2. The plugin renders the main mix of the timeline as WAV into `resolve_temp\<job>\` of the workbench. Afterwards the render job is deleted, and the page, the Deliver settings and the In/Out marks are as before – also after an error or *Cancel*. Then it starts the workbench with the WAV; a workbench that is already open takes the file over and keeps its models loaded.
-3. In the workbench the job appears as “*Timeline* · DaVinci Resolve”. It has its own countdown (*Settings → DaVinci Resolve*, 10 seconds by default). Language, mode, audio filter, characters per line and lines come from the plugin window; all other settings come from the INI: the prompt and all rules from *Settings → Subtitles*. The options of the main window do not apply to DaVinci jobs. The log shows both. Without the countdown, press *Start* yourself. Meanwhile the plugin window shows where the job stands: countdown, transcription in percent, done.
+3. In the workbench the job appears as “*Timeline* · DaVinci Resolve”. It has its own countdown (*Settings → DaVinci Resolve*, 10 seconds by default). Language, mode, audio filter, characters per line, lines and smooth display come from the plugin window; all other settings come from the INI: the prompt and all rules from *Settings → Subtitles*. The options of the main window do not apply to DaVinci jobs. The log shows both. Without the countdown, press *Start* yourself. Meanwhile the plugin window shows where the job stands: countdown, transcription in percent, done.
 4. When the job is done, check the subtitles and press **→ Hand over to DaVinci** (blue once the job is done). The SRT is moved to the position of the range in the timeline and saved as `resolve_temp\<Timeline>_<LANG>_<date-time>.srt`; this folder keeps the SRTs of the last 10 hand-overs, and the 11th deletes the oldest. The name is new every time, because Resolve does not read a file again that is already in its media pool – it would place the subtitles of the first import. The workbench then minimizes itself – it stays open, so its models stay loaded for the next job. In *Settings → DaVinci Resolve* you can let it hand over by itself as soon as the job is transcribed, and close instead of minimize.
-5. The plugin, still waiting in Resolve, switches back to the timeline of the job, imports the SRT into the media pool bin *WhisperX* and puts it onto the **first empty subtitle track** (ST1, ST2, …) – or onto a new one. The track is named `WhisperX DE` (`WhisperX DE 2` if the name exists) and stays the active subtitle track. Then the WAV and the job folder are deleted, and the plugin window comes to the front with the result until you press *OK*.
+5. The plugin, still waiting in Resolve, switches back to the timeline of the job, imports the SRT into the media pool bin *WhisperX* and puts it onto the **first empty subtitle track** (ST1, ST2, …) – or onto a new one. The track is named `WhisperX DE` (`WhisperX DE 2` if the name exists) and stays the active subtitle track. Then the WAV and the job folder are deleted, and the plugin window comes to the front with the result. After an import without a warning it closes after 10 seconds; otherwise it stays until you press *OK*. You set both under *Settings → DaVinci Resolve → 3 · Jobs from DaVinci Resolve*.
 6. Up to three more subtitle tracks help with checking, each switched on or off in *Settings → DaVinci Resolve → Analysis*: **WhisperX gaps** marks loud passages without text from the gap check, **WhisperX too fast** marks subtitles with more than 17 characters per second (mode *Sentences*), **WhisperX unsure** marks the words of the score check (whenever the score check is on; the row under *Analysis* is the same setting as under *Speech detection*). Jump through them in Resolve, then delete the tracks. A track is only added when there is something to show, and the transcript track stays the active one.
 
 ![A DaVinci Resolve job in the workbench, ready to hand over](docs/images/resolve-job.png)

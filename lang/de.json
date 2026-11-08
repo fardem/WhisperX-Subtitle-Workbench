@@ -311,7 +311,7 @@
     "sec_resolve_analysis": "2 · Analyse",
     "sec_resolve_analysis_info": "Prüfspuren: zusätzliche Untertitelspuren, die Stellen zum Prüfen markieren. Sie gehören nicht zu den Untertiteln. Eine Spur kommt nur dazu, wenn es etwas zu zeigen gibt. Nach dem Prüfen die Spur in Resolve löschen.",
     "sec_resolve_jobs": "3 · Jobs aus DaVinci Resolve",
-    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Sprache, Modus, Audiofilter, Zeichen/Zeile und Zeilen/Block kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI. Die Einstellungen im Hauptfenster gelten für diese Jobs nicht.",
+    "sec_resolve_jobs_info": "Ein Job aus DaVinci Resolve hat einen eigenen Countdown, unabhängig von dem für gezogene Dateien. Sprache, Modus, Audiofilter, Zeichen/Zeile, Zeilen/Block und „Flüssig anzeigen“ kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI. Die Einstellungen im Hauptfenster gelten für diese Jobs nicht.",
     "sw_resolve_countdown": "Jobs aus DaVinci Resolve automatisch starten nach",
     "sw_resolve_countdown_unit": "Sekunden",
     "resolve_countdown": "Countdown für DaVinci-Jobs",
@@ -321,7 +321,11 @@
     "resolve_track_fast": "Zu schnelle Untertitel auf eigener Spur „WhisperX zu schnell“ (nur Satzweise)",
     "sw_resolve_score": "Unsichere Wörter auf eigener Spur „WhisperX unsicher“: Score unter",
     "sw_resolve_score_unit": "(wie unter Spracherkennung)",
-    "resolve_close_after": "Workbench nach der Übergabe schließen statt minimieren"
+    "resolve_close_after": "Workbench nach der Übergabe schließen statt minimieren",
+    "sw_resolve_close_plugin": "Plugin-Fenster nach der Übergabe schließen nach",
+    "sw_resolve_close_plugin_unit": "Sekunden",
+    "resolve_close_plugin": "Plugin-Fenster schließen",
+    "resolve_close_plugin_warning": "Auch bei einer Warnung schließen"
   },
   "cmpdlg": {
     "title": "Text vergleichen",
@@ -381,7 +385,6 @@
     "ct2_folder": "CTranslate2-Ordner",
     "hf_download": "Hugging Face – wird beim ersten Einsatz heruntergeladen",
     "no_prompt": "ohne Prompt",
-    "model_off": "aus",
     "gpu": "Grafikkarte",
     "torch_cpu": "torch ist eine Version ohne CUDA ({version})",
     "no_driver": "Treiber oder Grafikkarte nicht erreichbar",
@@ -685,10 +688,12 @@
       "other": "{n} alte DaVinci-Resolve-Job-Ordner entfernt"
     },
     "fast_cue": "zu schnell: {cps} Zeichen/s",
-    "log_job_options": "Aus dem DaVinci-Resolve-Plugin: {lang} · {mode} · {filter} · {layout}",
+    "log_job_options": "Aus dem DaVinci-Resolve-Plugin: {lang} · {mode} · {filter} · {layout} · {smooth}",
     "layout": "{chars} Zeichen × {lines} Zeilen",
     "filter_on": "Audiofilter an",
     "filter_off": "Audiofilter aus",
+    "smooth_on": "Flüssig anzeigen an",
+    "smooth_off": "Flüssig anzeigen aus",
     "log_job_ini": "Übrige Einstellungen aus der INI: {prompt} · Regeln aus Einstellungen → Untertitel",
     "from_ini": "INI",
     "prompt_ini": "Prompt je Sprache",
@@ -745,6 +750,7 @@
     "position_off": "Lage prüfen: Der erste Untertitel steht bei Frame {actual}, erwartet war Frame {expected} (Abweichung {diff} Frames = {sec} s).",
     "position_start_tc": "Die Abweichung entspricht genau dem Start-Timecode der Timeline – bitte melden (Workspace → Console).",
     "srt_kept": "Die SRT bleibt hier: {path}",
+    "closing": "Das Fenster schließt in {n} s.",
     "timeline_gone": "Die Timeline „{name}“ gibt es nicht mehr. Die SRT bleibt hier: {path} – öffne die richtige Timeline und nimm „SRT importieren …“.",
     "cancelled": "Abgebrochen. Der Job-Ordner wurde entfernt.",
     "choose_srt": "SRT-Datei wählen",
@@ -779,6 +785,9 @@
     "track_score": "WhisperX unsicher",
     "placed_extra": "+ {n} auf Untertitelspur {track} „{name}“ – zum Prüfen, danach die Spur löschen.",
     "label_filter": "Audiofilter",
+    "label_smooth": "Flüssig anzeigen",
+    "opt_on": "an",
+    "opt_off": "aus",
     "label_chars": "Zeichen/Zeile",
     "label_lines": "Zeilen/Block",
     "err_numbers": "Zeichen/Zeile braucht eine ganze Zahl von {chars_lo} bis {chars_hi}, Zeilen/Block eine von {lines_lo} bis {lines_hi}.",
@@ -1164,6 +1173,8 @@
     "resolve_track_gaps": "„WhisperX Lücken“ markiert laute Stellen ohne Text. Braucht den Lücken-Check im Reiter Spracherkennung.",
     "resolve_track_fast": "„WhisperX zu schnell“ markiert Untertitel mit mehr als 17 Zeichen pro Sekunde. Nur im Modus Satzweise.",
     "resolve_score": "„WhisperX unsicher“ markiert Wörter mit niedrigem Score. Das ist der Score-Check aus dem Reiter Spracherkennung; eine Änderung gilt an beiden Stellen.",
-    "resolve_close_after": "Minimiert behält die Workbench ihre Modelle. Der nächste Job startet dann ohne Ladezeit."
+    "resolve_close_after": "Minimiert behält die Workbench ihre Modelle. Der nächste Job startet dann ohne Ladezeit.",
+    "resolve_close_plugin": "Nach einer Übernahme ohne Fehler schließt das Plugin-Fenster in DaVinci Resolve nach dieser Zeit. Die Statuszeile zählt herunter. „OK“ schließt sofort, „Transkribieren“ oder „SRT importieren …“ hält den Countdown an. Ohne Häkchen bleibt das Fenster offen.",
+    "resolve_close_plugin_warning": "Eine Warnung meldet, dass Anzahl oder Lage der Untertitel in Resolve nicht stimmt. Ohne Häkchen bleibt das Fenster dann offen."
   }
 }

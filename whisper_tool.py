@@ -1124,8 +1124,8 @@ class App(BaseTk):
 
     def _resolve_options(self, job, cfg: core.Config | None = None) -> core.JobOptions:
         """
-        Options of a DaVinci Resolve job: language, mode, audio filter, characters and lines as chosen in the
-        plugin, all other settings from the INI. The options of the main window do not apply to these jobs.
+        Options of a DaVinci Resolve job: language, mode, audio filter, characters, lines and smooth display as
+        chosen in the plugin, all other settings from the INI. The options of the main window do not apply.
         """
         o = core.JobOptions.from_config(cfg or self.cfg)
         def within(n, limits, default):
@@ -1135,7 +1135,8 @@ class App(BaseTk):
                        mode=job.mode if job.mode in core.MODES else o.mode,
                        use_filter=o.use_filter if job.use_filter is None else job.use_filter,
                        max_chars=within(job.chars, core.CHARS_RANGE, o.max_chars),
-                       max_lines=within(job.lines, core.LINES_RANGE, o.max_lines))
+                       max_lines=within(job.lines, core.LINES_RANGE, o.max_lines),
+                       smooth=job.smooth)
 
     def _log_resolve_options(self, job):
         o = self._resolve_options(job)
@@ -1147,7 +1148,9 @@ class App(BaseTk):
             filter=T("resolve.filter_on" if o.use_filter else "resolve.filter_off")
             + ("" if job.use_filter is not None else ini),
             layout=T("resolve.layout", chars=o.max_chars, lines=o.max_lines)
-            + ("" if (job.chars, job.lines) == (o.max_chars, o.max_lines) else ini)) + "\n")
+            + ("" if (job.chars, job.lines) == (o.max_chars, o.max_lines) else ini),
+            smooth=T("resolve.smooth_on" if (self.cfg.smooth if o.smooth is None else o.smooth) else "resolve.smooth_off")
+            + ("" if job.smooth is not None else ini)) + "\n")
         prompt = {"ini": "resolve.prompt_ini", "custom": "resolve.prompt_custom"}.get(o.prompt_mode,
                                                                                      "resolve.prompt_none")
         self._append_log(i18n.line("info", "resolve.log_job_ini", prompt=T(prompt)) + "\n")
@@ -1172,6 +1175,8 @@ class App(BaseTk):
                 lang = "" if lang == "auto" else lang
             try:
                 res = wt_resolve.hand_over(it["job"], it["out"], lang, encoding=self.cfg.encoding,
+                                           close_window=self.cfg.resolve_close_plugin,
+                                           close_on_warning=self.cfg.resolve_close_warning,
                                            **self._extra_tracks(it))
             except (wt_resolve.ResolveError, OSError) as e:
                 self._append_log(f"{i18n.tag('error')}{e}\n")
@@ -1410,6 +1415,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         ("Lyrics", "line_gap"):        (float, 0, 2, "line_gap"),
         ("Menu", "timeout"):           (int, 0, 600, "timeout"),
         ("Resolve", "countdown"):      (int, 0, 600, "resolve_countdown"),
+        ("Resolve", "close_plugin"):   (int, 0, 600, "resolve_close_plugin"),
         ("Gaps", "min_length"):        (float, 0.3, 30, "gap_min"),
         ("Gaps", "margin_db"):         (float, 2, 30, "gap_margin"),
         ("Score", "threshold"):        (float, core.SCORE_MIN, core.SCORE_MAX, "score"),
@@ -1423,7 +1429,6 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.title(f"{T('set.title')} – {APP_NAME} {VERSION}")
         self.transient(app)
         s = app.scale
-        self.geometry(f"{int(900 * s)}x{int(660 * s)}+{app.winfo_rootx() + 50}+{app.winfo_rooty() + 30}")
         self.minsize(int(720 * s), int(620 * s))
 
         body = ttk.Frame(self, padding=10)
@@ -1442,13 +1447,17 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.orig_lang = {code: dict(buf) for code, buf in self.lang_buf.items()}
 
         bar = ttk.Frame(body)
-        bar.pack(fill="x", pady=(10, 0))
+        # packed before the tabs: in a window that is too low the tabs get shorter, not the buttons
+        bar.pack(side="bottom", fill="x", pady=(10, 0), before=nb)
         b_ini = ttk.Button(bar, text=T("set.open_ini"), command=lambda: app._open_path(app.ini_path))
         b_ini.pack(side="left")
         tip(b_ini, "ini_open", app.scale)
         ttk.Label(bar, text=T("set.backup_note"), foreground="#77767b").pack(side="left", padx=12)
         ttk.Button(bar, text=T("set.save"), style="Accent.TButton", command=self._save).pack(side="right")
         ttk.Button(bar, text=T("main.cancel"), command=self.destroy).pack(side="right", padx=8)
+        self.update_idletasks()
+        h = min(max(int(660 * s), self.winfo_reqheight()), self.winfo_screenheight() - int(80 * s))
+        self.geometry(f"{int(900 * s)}x{h}+{app.winfo_rootx() + 50}+{app.winfo_rooty() + 30}")
         self.grab_set()
         self.focus_set()
 
@@ -1807,6 +1816,13 @@ class SettingsDialog(tk.Toplevel if tk else object):
             cb = ttk.Checkbutton(f, text=T(f"set.resolve_{key}"), variable=self._var("Resolve", key, value, True))
             cb.grid(row=r + 2 + i, column=0, columnspan=3, sticky="w", pady=(8 if i == 0 else 3, 0))
             tip(cb, f"resolve_{key}", sc)
+        var = self._switch(f, r + 4, "resolve_close_plugin", "Resolve", "close_plugin", c.resolve_close_plugin,
+                           10, 1, 600, 1)
+        cb = ttk.Checkbutton(f, text=T("set.resolve_close_plugin_warning"),
+                             variable=self._var("Resolve", "close_plugin_warning", c.resolve_close_warning, True))
+        cb.grid(row=r + 5, column=0, columnspan=3, sticky="w", padx=(26, 0), pady=(2, 0))
+        tip(cb, "resolve_close_plugin_warning", sc)
+        self._bind_state(var.on, [cb])
 
     def _plugin_state(self) -> str:
         return plugin_state_text(*wt_resolve.plugin_status(VERSION, i18n.current()))

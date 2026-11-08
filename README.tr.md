@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.7.7** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.7.8** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -95,7 +95,7 @@ Bu sürümler gerçek kullanımda birlikte çalışıyor (Python 3.13, Windows 1
 | `torchcodec` | 0.7.0 | WhisperX `<0.8`, pyannote-audio 4 `≥0.7` ister, yani yalnızca 0.7.x uyar. torch 2.8'e aittir |
 | `whisperx` | **3.8.6** | Workbench 3.8.x ile test edildi; sistem kontrolü 3.8'in altında uyarır |
 | `faster-whisper` | 1.2.1 | `ctranslate2 <5` ister |
-| `ctranslate2` | 4.7.1 | **4.5'ten** itibaren CUDA 12 + **cuDNN 9** kullanılır, bunu torch 2.8 birlikte getirir. 4.4 ve öncesi cuDNN 8 bekler ve başarısız olur |
+| `ctranslate2` | 4.8.5 | **4.5'ten** itibaren CUDA 12 + **cuDNN 9** kullanılır, bunu torch 2.8 birlikte getirir. 4.4 ve öncesi cuDNN 8 bekler ve başarısız olur |
 | `pyannote-audio` | 4.0.7 | Konuşma algılama (VAD). torch ≥ 2.8 ve torchcodec ≥ 0.7 ister |
 | `numpy` | ≥ 2.1 (WhisperX kurar) | `numpy<2` isteyen paketler aynı venv'de olamaz |
 | `uroman` | 1.3.1.1 | Yalnızca şarkı sözü modu için (hizalama için Latin harflerine çevirme) |
@@ -120,7 +120,7 @@ whisperx 3.8.x ── ister: torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.23.
 | torch'tan **önce** `pip install whisperx` | torch PyPI'dan CPU sürümü olarak gelir → sistem kontrolü: “torch, CUDA'sız bir sürüm” | Her zaman önce torch'u PyTorch dizininden kurun (aşağıda 4. adım) |
 | `pip install -U whisperx` veya başka bir paket farklı bir torch çeker | torch/torchaudio değişir, şarkı sözleri veya VAD başarısız olur, CUDA gider | Önce `pip install --dry-run …` çalıştırın; `torch`, `torchaudio`, `torchvision`, `torchcodec` veya `ctranslate2` değişecekse iptal edin |
 | torch ve torchaudio farklı sürüm veya derlemeden | torchaudio'da içe aktarma hataları (`DLL load failed`, `WinError 127`), şarkı sözleri başarısız olur; sistem kontrolü uyarır | İkisini aynı sürüm ve `--index-url` ile birlikte yeniden kurun |
-| `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | ctranslate2 ≥ 4.5 kullanın (test edilen: 4.7.1) |
+| `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | ctranslate2 ≥ 4.5 kullanın (test edilen: 4.8.5) |
 | RTX 50xx'te eski bir CUDA derlemesi (cu121/cu124) | `no kernel image is available for execution on the device` | cu128 derlemesini kullanın |
 | GTX 10xx, GTX 9xx veya Titan V'de cu128 derlemesi | “… CUDA capability sm_61 is not compatible …” uyarısı, ardından `no kernel image is available` | cu126 derlemesini kullanın (4. adım) |
 | Farklı bir torch içeren **mevcut** bir venv'de `pip install -r requirements.txt` | pip o torch'u PyPI'daki CPU sürümüyle değiştirir ve orada kurulu WhisperX de artık çalışmaz | Asla mevcut bir venv'e kurmayın; kendi venv'i olan yeni bir klasör kullanın |
@@ -333,11 +333,11 @@ Workbench'i güncelledikten, klasörünü taşıdıktan ve arayüz dilini deği�
 
 ### İş akışı
 
-1. Zaman çizelgesini Resolve'da açın. Yalnızca bir bölüm yazıya dökülecekse In ve Out koyun, yoksa tüm zaman çizelgesi kullanılır. Eklentiyi başlatın, gerekirse bu iş için **Dil** ve **Mod** seçin (“Workbench varsayılanı” INI'deki varsayılanı kullanır), **Ses filtresi**ni açın veya kapatın, *Cümle cümle* modu için **Karakter/satır** ve **Satır/blok** değerlerini ayarlayın (diğer modlarda gri) ve **Yazıya dök** düğmesine basın. Eklenti penceresi konumunu, boyutunu ve bu seçimleri hatırlar. İki sayı INI'deki değerlerle başlar.
+1. Zaman çizelgesini Resolve'da açın. Yalnızca bir bölüm yazıya dökülecekse In ve Out koyun, yoksa tüm zaman çizelgesi kullanılır. Eklentiyi başlatın, gerekirse bu iş için **Dil** ve **Mod** seçin (“Workbench varsayılanı” INI'deki varsayılanı kullanır), **Ses filtresi**ni açın veya kapatın, *Cümle cümle* modu için **Karakter/satır** ve **Satır/blok** değerlerini ayarlayın (diğer modlarda gri), **Akıcı göster** seçin (Workbench varsayılanı, açık veya kapalı) ve **Yazıya dök** düğmesine basın. Eklenti penceresi konumunu, boyutunu ve bu seçimleri hatırlar. İki sayı INI'deki değerlerle başlar.
 2. Eklenti, zaman çizelgesinin ana miksini WAV olarak Workbench'in `resolve_temp\<iş>\` klasörüne render eder. Ardından render işi silinir; sayfa, Deliver ayarları ve In/Out işaretleri eskisi gibidir – bir hatadan veya *İptal*'den sonra da. Sonra Workbench'i WAV ile başlatır; zaten açık olan bir Workbench dosyayı devralır, modelleri yüklü kalır.
-3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Dil, mod, ses filtresi, satır başına karakter ve satır sayısı eklenti penceresinden, diğer tüm ayarlar INI'den gelir: prompt ve *Ayarlar → Altyazılar*'daki tüm kurallar. Ana penceredeki seçenekler DaVinci işleri için geçerli değildir. Günlük ikisini de gösterir. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız. Bu sırada eklenti penceresi işin nerede olduğunu gösterir: geri sayım, yüzde olarak transkripsiyon, bitti.
+3. Workbench'te iş “*Zaman çizelgesi* · DaVinci Resolve” olarak listede görünür. Kendi geri sayımı vardır (*Ayarlar → DaVinci Resolve*, varsayılan 10 saniye). Dil, mod, ses filtresi, satır başına karakter, satır sayısı ve “Akıcı göster” eklenti penceresinden, diğer tüm ayarlar INI'den gelir: prompt ve *Ayarlar → Altyazılar*'daki tüm kurallar. Ana penceredeki seçenekler DaVinci işleri için geçerli değildir. Günlük ikisini de gösterir. Geri sayım kapalıysa *Başlat*'a kendiniz basarsınız. Bu sırada eklenti penceresi işin nerede olduğunu gösterir: geri sayım, yüzde olarak transkripsiyon, bitti.
 4. İş bitince altyazıları kontrol edin ve **→ DaVinci'ye aktar** düğmesine basın (iş bitince mavi olur). SRT, zaman çizelgesindeki aralığın konumuna kaydırılır ve `resolve_temp\<ZamanÇizelgesi>_<DİL>_<tarih-saat>.srt` olarak kaydedilir; bu klasör son 10 aktarımın SRT'lerini saklar, 11. aktarım en eskisini siler. Ad her seferinde yenidir, çünkü Resolve medya havuzunda zaten bulunan bir dosyayı yeniden okumaz – ilk içe aktarmanın altyazılarını yerleştirirdi. Ardından Workbench kendini simge durumuna küçültür – açık kalır, modelleri bir sonraki iş için yüklü kalır. *Ayarlar → DaVinci Resolve* altında iş yazıya dökülür dökülmez otomatik aktarımı ve küçültmek yerine kapatmayı açabilirsiniz.
-5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir; eklenti penceresi sonuçla öne gelir ve *Tamam*'a basana kadar orada kalır.
+5. Resolve'da bekleyen eklenti işin zaman çizelgesine geri döner, SRT'yi medya havuzundaki *WhisperX* klasörüne aktarır ve **ilk boş altyazı izine** (ST1, ST2, …) – ya da yeni bir ize – yerleştirir. İzin adı `WhisperX DE` olur (bu ad varsa `WhisperX DE 2`) ve etkin altyazı izi olarak kalır. Ardından WAV ve iş klasörü silinir; eklenti penceresi sonuçla öne gelir. Uyarısız bir içe aktarmadan sonra 10 saniye içinde kapanır; aksi halde *Tamam*'a basana kadar açık kalır. İkisini de *Ayarlar → DaVinci Resolve → 3 · DaVinci Resolve'dan gelen işler* altında ayarlarsınız.
 6. En fazla üç ek altyazı izi kontrole yardım eder; her biri *Ayarlar → DaVinci Resolve → Analiz* altında ayrı ayrı açılıp kapatılır: **WhisperX boşluklar** boşluk kontrolünden metinsiz yüksek sesli yerleri, **WhisperX çok hızlı** saniyede 17 karakterden fazla olan altyazıları (*Cümle cümle* modu), **WhisperX belirsiz** skor kontrolünün kelimelerini işaretler (skor kontrolü açık olduğu sürece; *Analiz* altındaki satır, *Konuşma algılama* altındakiyle aynı ayardır). Resolve'da bunlar arasında gezinin, sonra izleri silin. Bir iz yalnızca gösterilecek bir şey varsa eklenir ve transkript izi etkin iz olarak kalır.
 
 ![Workbench'te aktarılmaya hazır bir DaVinci Resolve işi](docs/images/resolve-job.png)

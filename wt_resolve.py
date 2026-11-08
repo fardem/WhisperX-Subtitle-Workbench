@@ -136,6 +136,7 @@ class ResolveJob:
     use_filter:  bool | None = None   # audio filter chosen in the plugin (None = from the INI)
     chars:       int = 0         # characters per line chosen in the plugin (0 = from the INI)
     lines:       int = 0         # lines per subtitle chosen in the plugin (0 = from the INI)
+    smooth:      bool | None = None   # "Smooth display" chosen in the plugin (None = from the INI)
 
     @classmethod
     def from_values(cls, folder, v: dict) -> "ResolveJob":
@@ -154,6 +155,7 @@ class ResolveJob:
                 return 0
         start = frame("start_frame")
         flt = v.get("filter", "").strip().lower()
+        smooth = v.get("smooth", "").strip().lower()
         return cls(folder=Path(folder), audio=v["audio"], job_id=v.get("job", ""),
                    timeline=v.get("timeline", ""), timeline_id=v.get("timeline_id", ""),
                    project=v.get("project", ""), fps=parse_fps(v.get("fps", "")), fps_text=v.get("fps", ""),
@@ -163,7 +165,8 @@ class ResolveJob:
                    whole=v.get("range", "all") != "inout", language=v.get("language", "").lower(),
                    mode=v.get("mode", "").lower(),
                    use_filter=None if flt == "" else flt in ("1", "true", "on", "yes"),
-                   chars=whole("chars"), lines=whole("lines"))
+                   chars=whole("chars"), lines=whole("lines"),
+                   smooth=None if smooth == "" else smooth in ("1", "true", "on", "yes"))
 
     def values(self) -> dict:
         """The keys of job.txt, in the order the plugin writes them."""
@@ -173,7 +176,8 @@ class ResolveJob:
                 "start_tc": self.start_tc, "range": "all" if self.whole else "inout", "in_frame": self.in_frame,
                 "out_frame": self.out_frame, "end_frame": self.end_frame, "language": self.language,
                 "mode": self.mode, "filter": "" if self.use_filter is None else "1" if self.use_filter else "0",
-                "chars": self.chars or "", "lines": self.lines or ""}
+                "chars": self.chars or "", "lines": self.lines or "",
+                "smooth": "" if self.smooth is None else "1" if self.smooth else "0"}
 
     @property
     def audio_path(self) -> Path:
@@ -384,7 +388,7 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8", keep
 
 def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir=None,
               gaps=None, gap_label=None, fast_cps: float | None = None, fast_label=None,
-              score=None, stamp: str | None = None) -> HandOver:
+              score=None, stamp: str | None = None, close_window: int = 0, close_on_warning: bool = False) -> HandOver:
     """
     "Hand over to DaVinci": shift the SRT (read again from disk), keep it in resolve_temp/, write done.txt.
     gaps, fast_cps and score each become an SRT for an own track in the job folder (_gaps/_fast/_score).
@@ -416,7 +420,8 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
     if score:
         extra["score"] = [(s + offset, e + offset, [text]) for s, e, text in score]
     done = {"format": DONE_FORMAT, "job": job.job_id, "srt": target, "lang": code, "cues": cues,
-            "first": f"{first:.3f}", "offset": f"{offset:.3f}"}
+            "first": f"{first:.3f}", "offset": f"{offset:.3f}",
+            "close_window": max(int(close_window), 0), "close_on_warning": 1 if close_on_warning else 0}
     for key, items in extra.items():
         path = job.folder / f"{stem}_{key}.srt"
         path.write_text("".join(f"{n}\n{_fmt_ms(round(s * 1000))} --> {_fmt_ms(round(e * 1000))}\n"

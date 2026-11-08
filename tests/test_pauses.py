@@ -198,3 +198,14 @@ def test_pipeline_raw_screen_is_empty_during_the_pause(tmp_path):
     assert len(times) == 2                                                          # split at the 4 s pause
     assert times[0][1] == pytest.approx(words[4]["end"] + 1.0)                      # "das." + 1 s hold
     assert times[1][0] == pytest.approx(words[5]["start"])                          # "Danach" exactly on time
+
+
+def test_smooth_display_chosen_for_the_job_wins_over_the_ini(tmp_path):
+    ini = tmp_path / "whisper_tool.ini"
+    ini.write_text("[Layout]\nsmooth = 0\npause = 2\npause_hold = 5\n", encoding="utf-8")
+    cfg = core.Config(ini)
+    cues = [(0.0, 1.0, ["a"]), (1.5, 2.0, ["b"]), (8.0, 9.0, ["c"])]
+    assert core.display_cues(cues, "sentence", cfg) == cues
+    on = core.display_cues(cues, "sentence", cfg, smooth=True)
+    assert on[0][1] == 1.5 and on[1][1] == 3.0          # held up to the next one; real pause: hold of pause / 2
+    assert core.display_cues(cues, "lyrics", cfg, smooth=True) == cues

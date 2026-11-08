@@ -230,6 +230,8 @@ class Config:
         self.resolve_gaps      = g("Resolve", "track_gaps", extra, _bool)
         self.resolve_fast      = g("Resolve", "track_fast", extra, _bool)
         self.resolve_close     = g("Resolve", "close_after", False, _bool)
+        self.resolve_close_plugin = max(g("Resolve", "close_plugin", 10, int), 0)
+        self.resolve_close_warning = g("Resolve", "close_plugin_warning", False, _bool)
         self.resolve_skip      = g("Resolve", "skip_plugin_update", "")
 
         if self.score_threshold != 0 and not SCORE_MIN <= self.score_threshold <= SCORE_MAX:
@@ -653,11 +655,12 @@ def smooth_cues(cues: list, pause: float, hold: float, duration: float | None = 
     return out
 
 
-def display_cues(cues: list, mode: str, cfg, duration: float | None = None) -> list:
+def display_cues(cues: list, mode: str, cfg, duration: float | None = None, smooth: bool | None = None) -> list:
     """Display rule for speech (sentences, word by word, raw) if "smooth" is on – lyrics keep their own."""
-    if mode == "lyrics" or not cfg.smooth:
+    if mode == "lyrics" or not (cfg.smooth if smooth is None else smooth):
         return cues
-    return smooth_cues(cues, cfg.pause, cfg.pause_hold, duration)
+    hold = cfg.pause_hold if cfg.pause_hold < cfg.pause else round(cfg.pause / 2, 2)   # rule of Config.__init__
+    return smooth_cues(cues, cfg.pause, hold, duration)
 
 
 def fast_cues(cues: list, max_cps: float = READING_CPS) -> list[tuple[float, float, float]]:
@@ -907,6 +910,7 @@ class JobOptions:
     keep_json:     bool  = False
     line_hold:     float = 0.0
     live_lines:    bool  = True        # print recognized lines during transcription
+    smooth:        bool | None = None  # None = [Layout] smooth
 
     @classmethod
     def from_config(cls, cfg: Config) -> "JobOptions":
@@ -1273,7 +1277,7 @@ class Engine:
             info["score_list"] = self._report_score(result, src)            # also for DaVinci Resolve
             info["unsure"] = len(info["score_list"])
 
-        cues = display_cues(cues, mode, cfg, duration)      # pause rule – lyrics keep their own
+        cues = display_cues(cues, mode, cfg, duration, opts.smooth)    # pause rule – lyrics keep their own
         if mode == "sentence":
             info["fast"] = self._report_fast(cues)
         write_srt(out, cues, cfg.encoding)
@@ -1464,10 +1468,9 @@ def check_environment(cfg: Config) -> list[tuple[str, str]]:
         res.append(("error", T("check.ffmpeg_missing", path=cfg.ffmpeg)))
 
     for lang, name in [("", cfg.model)] + sorted(cfg.models.items()):
-        label = T("set.model") + (f" {lang}" if lang else "")
         if lang in cfg.models_off:
-            res.append(("info", f"{label}: {name} · {T('check.model_off')}"))
             continue
+        label = T("set.model") + (f" {lang}" if lang else "")
         _, compute, takes_prompt = cfg.model_for(lang)
         extra = (f" · {compute}" if lang and compute != cfg.compute_type else "") + \
                 ("" if takes_prompt else f" · {T('check.no_prompt')}")

@@ -311,7 +311,7 @@
     "sec_resolve_analysis": "2 · Analiz",
     "sec_resolve_analysis_info": "Kontrol izleri: kontrol edilecek yerleri işaretleyen ek altyazı izleri. Altyazıların parçası değildir. Bir iz yalnızca gösterilecek bir şey varsa eklenir. Kontrolden sonra izi Resolve'da silin.",
     "sec_resolve_jobs": "3 · DaVinci Resolve'dan gelen işler",
-    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Dil, mod, ses filtresi, satır başına karakter ve blok başına satır eklenti penceresinden, diğer tüm ayarlar INI'den gelir. Ana penceredeki seçenekler bu işler için geçerli değildir.",
+    "sec_resolve_jobs_info": "DaVinci Resolve'dan gelen bir işin, sürüklenen dosyalarınkinden bağımsız kendi geri sayımı vardır. Dil, mod, ses filtresi, satır başına karakter, blok başına satır ve “Akıcı göster” eklenti penceresinden, diğer tüm ayarlar INI'den gelir. Ana penceredeki seçenekler bu işler için geçerli değildir.",
     "sw_resolve_countdown": "DaVinci Resolve'dan gelen işleri otomatik başlat:",
     "sw_resolve_countdown_unit": "saniye sonra",
     "resolve_countdown": "DaVinci işleri için geri sayım",
@@ -321,7 +321,11 @@
     "resolve_track_fast": "Çok hızlı altyazılar kendi izinde “WhisperX çok hızlı” (yalnızca cümle cümle)",
     "sw_resolve_score": "Belirsiz kelimeler kendi izinde “WhisperX belirsiz”: skoru",
     "sw_resolve_score_unit": "altında (Konuşma algılama sekmesindeki gibi)",
-    "resolve_close_after": "Aktarımdan sonra Workbench'i küçültmek yerine kapat"
+    "resolve_close_after": "Aktarımdan sonra Workbench'i küçültmek yerine kapat",
+    "sw_resolve_close_plugin": "Aktarımdan sonra eklenti penceresini kapat:",
+    "sw_resolve_close_plugin_unit": "saniye sonra",
+    "resolve_close_plugin": "Eklenti penceresini kapat",
+    "resolve_close_plugin_warning": "Bir uyarı olsa da kapat"
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -381,7 +385,6 @@
     "ct2_folder": "CTranslate2 klasörü",
     "hf_download": "Hugging Face – ilk kullanımda indirilir",
     "no_prompt": "prompt olmadan",
-    "model_off": "kapalı",
     "gpu": "Ekran kartı",
     "torch_cpu": "torch, CUDA'sız bir sürüm ({version})",
     "no_driver": "sürücüye veya ekran kartına ulaşılamıyor",
@@ -685,10 +688,12 @@
       "other": "{n} eski DaVinci Resolve iş klasörü kaldırıldı"
     },
     "fast_cue": "çok hızlı: saniyede {cps} karakter",
-    "log_job_options": "DaVinci Resolve eklentisinden: {lang} · {mode} · {filter} · {layout}",
+    "log_job_options": "DaVinci Resolve eklentisinden: {lang} · {mode} · {filter} · {layout} · {smooth}",
     "layout": "{chars} karakter × {lines} satır",
     "filter_on": "ses filtresi açık",
     "filter_off": "ses filtresi kapalı",
+    "smooth_on": "akıcı gösterim açık",
+    "smooth_off": "akıcı gösterim kapalı",
     "log_job_ini": "Diğer ayarlar INI'den: {prompt} · kurallar Ayarlar → Altyazılar'dan",
     "from_ini": "INI",
     "prompt_ini": "dile göre prompt",
@@ -745,6 +750,7 @@
     "position_off": "Konumu kontrol edin: ilk altyazı {actual}. karede, beklenen {expected}. kareydi (fark {diff} kare = {sec} sn).",
     "position_start_tc": "Fark tam olarak zaman çizelgesinin başlangıç zaman kodu kadar – lütfen bildirin (Workspace → Console).",
     "srt_kept": "SRT burada kalıyor: {path}",
+    "closing": "Pencere {n} sn içinde kapanıyor.",
     "timeline_gone": "“{name}” zaman çizelgesi artık yok. SRT burada kalıyor: {path} – doğru zaman çizelgesini açıp “SRT içe aktar …” kullanın.",
     "cancelled": "İptal edildi. İş klasörü kaldırıldı.",
     "choose_srt": "SRT dosyası seçin",
@@ -779,6 +785,9 @@
     "track_score": "WhisperX belirsiz",
     "placed_extra": "+ {n}, {track} numaralı “{name}” altyazı izinde – kontrol edin, sonra izi silin.",
     "label_filter": "Ses filtresi",
+    "label_smooth": "Akıcı göster",
+    "opt_on": "açık",
+    "opt_off": "kapalı",
     "label_chars": "Karakter/satır",
     "label_lines": "Satır/blok",
     "err_numbers": "Karakter/satır için {chars_lo} ile {chars_hi} arasında, satır/blok için {lines_lo} ile {lines_hi} arasında bir tam sayı gerekir.",
@@ -1162,6 +1171,8 @@
     "resolve_track_gaps": "“WhisperX boşluklar” metinsiz yüksek sesli yerleri işaretler. Konuşma algılama sekmesindeki boşluk kontrolü gerekir.",
     "resolve_track_fast": "“WhisperX çok hızlı” saniyede 17 karakterden fazla olan altyazıları işaretler. Yalnızca cümle cümle modunda.",
     "resolve_score": "“WhisperX belirsiz” skoru düşük kelimeleri işaretler. Bu, Konuşma algılama sekmesindeki skor kontrolüdür; bir değişiklik iki yerde birden geçerli olur.",
-    "resolve_close_after": "Simge durumunda Workbench modellerini yüklü tutar. Sonraki iş böylece yükleme süresi olmadan başlar."
+    "resolve_close_after": "Simge durumunda Workbench modellerini yüklü tutar. Sonraki iş böylece yükleme süresi olmadan başlar.",
+    "resolve_close_plugin": "Hatasız bir içe aktarmadan sonra DaVinci Resolve'daki eklenti penceresi bu süre sonunda kapanır. Durum satırı geri sayar. “Tamam” hemen kapatır, “Yazıya dök” veya “SRT içe aktar …” geri sayımı durdurur. İşaret yoksa pencere açık kalır.",
+    "resolve_close_plugin_warning": "Bir uyarı, Resolve'daki altyazıların sayısının veya konumunun doğru olmadığını bildirir. İşaret yoksa pencere bu durumda açık kalır."
   }
 }

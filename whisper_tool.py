@@ -1426,7 +1426,6 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.title(f"{T('set.title')} – {APP_NAME} {VERSION}")
         self.transient(app)
         s = app.scale
-        self.geometry(f"{int(900 * s)}x{int(660 * s)}+{app.winfo_rootx() + 50}+{app.winfo_rooty() + 30}")
         self.minsize(int(720 * s), int(620 * s))
 
         body = ttk.Frame(self, padding=10)
@@ -1445,13 +1444,17 @@ class SettingsDialog(tk.Toplevel if tk else object):
         self.orig_lang = {code: dict(buf) for code, buf in self.lang_buf.items()}
 
         bar = ttk.Frame(body)
-        bar.pack(fill="x", pady=(10, 0))
+        # packed before the tabs: in a window that is too low the tabs get shorter, not the buttons
+        bar.pack(side="bottom", fill="x", pady=(10, 0), before=nb)
         b_ini = ttk.Button(bar, text=T("set.open_ini"), command=lambda: app._open_path(app.ini_path))
         b_ini.pack(side="left")
         tip(b_ini, "ini_open", app.scale)
         ttk.Label(bar, text=T("set.backup_note"), foreground="#77767b").pack(side="left", padx=12)
         ttk.Button(bar, text=T("set.save"), style="Accent.TButton", command=self._save).pack(side="right")
         ttk.Button(bar, text=T("main.cancel"), command=self.destroy).pack(side="right", padx=8)
+        self.update_idletasks()
+        h = min(max(int(660 * s), self.winfo_reqheight()), self.winfo_screenheight() - int(80 * s))
+        self.geometry(f"{int(900 * s)}x{h}+{app.winfo_rootx() + 50}+{app.winfo_rooty() + 30}")
         self.grab_set()
         self.focus_set()
 

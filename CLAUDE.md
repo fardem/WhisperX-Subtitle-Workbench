@@ -181,9 +181,10 @@ Version: `# INI without [Score]`, nicht `# INI of 0.6.3`.
 - Ein Reiter des Einstellungsdialogs ist ein einziges Grid, damit die Zahlenfelder
   untereinander stehen. Zeilen, die nicht dazu passen, bekommen ein eigenes Frame
   (Beispiel: Plugin-Status in `_tab_resolve`).
-- Die Bildschirmfotos in `docs/images/` zeigen die englische Oberfläche unter Windows.
-  Ändert sich ein Dialog, wird das Bild neu aufgenommen. Das kann nur der Betreiber;
-  Claude nennt in der Antwort, welches Bild veraltet ist.
+- Die Bildschirmfotos in `docs/images/` zeigen die englische Oberfläche der Workbench,
+  aufgenommen unter Linux mit Xvfb (100 dpi, Hauptfenster 1042 × 791). Ändert sich ein Dialog
+  oder ein Text darin, nimmt Claude das Bild neu auf und nennt es in der Antwort. Bilder aus
+  DaVinci Resolve nimmt der Betreiber auf.
 
 ## 5. Ablauf
 

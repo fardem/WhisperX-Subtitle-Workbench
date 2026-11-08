@@ -8,6 +8,8 @@ All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic
 
 - **Plugin window closes after the import.** After an import without errors the plugin window in DaVinci Resolve closes after 10 seconds; the status line counts down. *OK* closes it at once, *Transcribe* or *Import SRT …* stops the countdown. After a warning about the number or position of the subtitles it stays open. *Settings → DaVinci Resolve → 3 · Jobs from DaVinci Resolve* has two new rows: **Close the plugin window after the hand-over, after … seconds** (`[Resolve] close_plugin`, 0 = stays open) and **Close it after a warning too** (`close_plugin_warning`). The Workbench sends both with the hand-over (`done.txt`)
 - The system check no longer lists an own model that is switched off; it lists the own models that are on
+- The settings dialog takes the height that its tallest tab needs. Before, the buttons *Open INI in editor*, *Cancel* and *Save* could be cut off at the bottom. In a window made smaller by hand the tabs get shorter, not the buttons
+- New screenshots of *Settings → Subtitles*, *DaVinci Resolve* and *General* in the README
 - **Tested versions:** ctranslate2 4.8.5 (security fixes for loading model files, FP16 and BF16 attention on CUDA), certifi 2026.10.23, urllib3 2.8.0, requests 2.34.2, idna 3.20 and charset-normalizer 3.5.2 (downloads from Hugging Face). No other package changes
 
 ## [0.7.7] – 2026-11-07

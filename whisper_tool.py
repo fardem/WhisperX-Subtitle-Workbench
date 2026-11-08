@@ -444,7 +444,7 @@ class App(BaseTk):
         self.lang_choices, self.mode_choices = lang_choices(), mode_choices()
         self.v_lang   = tk.StringVar(value=label_of(self.lang_choices, cfg.default_language))
         self.v_mode   = tk.StringVar(value=label_of(self.mode_choices, cfg.default_mode))
-        self.v_chars  = tk.StringVar(value=str(cfg.default_chars))
+        self.v_chars  = tk.StringVar(value=str(cfg.default_cue_chars))
         self.v_lines  = tk.StringVar(value=str(cfg.default_lines))
         self.v_filter = tk.BooleanVar(value=cfg.default_filter)
         self.v_json   = tk.BooleanVar(value=cfg.keep_json)
@@ -762,7 +762,7 @@ class App(BaseTk):
             use_filter    = self.v_filter.get(),
             prompt_mode   = pmode,
             custom_prompt = self.v_ptext.get() if pmode == "custom" else "",
-            max_chars     = num(self.v_chars, int, *core.CHARS_RANGE, T("main.chars")),
+            cue_chars     = num(self.v_chars, int, *core.CHARS_RANGE, T("main.chars")),
             max_lines     = num(self.v_lines, int, *core.LINES_RANGE, T("main.lines")),
             keep_json     = self.v_json.get(),
             line_hold     = num(self.v_hold, float, 0, 10, T("main.hold")),
@@ -793,7 +793,7 @@ class App(BaseTk):
                 ("Menu", "ffmpeg"):          "1" if o.use_filter else "0",
                 ("Menu", "prompt_mode"):     o.prompt_mode,
                 ("Menu", "custom_prompt"):   " ".join(custom.split()),
-                ("Layout", "default_chars"): str(o.max_chars),
+                ("Layout", "default_cue_chars"): str(o.cue_chars),
                 ("Layout", "default_lines"): str(o.max_lines),
                 ("Output", "keep_json"):     "1" if o.keep_json else "0",
                 ("Lyrics", "line_hold"):     f"{o.line_hold:g}",
@@ -1124,7 +1124,7 @@ class App(BaseTk):
 
     def _resolve_options(self, job, cfg: core.Config | None = None) -> core.JobOptions:
         """
-        Options of a DaVinci Resolve job: language, mode, audio filter, characters, lines and smooth display as
+        Options of a DaVinci Resolve job: language, mode, audio filter, characters, lines and flickerfree as
         chosen in the plugin, all other settings from the INI. The options of the main window do not apply.
         """
         o = core.JobOptions.from_config(cfg or self.cfg)
@@ -1134,7 +1134,7 @@ class App(BaseTk):
                        language=job.language if job.language in ("auto",) + core.LANGS else o.language,
                        mode=job.mode if job.mode in core.MODES else o.mode,
                        use_filter=o.use_filter if job.use_filter is None else job.use_filter,
-                       max_chars=within(job.chars, core.CHARS_RANGE, o.max_chars),
+                       cue_chars=within(job.cue_chars, core.CHARS_RANGE, o.cue_chars),
                        max_lines=within(job.lines, core.LINES_RANGE, o.max_lines),
                        smooth=job.smooth)
 
@@ -1147,8 +1147,8 @@ class App(BaseTk):
             mode=label_of(self.mode_choices, o.mode) + ("" if job.mode else ini),
             filter=T("resolve.filter_on" if o.use_filter else "resolve.filter_off")
             + ("" if job.use_filter is not None else ini),
-            layout=T("resolve.layout", chars=o.max_chars, lines=o.max_lines)
-            + ("" if (job.chars, job.lines) == (o.max_chars, o.max_lines) else ini),
+            layout=T("resolve.layout", chars=o.cue_chars, lines=o.max_lines)
+            + ("" if (job.cue_chars, job.lines) == (o.cue_chars, o.max_lines) else ini),
             smooth=T("resolve.smooth_on" if (self.cfg.smooth if o.smooth is None else o.smooth) else "resolve.smooth_off")
             + ("" if job.smooth is not None else ini)) + "\n")
         prompt = {"ini": "resolve.prompt_ini", "custom": "resolve.prompt_custom"}.get(o.prompt_mode,

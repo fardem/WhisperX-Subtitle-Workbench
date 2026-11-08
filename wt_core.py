@@ -27,8 +27,8 @@ SAMPLE_RATE = 16000
 
 LANGS = ("de", "en", "ar", "tr")                 # languages with their own rules (names: lang/*.json → speechlang)
 MODES = ("sentence", "word", "raw")
-# Characters per line and lines per subtitle; the plugin has the same limits (resolve/WhisperX_Subtitles.lua).
-CHARS_RANGE = (10, 200)
+# Characters and lines of one subtitle; the plugin has the same limits (resolve/WhisperX_Subtitles.lua).
+CHARS_RANGE = (10, 400)
 LINES_RANGE = (1, 5)
 COMPUTE_TYPES = ("float16", "bfloat16", "float32", "int8_float16", "int8")
 MEDIA_EXT = (".mp3", ".mp4", ".wav", ".flac", ".m4a", ".aac", ".ogg", ".opus",
@@ -134,7 +134,7 @@ class LangRules:
 
 @dataclass
 class Layout:
-    max_chars:    int   = 45
+    max_chars:    int   = 45        # per line: Config.layout divides the characters of a subtitle by its lines
     max_lines:    int   = 1
     orphan_limit: int   = 4
     orphan_fill:  int   = 80
@@ -202,8 +202,10 @@ class Config:
         self.lyrics_suffix     = g("Output", "lyrics_suffix", ".lyric.srt")
         self.encoding          = g("Output", "encoding", "utf-8")
         # Layout
-        self.default_chars     = g("Layout", "default_chars", 45, int)
         self.default_lines     = g("Layout", "default_lines", 1, int)
+        # A missing default_cue_chars takes the old key default_chars (characters per line) × default_lines.
+        self.default_cue_chars = g("Layout", "default_cue_chars",
+                                   g("Layout", "default_chars", 45, int) * self.default_lines, int)
         self.orphan_limit      = g("Layout", "orphan_limit", 4, int)
         self.orphan_fill       = g("Layout", "orphan_min_fill", 80, int)
         self.max_duration      = g("Layout", "max_duration", 0.0, float)
@@ -289,8 +291,9 @@ class Config:
         return (self.device, self.compute_type, self.beam_size, self.suppress_numerals,
                 self.vad_method, self.vad_onset, self.vad_offset, self.chunk_size)
 
-    def layout(self, max_chars=None, max_lines=None) -> Layout:
-        return Layout(max_chars or self.default_chars, max_lines or self.default_lines,
+    def layout(self, cue_chars=None, lines=None) -> Layout:
+        lines = lines or self.default_lines
+        return Layout(max((cue_chars or self.default_cue_chars) // lines, 1), lines,
                       self.orphan_limit, self.orphan_fill, self.pause, self.max_duration,
                       balance=self.balance_lines)
 
@@ -905,7 +908,7 @@ class JobOptions:
     use_filter:    bool  = True
     prompt_mode:   str   = "ini"       # ini, custom, none
     custom_prompt: str   = ""
-    max_chars:     int   = 45
+    cue_chars:     int   = 45          # characters of one subtitle, spread over max_lines
     max_lines:     int   = 1
     keep_json:     bool  = False
     line_hold:     float = 0.0
@@ -916,7 +919,7 @@ class JobOptions:
     def from_config(cls, cfg: Config) -> "JobOptions":
         return cls(language=cfg.default_language, mode=cfg.default_mode, use_filter=cfg.default_filter,
                    prompt_mode=cfg.prompt_mode, custom_prompt=cfg.custom_prompt,
-                   max_chars=cfg.default_chars, max_lines=cfg.default_lines, keep_json=cfg.keep_json,
+                   cue_chars=cfg.default_cue_chars, max_lines=cfg.default_lines, keep_json=cfg.keep_json,
                    line_hold=cfg.line_hold, live_lines=cfg.live_lines)
 
 
@@ -1234,7 +1237,7 @@ class Engine:
             self.log(i18n.line("json", "core.json_rebuild", name=src.name))
             result = json.loads(src.read_text(encoding="utf-8"))
             lang = result.get("language") or (opts.language if opts.language != "auto" else "de")
-            cues, mode = build_cues(result, opts.mode, cfg.rules(lang), cfg.layout(opts.max_chars, opts.max_lines))
+            cues, mode = build_cues(result, opts.mode, cfg.rules(lang), cfg.layout(opts.cue_chars, opts.max_lines))
             if "{" in cfg.speech_suffix:
                 out = src.with_name(src.stem + fill_suffix(cfg.speech_suffix, result.get("model", "json"), lang))
 
@@ -1265,7 +1268,7 @@ class Engine:
                 json_out = src.with_name(src.stem + ".json")
                 json_out.write_text(json.dumps(result, ensure_ascii=False, default=_json_default), encoding="utf-8")
                 self.log(i18n.line("json", "core.json_saved", name=json_out.name))
-            cues, mode = build_cues(result, opts.mode, rules, cfg.layout(opts.max_chars, opts.max_lines))
+            cues, mode = build_cues(result, opts.mode, rules, cfg.layout(opts.cue_chars, opts.max_lines))
             duration = audio.shape[0] / SAMPLE_RATE
             if mode != opts.mode:
                 self.log(i18n.line("warn", "core.no_word_times", mode=T(f"mode.{mode}")))

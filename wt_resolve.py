@@ -134,9 +134,9 @@ class ResolveJob:
     language:    str = ""        # chosen in the plugin ("" = Workbench default from the INI)
     mode:        str = ""        # chosen in the plugin ("" = Workbench default from the INI)
     use_filter:  bool | None = None   # audio filter chosen in the plugin (None = from the INI)
-    chars:       int = 0         # characters per line chosen in the plugin (0 = from the INI)
+    cue_chars:   int = 0         # characters of one subtitle chosen in the plugin (0 = from the INI)
     lines:       int = 0         # lines per subtitle chosen in the plugin (0 = from the INI)
-    smooth:      bool | None = None   # "Smooth display" chosen in the plugin (None = from the INI)
+    smooth:      bool | None = None   # "Flickerfree" chosen in the plugin (None = from the INI)
 
     @classmethod
     def from_values(cls, folder, v: dict) -> "ResolveJob":
@@ -156,6 +156,7 @@ class ResolveJob:
         start = frame("start_frame")
         flt = v.get("filter", "").strip().lower()
         smooth = v.get("smooth", "").strip().lower()
+        old_plugin = whole("chars") * whole("lines")    # an older plugin wrote characters per line
         return cls(folder=Path(folder), audio=v["audio"], job_id=v.get("job", ""),
                    timeline=v.get("timeline", ""), timeline_id=v.get("timeline_id", ""),
                    project=v.get("project", ""), fps=parse_fps(v.get("fps", "")), fps_text=v.get("fps", ""),
@@ -165,7 +166,7 @@ class ResolveJob:
                    whole=v.get("range", "all") != "inout", language=v.get("language", "").lower(),
                    mode=v.get("mode", "").lower(),
                    use_filter=None if flt == "" else flt in ("1", "true", "on", "yes"),
-                   chars=whole("chars"), lines=whole("lines"),
+                   cue_chars=whole("cue_chars") or old_plugin, lines=whole("lines"),
                    smooth=None if smooth == "" else smooth in ("1", "true", "on", "yes"))
 
     def values(self) -> dict:
@@ -176,7 +177,7 @@ class ResolveJob:
                 "start_tc": self.start_tc, "range": "all" if self.whole else "inout", "in_frame": self.in_frame,
                 "out_frame": self.out_frame, "end_frame": self.end_frame, "language": self.language,
                 "mode": self.mode, "filter": "" if self.use_filter is None else "1" if self.use_filter else "0",
-                "chars": self.chars or "", "lines": self.lines or "",
+                "cue_chars": self.cue_chars or "", "lines": self.lines or "",
                 "smooth": "" if self.smooth is None else "1" if self.smooth else "0"}
 
     @property

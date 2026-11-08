@@ -187,3 +187,13 @@ def test_ini_without_close_plugin_closes_the_plugin_window_after_10_seconds(tmp_
     assert (cfg.resolve_close_plugin, cfg.resolve_close_warning) == (10, False)
     template = core.Config(EXAMPLE)
     assert (template.resolve_close_plugin, template.resolve_close_warning) == (10, False)
+
+
+def test_ini_with_characters_per_line_keeps_its_subtitles(tmp_path):
+    ini = tmp_path / "old.ini"
+    ini.write_text("[Layout]\ndefault_chars = 42\ndefault_lines = 2\n", encoding="utf-8")
+    cfg = core.Config(ini)
+    assert cfg.default_cue_chars == 84 and cfg.layout().max_chars == 42
+    assert (cfg.layout(54, 1).max_chars, cfg.layout(54, 2).max_chars, cfg.layout(55, 2).max_chars) == (54, 27, 27)
+    ini.write_text("[Layout]\ndefault_chars = 42\ndefault_cue_chars = 60\ndefault_lines = 2\n", encoding="utf-8")
+    assert core.Config(ini).default_cue_chars == 60

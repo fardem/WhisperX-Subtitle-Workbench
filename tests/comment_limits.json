@@ -1,6 +1,6 @@
 {
   "resolve/WhisperX_Subtitles.lua": {
-    "lines": 98,
+    "lines": 99,
     "long_blocks": 1
   },
   "resolve/tools/probe_subtitles.lua": {
@@ -68,7 +68,7 @@
     "long_blocks": 0
   },
   "tests/test_resolve_plugin.py": {
-    "lines": 56,
+    "lines": 57,
     "long_blocks": 0
   },
   "tests/test_score.py": {
@@ -92,7 +92,7 @@
     "long_blocks": 0
   },
   "whisper_tool.example.ini": {
-    "lines": 97,
+    "lines": 98,
     "long_blocks": 2
   },
   "whisper_tool.py": {
@@ -104,7 +104,7 @@
     "long_blocks": 0
   },
   "wt_core.py": {
-    "lines": 193,
+    "lines": 196,
     "long_blocks": 0
   },
   "wt_i18n.py": {
@@ -112,7 +112,7 @@
     "long_blocks": 0
   },
   "wt_resolve.py": {
-    "lines": 91,
+    "lines": 92,
     "long_blocks": 0
   },
   "wt_version.py": {

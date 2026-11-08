@@ -78,7 +78,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, Workbench `.srt` altyaz�
 | NVIDIA ekran kartı | RTX 5080 (16 GB) | `large-v3` için ≥ 8 GB ekran kartı belleği önerilir. RTX 20xx veya daha yenisi; GTX 10xx ve daha eskileri başka bir PyTorch derlemesi gerektirir (4. adım). CPU ile de çalışır ama çok yavaştır |
 | NVIDIA sürücüsü | R570 veya daha yeni | CUDA 12.8 paketleri için gerekli. Yalnızca sürücü yeterli; CUDA araç setini kurmanız **gerekmez** |
 | Python | **3.13** (test edilen: 3.13.17; WhisperX 3.10–3.13'e izin verir) | python.org'dan, “tcl/tk and IDLE” (Tkinter) seçili olarak; bu varsayılan olarak işaretlidir. 3.14 değil: WhisperX 3.8, 3.14'ün altında bir sürüm ister. Python 3.10 ile kurulmuş mevcut bir venv çalışmaya devam eder; ancak 3.10 Ekim 2026'dan beri güvenlik güncellemesi almıyor |
-| ffmpeg | 6.x – 8.x | Ayrı bir program, pip paketi değil. Herhangi bir tam sürüm, örn. `winget install Gyan.FFmpeg` |
+| ffmpeg | 6.x – 9.x | Ayrı bir program, pip paketi değil. Herhangi bir tam sürüm, örn. `winget install Gyan.FFmpeg` |
 | İnternet | yalnızca ilk başlatmada | Whisper modeli (~3 GB), dile göre hizalama modelleri, MMS_FA (şarkı sözleri için ~1,2 GB) |
 
 Hugging Face token'ı gerekmez, çünkü Workbench konuşmacı ayrımı (diarization) kullanmaz.

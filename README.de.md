@@ -78,7 +78,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und die Workbench erstellt `.srt
 | NVIDIA-Grafikkarte | RTX 5080 (16 GB) | ≥ 8 GB Grafikspeicher empfohlen für `large-v3`. RTX 20xx oder neuer; GTX 10xx und älter brauchen einen anderen PyTorch-Build (Schritt 4). Mit der CPU geht es, aber sehr langsam |
 | NVIDIA-Treiber | R570 oder neuer | Nötig für die CUDA-12.8-Pakete. Es reicht der Treiber; das CUDA-Toolkit musst du **nicht** installieren |
 | Python | **3.13** (getestet: 3.13.17; WhisperX erlaubt 3.10–3.13) | Von python.org, mit „tcl/tk and IDLE“ (Tkinter), das ist standardmäßig angehakt. Nicht 3.14: WhisperX 3.8 verlangt eine Version unter 3.14. Ein vorhandenes venv mit Python 3.10 läuft weiter; 3.10 bekommt aber seit Oktober 2026 keine Sicherheitsupdates mehr |
-| ffmpeg | 6.x bis 8.x | Eigenes Programm, kein pip-Paket. Jeder Full-Build, z.B. `winget install Gyan.FFmpeg` |
+| ffmpeg | 6.x bis 9.x | Eigenes Programm, kein pip-Paket. Jeder Full-Build, z.B. `winget install Gyan.FFmpeg` |
 | Internet | nur beim ersten Start | Whisper-Modell (~3 GB), Alignment-Modelle je Sprache, MMS_FA (~1,2 GB für Lyrics) |
 
 Ein Hugging-Face-Token ist nicht nötig, weil die Workbench keine Sprechertrennung (Diarization) benutzt.

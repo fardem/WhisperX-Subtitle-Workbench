@@ -1124,8 +1124,8 @@ class App(BaseTk):
 
     def _resolve_options(self, job, cfg: core.Config | None = None) -> core.JobOptions:
         """
-        Options of a DaVinci Resolve job: language, mode, audio filter, characters and lines as chosen in the
-        plugin, all other settings from the INI. The options of the main window do not apply to these jobs.
+        Options of a DaVinci Resolve job: language, mode, audio filter, characters, lines and smooth display as
+        chosen in the plugin, all other settings from the INI. The options of the main window do not apply.
         """
         o = core.JobOptions.from_config(cfg or self.cfg)
         def within(n, limits, default):
@@ -1135,7 +1135,8 @@ class App(BaseTk):
                        mode=job.mode if job.mode in core.MODES else o.mode,
                        use_filter=o.use_filter if job.use_filter is None else job.use_filter,
                        max_chars=within(job.chars, core.CHARS_RANGE, o.max_chars),
-                       max_lines=within(job.lines, core.LINES_RANGE, o.max_lines))
+                       max_lines=within(job.lines, core.LINES_RANGE, o.max_lines),
+                       smooth=job.smooth)
 
     def _log_resolve_options(self, job):
         o = self._resolve_options(job)
@@ -1147,7 +1148,9 @@ class App(BaseTk):
             filter=T("resolve.filter_on" if o.use_filter else "resolve.filter_off")
             + ("" if job.use_filter is not None else ini),
             layout=T("resolve.layout", chars=o.max_chars, lines=o.max_lines)
-            + ("" if (job.chars, job.lines) == (o.max_chars, o.max_lines) else ini)) + "\n")
+            + ("" if (job.chars, job.lines) == (o.max_chars, o.max_lines) else ini),
+            smooth=T("resolve.smooth_on" if (self.cfg.smooth if o.smooth is None else o.smooth) else "resolve.smooth_off")
+            + ("" if job.smooth is not None else ini)) + "\n")
         prompt = {"ini": "resolve.prompt_ini", "custom": "resolve.prompt_custom"}.get(o.prompt_mode,
                                                                                      "resolve.prompt_none")
         self._append_log(i18n.line("info", "resolve.log_job_ini", prompt=T(prompt)) + "\n")

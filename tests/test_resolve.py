@@ -502,6 +502,15 @@ def test_resolve_job_options_come_from_the_plugin_and_the_ini(tmp_path):
     assert (default.language, default.mode, default.use_filter) == ("de", "sentence", False)
 
 
+def test_smooth_display_comes_from_the_plugin(tmp_path):
+    wt = pytest.importorskip("whisper_tool")
+    app = type("App", (), {"cfg": core.Config(ROOT / "whisper_tool.example.ini")})()
+    for chosen in (True, False, None):
+        job = make_job(tmp_path / str(chosen), smooth=chosen)
+        assert wr.find_job(tmp_path / str(chosen) / "audio.wav").smooth is chosen
+        assert wt.App._resolve_options(app, job).smooth is chosen
+
+
 def test_characters_and_lines_come_from_the_plugin(tmp_path):
     wt = pytest.importorskip("whisper_tool")
     ini = tmp_path / "whisper_tool.ini"

@@ -655,11 +655,12 @@ def smooth_cues(cues: list, pause: float, hold: float, duration: float | None = 
     return out
 
 
-def display_cues(cues: list, mode: str, cfg, duration: float | None = None) -> list:
+def display_cues(cues: list, mode: str, cfg, duration: float | None = None, smooth: bool | None = None) -> list:
     """Display rule for speech (sentences, word by word, raw) if "smooth" is on – lyrics keep their own."""
-    if mode == "lyrics" or not cfg.smooth:
+    if mode == "lyrics" or not (cfg.smooth if smooth is None else smooth):
         return cues
-    return smooth_cues(cues, cfg.pause, cfg.pause_hold, duration)
+    hold = cfg.pause_hold if cfg.pause_hold < cfg.pause else round(cfg.pause / 2, 2)   # rule of Config.__init__
+    return smooth_cues(cues, cfg.pause, hold, duration)
 
 
 def fast_cues(cues: list, max_cps: float = READING_CPS) -> list[tuple[float, float, float]]:
@@ -909,6 +910,7 @@ class JobOptions:
     keep_json:     bool  = False
     line_hold:     float = 0.0
     live_lines:    bool  = True        # print recognized lines during transcription
+    smooth:        bool | None = None  # None = [Layout] smooth
 
     @classmethod
     def from_config(cls, cfg: Config) -> "JobOptions":
@@ -1275,7 +1277,7 @@ class Engine:
             info["score_list"] = self._report_score(result, src)            # also for DaVinci Resolve
             info["unsure"] = len(info["score_list"])
 
-        cues = display_cues(cues, mode, cfg, duration)      # pause rule – lyrics keep their own
+        cues = display_cues(cues, mode, cfg, duration, opts.smooth)    # pause rule – lyrics keep their own
         if mode == "sentence":
             info["fast"] = self._report_fast(cues)
         write_srt(out, cues, cfg.encoding)

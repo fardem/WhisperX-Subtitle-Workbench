@@ -724,7 +724,7 @@ local function write_job_file(project, wav_name)
     { "out_frame", job.b }, { "end_frame", info.last }, { "resolve", api(resolve, "GetVersionString") or "" },
     { "language", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
     { "filter", S.choice_filter and "1" or "0" }, { "chars", S.choice_chars }, { "lines", S.choice_lines },
-    { "created", os.date("%Y-%m-%d %H:%M:%S") },
+    { "smooth", S.choice_smooth or "" }, { "created", os.date("%Y-%m-%d %H:%M:%S") },
   }
   local ok, err = write_kv(join(job.dir, "job.txt"), "WhisperX Subtitle Workbench - DaVinci Resolve job", rows)
   if not ok then
@@ -1111,7 +1111,7 @@ local function buttons()
   local idle = S.state == "idle"
   itm.Transcribe.Enabled = idle and S.can_transcribe == true
   itm.ImportSrt.Enabled = idle and S.can_import == true
-  for _, id in ipairs({ "Lang", "Mode", "Filter" }) do
+  for _, id in ipairs({ "Lang", "Mode", "Filter", "SmoothLabel", "Smooth" }) do
     if itm[id] then
       itm[id].Enabled = idle
     end
@@ -1201,6 +1201,7 @@ local function choices()
              { "tr", T("lang_tr") }, { "ar", T("lang_ar") } },
     mode = { { "", T("opt_workbench") }, { "sentence", T("mode_sentence") }, { "word", T("mode_word") },
              { "raw", T("mode_raw") } },
+    smooth = { { "", T("opt_workbench") }, { "1", T("opt_on") }, { "0", T("opt_off") } },
   }
 end
 
@@ -1214,7 +1215,7 @@ local function index_of(list, code)
 end
 
 -- Window: start size, smallest size; LAYOUT changes when they do (an older saved size is dropped).
-local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 360 }, { 520, 320 }, "3"
+local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 392 }, { 520, 352 }, "4"
 
 -- The same limits as CHARS_RANGE and LINES_RANGE in wt_core.py.
 local CHARS_RANGE, LINES_RANGE = { 10, 200 }, { 1, 5 }
@@ -1291,7 +1292,7 @@ local function save_settings()
   end
   local rows = { { "lang", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
                  { "filter", S.choice_filter and "1" or "0" }, { "chars", S.choice_chars },
-                 { "lines", S.choice_lines }, { "layout", LAYOUT } }
+                 { "lines", S.choice_lines }, { "smooth", S.choice_smooth or "" }, { "layout", LAYOUT } }
   local g = window_geometry()
   if g then
     rows[#rows + 1] = { "geometry", string.format("%d,%d,%d,%d", g[1], g[2], g[3], g[4]) }
@@ -1725,6 +1726,7 @@ function M.main()
   S.choice_lang = list.lang[index_of(list.lang, saved.lang)][1]
   S.choice_mode = list.mode[index_of(list.mode, saved.mode)][1]
   S.choice_filter = saved.filter == "1"
+  S.choice_smooth = list.smooth[index_of(list.smooth, saved.smooth)][1]
   local ini = WX.workbench and read_kv(join(WX.workbench, "whisper_tool.ini")) or {}
   S.choice_chars = number_in(saved.chars, CHARS_RANGE) or number_in(ini.default_chars, CHARS_RANGE) or CHARS_START
   S.choice_lines = number_in(saved.lines, LINES_RANGE) or number_in(ini.default_lines, LINES_RANGE) or LINES_START
@@ -1757,6 +1759,12 @@ function M.main()
       },
       ui:HGroup{
         Weight = 0,
+        ui:Label{ ID = "SmoothLabel", Text = T("label_smooth"), Weight = 0 },
+        ui:ComboBox{ ID = "Smooth", Weight = 0 },
+        ui:HGap(0, 1),
+      },
+      ui:HGroup{
+        Weight = 0,
         ui:Button{ ID = "Transcribe", Text = T("btn_transcribe") },
         ui:Button{ ID = "ImportSrt", Text = T("btn_import") },
       },
@@ -1779,8 +1787,8 @@ function M.main()
     },
   })
   itm = win:GetItems()
-  for _, key in ipairs({ "lang", "mode" }) do
-    local id = key == "lang" and "Lang" or "Mode"
+  for _, key in ipairs({ "lang", "mode", "smooth" }) do
+    local id = ({ lang = "Lang", mode = "Mode", smooth = "Smooth" })[key]
     for _, item in ipairs(list[key]) do
       pcall(function() itm[id]:AddItem(item[2]) end)
     end

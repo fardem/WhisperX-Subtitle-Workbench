@@ -662,6 +662,38 @@ def test_language_and_mode_chosen_in_the_plugin_go_into_the_job(tmp_path):
     assert (seen["job"].language, seen["job"].mode, seen["job"].use_filter) == ("tr", "word", False)
 
 
+def test_smooth_display_chosen_in_the_plugin_goes_into_the_job_and_stays(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        seen["start"] = list(h.mock["items"].Smooth.entries.values())
+        h.click("Transcribe")
+        h.tick(2)
+        (job_dir,) = h.job_dirs()
+        seen["default"] = wr.find_job(job_dir / "audio.wav").smooth
+        h.click("Cancel")
+        h.mock.choose("Smooth", 2)                     # off
+        seen["saved"] = wr.read_kv(h.last / "plugin.txt")
+        h.click("Transcribe")
+        h.tick(2)
+        (job_dir,) = h.job_dirs()
+        seen["off"] = wr.find_job(job_dir / "audio.wav").smooth
+        h.click("Cancel")
+
+    h.run(steps, timelines=[timeline()])
+    assert seen["start"] == [h.T("opt_workbench"), h.T("opt_on"), h.T("opt_off")]
+    assert seen["default"] is None and seen["off"] is False and seen["saved"]["smooth"] == "0"
+
+    h2 = Harness(tmp_path)
+
+    def second(h):
+        seen["index"] = h.mock["items"].Smooth.CurrentIndex
+
+    h2.run(second, timelines=[timeline()])
+    assert seen["index"] == 2
+
+
 def test_audio_filter_chosen_in_the_plugin_goes_into_the_job_and_stays(tmp_path):
     h = Harness(tmp_path)
     seen = {}
@@ -774,14 +806,15 @@ def test_unusable_saved_geometry_is_ignored(tmp_path):
     g.WX_TEST = True
     m = h.lua.execute(h.code)
     for bad in ("", "1,2,3", "0,0,100,100", "-5000,0,700,500", "0,0,99999,500"):
-        assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "3"})) is None
-    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,360", "layout": "3"})).values()) == \
-        [10, 20, 600, 360]
+        assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "4"})) is None
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,392", "layout": "4"})).values()) == \
+        [10, 20, 600, 392]
     # Resolve 21.2 reported 505 wide although the minimum is 520 - restore it anyway
-    assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,360", "layout": "3"})).values()) == \
-        [260, 180, 505, 360]
-    # saved before the row with characters and lines: too low for it
-    assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,330", "layout": "2"})) is None
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,392", "layout": "4"})).values()) == \
+        [260, 180, 505, 392]
+    # saved before the rows with characters and lines (2) and with "Smooth display" (3): too low
+    for layout in ("2", "3"):
+        assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,360", "layout": layout})) is None
     # saved by an older plugin (no layout key): its start size was too big - start with the new one
     assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})) is None
 

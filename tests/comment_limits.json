@@ -52,7 +52,7 @@
     "long_blocks": 0
   },
   "tests/test_pauses.py": {
-    "lines": 21,
+    "lines": 22,
     "long_blocks": 0
   },
   "tests/test_reading_speed.py": {
@@ -68,7 +68,7 @@
     "long_blocks": 0
   },
   "tests/test_resolve_plugin.py": {
-    "lines": 55,
+    "lines": 56,
     "long_blocks": 0
   },
   "tests/test_score.py": {
@@ -104,7 +104,7 @@
     "long_blocks": 0
   },
   "wt_core.py": {
-    "lines": 191,
+    "lines": 193,
     "long_blocks": 0
   },
   "wt_i18n.py": {
@@ -112,7 +112,7 @@
     "long_blocks": 0
   },
   "wt_resolve.py": {
-    "lines": 90,
+    "lines": 91,
     "long_blocks": 0
   },
   "wt_version.py": {

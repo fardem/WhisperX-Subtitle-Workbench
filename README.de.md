@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.7.7** · [Änderungen](CHANGELOG.md)
+**Version 0.7.8** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -95,7 +95,7 @@ Diese Versionen laufen produktiv zusammen (Python 3.13, Windows 11, RTX 5080):
 | `torchcodec` | 0.7.0 | WhisperX verlangt `<0.8`, pyannote-audio 4 verlangt `≥0.7`, also passt nur 0.7.x. Gehört zu torch 2.8 |
 | `whisperx` | **3.8.6** | Die Workbench ist mit 3.8.x getestet; die Systemprüfung warnt unter 3.8 |
 | `faster-whisper` | 1.2.1 | Verlangt `ctranslate2 <5` |
-| `ctranslate2` | 4.7.1 | Ab **4.5** wird CUDA 12 + **cuDNN 9** benutzt, das torch 2.8 mitbringt. Bis 4.4 wird cuDNN 8 erwartet, das scheitert |
+| `ctranslate2` | 4.8.5 | Ab **4.5** wird CUDA 12 + **cuDNN 9** benutzt, das torch 2.8 mitbringt. Bis 4.4 wird cuDNN 8 erwartet, das scheitert |
 | `pyannote-audio` | 4.0.7 | Spracherkennung (VAD). Verlangt torch ≥ 2.8 und torchcodec ≥ 0.7 |
 | `numpy` | ≥ 2.1 (installiert WhisperX) | Pakete, die `numpy<2` brauchen, passen nicht ins selbe venv |
 | `uroman` | 1.3.1.1 | Nur für den Lyrics-Modus (Umschrift für das Alignment) |
@@ -120,7 +120,7 @@ whisperx 3.8.x ── verlangt torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 | `pip install whisperx` **vor** torch | torch kommt von PyPI als CPU-Version → Systemprüfung: „torch ist eine Version ohne CUDA“ | Immer zuerst torch vom PyTorch-Index installieren (Schritt 4 unten) |
 | `pip install -U whisperx` oder ein anderes Paket zieht ein anderes torch nach | torch/torchaudio ersetzt, Lyrics oder VAD scheitern, CUDA weg | Erst `pip install --dry-run …` und abbrechen, wenn sich `torch`, `torchaudio`, `torchvision`, `torchcodec` oder `ctranslate2` ändern würde |
 | torch und torchaudio aus verschiedenen Versionen oder Builds | Importfehler in torchaudio (`DLL load failed`, `WinError 127`), Lyrics scheitern; die Systemprüfung warnt | Beide zusammen mit gleicher Version und `--index-url` neu installieren |
-| `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | ctranslate2 ≥ 4.5 benutzen (getestet: 4.7.1) |
+| `ctranslate2` < 4.5 | `Could not locate cudnn_ops_infer64_8.dll` | ctranslate2 ≥ 4.5 benutzen (getestet: 4.8.5) |
 | Ein älterer CUDA-Build (cu121/cu124) auf einer RTX 50xx | `no kernel image is available for execution on the device` | Den cu128-Build benutzen |
 | Der cu128-Build auf einer GTX 10xx, GTX 9xx oder Titan V | Warnung „… CUDA capability sm_61 is not compatible …“, danach `no kernel image is available` | Den cu126-Build benutzen (Schritt 4) |
 | `pip install -r requirements.txt` in einem **vorhandenen** venv mit anderem torch | pip ersetzt dieses torch durch die CPU-Version von PyPI, und das dort installierte WhisperX läuft auch nicht mehr | Nie in ein vorhandenes venv installieren; einen neuen Ordner mit eigenem venv nehmen |
@@ -337,7 +337,7 @@ Nach einem Update der Workbench, nach dem Verschieben ihres Ordners und nach ein
 2. Das Plugin rendert die Hauptmischung der Timeline als WAV nach `resolve_temp\<Job>\` der Workbench. Danach ist der Render-Job gelöscht, und Seite, Deliver-Einstellungen sowie In/Out-Marken sind wie vorher – auch nach einem Fehler oder *Abbrechen*. Dann startet es die Workbench mit der WAV; eine schon geöffnete Workbench übernimmt die Datei, ihre Modelle bleiben geladen.
 3. In der Workbench steht der Job als „*Timeline* · DaVinci Resolve“ in der Liste. Er hat einen eigenen Countdown (*Einstellungen → DaVinci Resolve*, Vorgabe 10 Sekunden). Sprache, Modus, Audiofilter, Zeichen pro Zeile und Zeilen kommen aus dem Plugin-Fenster, alle übrigen Einstellungen aus der INI: der Prompt und alle Regeln aus *Einstellungen → Untertitel*. Die Einstellungen im Hauptfenster gelten für DaVinci-Jobs nicht. Das Protokoll zeigt beides an. Ohne Countdown startest du selbst mit *Start*. Währenddessen zeigt das Plugin-Fenster, wo der Job steht: Countdown, Transkription in Prozent, fertig.
 4. Ist der Job fertig, die Untertitel prüfen und **→ An DaVinci übergeben** drücken (blau, sobald der Job fertig ist). Die SRT wird an die Stelle des Bereichs in der Timeline verschoben und als `resolve_temp\<Timeline>_<SPRACHE>_<Datum-Uhrzeit>.srt` gespeichert; dieser Ordner behält die SRTs der letzten 10 Übergaben, bei der 11. wird die älteste gelöscht. Der Name ist jedes Mal neu, weil Resolve eine Datei, die schon im Media Pool liegt, nicht noch einmal liest – es würde die Untertitel des ersten Imports einsetzen. Danach minimiert sich die Workbench – sie bleibt offen, ihre Modelle bleiben für den nächsten Job geladen. Unter *Einstellungen → DaVinci Resolve* kannst du automatisch übergeben lassen, sobald der Job transkribiert ist, und schließen statt minimieren.
-5. Das Plugin wartet in Resolve, wechselt zurück zur Timeline des Jobs, importiert die SRT in den Media-Pool-Bin *WhisperX* und legt sie auf die **erste leere Untertitelspur** (ST1, ST2, …) – oder auf eine neue. Die Spur heißt `WhisperX DE` (`WhisperX DE 2`, wenn es den Namen schon gibt) und bleibt die aktive Untertitelspur. Danach werden WAV und Job-Ordner gelöscht, und das Plugin-Fenster kommt mit dem Ergebnis nach vorne, bis du *OK* drückst.
+5. Das Plugin wartet in Resolve, wechselt zurück zur Timeline des Jobs, importiert die SRT in den Media-Pool-Bin *WhisperX* und legt sie auf die **erste leere Untertitelspur** (ST1, ST2, …) – oder auf eine neue. Die Spur heißt `WhisperX DE` (`WhisperX DE 2`, wenn es den Namen schon gibt) und bleibt die aktive Untertitelspur. Danach werden WAV und Job-Ordner gelöscht, und das Plugin-Fenster kommt mit dem Ergebnis nach vorne. Nach einer Übernahme ohne Warnung schließt es nach 10 Sekunden, sonst bleibt es, bis du *OK* drückst. Beides stellst du unter *Einstellungen → DaVinci Resolve → 3 · Jobs aus DaVinci Resolve* ein.
 6. Bis zu drei weitere Untertitelspuren helfen beim Prüfen, jede einzeln unter *Einstellungen → DaVinci Resolve → Analyse* ein- oder ausgeschaltet: **WhisperX Lücken** markiert laute Stellen ohne Text aus dem Lücken-Check, **WhisperX zu schnell** markiert Untertitel mit mehr als 17 Zeichen pro Sekunde (Modus *Satzweise*), **WhisperX unsicher** markiert die Wörter des Score-Checks (immer, wenn der Score-Check an ist; die Zeile unter *Analyse* ist dieselbe Einstellung wie unter *Spracherkennung*). Du springst in Resolve von Eintrag zu Eintrag und löschst danach die Spuren. Eine Spur kommt nur dazu, wenn es etwas zu zeigen gibt, und die Spur mit dem Transkript bleibt die aktive.
 
 ![Ein DaVinci-Resolve-Job in der Workbench, bereit zur Übergabe](docs/images/resolve-job.png)

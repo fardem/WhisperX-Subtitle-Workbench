@@ -867,3 +867,66 @@ def test_without_a_spinbox_a_text_field_is_checked_before_rendering(tmp_path):
     h.run(steps, timelines=[timeline()])
     assert seen["status"] == h.T("err_numbers", chars_lo=10, chars_hi=200, lines_lo=1, lines_hi=5)
     assert seen["dirs"] == [] and seen["job"].chars == 38
+
+
+# ─── Plugin window closes after the import ────────────────────────────────────
+
+def closing_round(tmp_path, shift=0, **hand_over):
+    h = Harness(tmp_path)
+    seen, clock = {}, [1000]
+
+    def steps(h):
+        h.lua.globals().os.time = lambda *a: clock[0]
+        h.mock.placement_shift = shift
+        h.click("Transcribe")
+        h.tick(2)
+        h.workbench_hands_over(**hand_over)
+        h.tick()
+        seen["after_import"] = h.text("Status")
+        clock[0] += 4
+        h.tick()
+        seen["after_4s"] = h.text("Status")
+        seen["exited_early"] = bool(h.mock.exited)
+        clock[0] += 6
+        h.tick()
+
+    h.run(steps, timelines=[timeline()])
+    return h, seen
+
+
+def test_window_closes_after_the_set_time_and_counts_down(tmp_path):
+    h, seen = closing_round(tmp_path, close_window=10)
+    assert seen["after_import"].endswith(h.T("closing", n=10))
+    assert seen["after_4s"].endswith(h.T("closing", n=6))
+    assert not seen["exited_early"] and h.mock.exited
+
+
+def test_window_stays_open_without_close_time(tmp_path):
+    h, seen = closing_round(tmp_path)
+    assert h.T("closing", n=10) not in seen["after_import"] and not h.mock.exited
+
+
+@pytest.mark.parametrize("close_on_warning", [False, True])
+def test_window_after_a_warning_closes_only_when_allowed(tmp_path, close_on_warning):
+    h, seen = closing_round(tmp_path, shift=-90000, close_window=10, close_on_warning=close_on_warning)
+    assert h.T("position_start_tc") in seen["after_import"]
+    assert bool(h.mock.exited) == close_on_warning
+
+
+def test_transcribe_stops_the_countdown(tmp_path):
+    h = Harness(tmp_path)
+    clock = [1000]
+
+    def steps(h):
+        h.lua.globals().os.time = lambda *a: clock[0]
+        h.click("Transcribe")
+        h.tick(2)
+        h.workbench_hands_over(close_window=10)
+        h.tick()
+        h.mock.playing = True                       # "Transcribe" is refused, the plugin stays idle
+        h.click("Transcribe")
+        clock[0] += 20
+        h.tick()
+
+    h.run(steps, timelines=[timeline()])
+    assert not h.mock.exited

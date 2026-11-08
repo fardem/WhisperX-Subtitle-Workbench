@@ -1172,6 +1172,8 @@ class App(BaseTk):
                 lang = "" if lang == "auto" else lang
             try:
                 res = wt_resolve.hand_over(it["job"], it["out"], lang, encoding=self.cfg.encoding,
+                                           close_window=self.cfg.resolve_close_plugin,
+                                           close_on_warning=self.cfg.resolve_close_warning,
                                            **self._extra_tracks(it))
             except (wt_resolve.ResolveError, OSError) as e:
                 self._append_log(f"{i18n.tag('error')}{e}\n")
@@ -1410,6 +1412,7 @@ class SettingsDialog(tk.Toplevel if tk else object):
         ("Lyrics", "line_gap"):        (float, 0, 2, "line_gap"),
         ("Menu", "timeout"):           (int, 0, 600, "timeout"),
         ("Resolve", "countdown"):      (int, 0, 600, "resolve_countdown"),
+        ("Resolve", "close_plugin"):   (int, 0, 600, "resolve_close_plugin"),
         ("Gaps", "min_length"):        (float, 0.3, 30, "gap_min"),
         ("Gaps", "margin_db"):         (float, 2, 30, "gap_margin"),
         ("Score", "threshold"):        (float, core.SCORE_MIN, core.SCORE_MAX, "score"),
@@ -1807,6 +1810,13 @@ class SettingsDialog(tk.Toplevel if tk else object):
             cb = ttk.Checkbutton(f, text=T(f"set.resolve_{key}"), variable=self._var("Resolve", key, value, True))
             cb.grid(row=r + 2 + i, column=0, columnspan=3, sticky="w", pady=(8 if i == 0 else 3, 0))
             tip(cb, f"resolve_{key}", sc)
+        var = self._switch(f, r + 4, "resolve_close_plugin", "Resolve", "close_plugin", c.resolve_close_plugin,
+                           10, 1, 600, 1)
+        cb = ttk.Checkbutton(f, text=T("set.resolve_close_plugin_warning"),
+                             variable=self._var("Resolve", "close_plugin_warning", c.resolve_close_warning, True))
+        cb.grid(row=r + 5, column=0, columnspan=3, sticky="w", padx=(26, 0), pady=(2, 0))
+        tip(cb, "resolve_close_plugin_warning", sc)
+        self._bind_state(var.on, [cb])
 
     def _plugin_state(self) -> str:
         return plugin_state_text(*wt_resolve.plugin_status(VERSION, i18n.current()))

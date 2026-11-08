@@ -384,7 +384,7 @@ def write_last_srt(last_dir, name: str, text: str, encoding: str = "utf-8", keep
 
 def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir=None,
               gaps=None, gap_label=None, fast_cps: float | None = None, fast_label=None,
-              score=None, stamp: str | None = None) -> HandOver:
+              score=None, stamp: str | None = None, close_window: int = 0, close_on_warning: bool = False) -> HandOver:
     """
     "Hand over to DaVinci": shift the SRT (read again from disk), keep it in resolve_temp/, write done.txt.
     gaps, fast_cps and score each become an SRT for an own track in the job folder (_gaps/_fast/_score).
@@ -416,7 +416,8 @@ def hand_over(job: ResolveJob, srt, lang: str, encoding: str = "utf-8", last_dir
     if score:
         extra["score"] = [(s + offset, e + offset, [text]) for s, e, text in score]
     done = {"format": DONE_FORMAT, "job": job.job_id, "srt": target, "lang": code, "cues": cues,
-            "first": f"{first:.3f}", "offset": f"{offset:.3f}"}
+            "first": f"{first:.3f}", "offset": f"{offset:.3f}",
+            "close_window": max(int(close_window), 0), "close_on_warning": 1 if close_on_warning else 0}
     for key, items in extra.items():
         path = job.folder / f"{stem}_{key}.srt"
         path.write_text("".join(f"{n}\n{_fmt_ms(round(s * 1000))} --> {_fmt_ms(round(e * 1000))}\n"

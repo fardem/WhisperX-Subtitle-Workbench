@@ -321,7 +321,11 @@
     "resolve_track_fast": "Subtitles too fast to read on their own track “WhisperX too fast” (Sentences only)",
     "sw_resolve_score": "Unsure words on their own track “WhisperX unsure”: score below",
     "sw_resolve_score_unit": "(as under Speech detection)",
-    "resolve_close_after": "Close the Workbench after the hand-over instead of minimizing it"
+    "resolve_close_after": "Close the Workbench after the hand-over instead of minimizing it",
+    "sw_resolve_close_plugin": "Close the plugin window after the hand-over, after",
+    "sw_resolve_close_plugin_unit": "seconds",
+    "resolve_close_plugin": "Close the plugin window",
+    "resolve_close_plugin_warning": "Close it after a warning too"
   },
   "cmpdlg": {
     "title": "Compare text",
@@ -381,7 +385,6 @@
     "ct2_folder": "CTranslate2 folder",
     "hf_download": "Hugging Face – downloaded on first use",
     "no_prompt": "without prompt",
-    "model_off": "off",
     "gpu": "Graphics card",
     "torch_cpu": "torch is a build without CUDA ({version})",
     "no_driver": "driver or graphics card not reachable",
@@ -745,6 +748,7 @@
     "position_off": "Check the position: the first subtitle is at frame {actual}, frame {expected} was expected (difference {diff} frames = {sec} s).",
     "position_start_tc": "The difference is exactly the start timecode of the timeline – please report this (Workspace → Console).",
     "srt_kept": "The SRT stays here: {path}",
+    "closing": "The window closes in {n} s.",
     "timeline_gone": "The timeline “{name}” no longer exists. The SRT stays here: {path} – open the right timeline and use “Import SRT …”.",
     "cancelled": "Cancelled. The job folder was removed.",
     "choose_srt": "Choose an SRT file",
@@ -1164,6 +1168,8 @@
     "resolve_track_gaps": "“WhisperX gaps” marks loud passages without text. Needs the gap check on the tab Speech detection.",
     "resolve_track_fast": "“WhisperX too fast” marks subtitles with more than 17 characters per second. Mode “Sentences” only.",
     "resolve_score": "“WhisperX unsure” marks words with a low score. This is the score check from the tab Speech detection; a change applies in both places.",
-    "resolve_close_after": "Minimized, the Workbench keeps its models loaded. The next job then starts without loading time."
+    "resolve_close_after": "Minimized, the Workbench keeps its models loaded. The next job then starts without loading time.",
+    "resolve_close_plugin": "After an import without errors, the plugin window in DaVinci Resolve closes after this time. The status line counts down. “OK” closes it at once, “Transcribe” or “Import SRT …” stops the countdown. Without the tick the window stays open.",
+    "resolve_close_plugin_warning": "A warning says that the number or the position of the subtitles in Resolve is not right. Without the tick the window then stays open."
   }
 }

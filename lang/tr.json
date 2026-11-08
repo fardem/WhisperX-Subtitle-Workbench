@@ -321,7 +321,11 @@
     "resolve_track_fast": "Çok hızlı altyazılar kendi izinde “WhisperX çok hızlı” (yalnızca cümle cümle)",
     "sw_resolve_score": "Belirsiz kelimeler kendi izinde “WhisperX belirsiz”: skoru",
     "sw_resolve_score_unit": "altında (Konuşma algılama sekmesindeki gibi)",
-    "resolve_close_after": "Aktarımdan sonra Workbench'i küçültmek yerine kapat"
+    "resolve_close_after": "Aktarımdan sonra Workbench'i küçültmek yerine kapat",
+    "sw_resolve_close_plugin": "Aktarımdan sonra eklenti penceresini kapat:",
+    "sw_resolve_close_plugin_unit": "saniye sonra",
+    "resolve_close_plugin": "Eklenti penceresini kapat",
+    "resolve_close_plugin_warning": "Bir uyarı olsa da kapat"
   },
   "cmpdlg": {
     "title": "Metin karşılaştır",
@@ -381,7 +385,6 @@
     "ct2_folder": "CTranslate2 klasörü",
     "hf_download": "Hugging Face – ilk kullanımda indirilir",
     "no_prompt": "prompt olmadan",
-    "model_off": "kapalı",
     "gpu": "Ekran kartı",
     "torch_cpu": "torch, CUDA'sız bir sürüm ({version})",
     "no_driver": "sürücüye veya ekran kartına ulaşılamıyor",
@@ -745,6 +748,7 @@
     "position_off": "Konumu kontrol edin: ilk altyazı {actual}. karede, beklenen {expected}. kareydi (fark {diff} kare = {sec} sn).",
     "position_start_tc": "Fark tam olarak zaman çizelgesinin başlangıç zaman kodu kadar – lütfen bildirin (Workspace → Console).",
     "srt_kept": "SRT burada kalıyor: {path}",
+    "closing": "Pencere {n} sn içinde kapanıyor.",
     "timeline_gone": "“{name}” zaman çizelgesi artık yok. SRT burada kalıyor: {path} – doğru zaman çizelgesini açıp “SRT içe aktar …” kullanın.",
     "cancelled": "İptal edildi. İş klasörü kaldırıldı.",
     "choose_srt": "SRT dosyası seçin",
@@ -1162,6 +1166,8 @@
     "resolve_track_gaps": "“WhisperX boşluklar” metinsiz yüksek sesli yerleri işaretler. Konuşma algılama sekmesindeki boşluk kontrolü gerekir.",
     "resolve_track_fast": "“WhisperX çok hızlı” saniyede 17 karakterden fazla olan altyazıları işaretler. Yalnızca cümle cümle modunda.",
     "resolve_score": "“WhisperX belirsiz” skoru düşük kelimeleri işaretler. Bu, Konuşma algılama sekmesindeki skor kontrolüdür; bir değişiklik iki yerde birden geçerli olur.",
-    "resolve_close_after": "Simge durumunda Workbench modellerini yüklü tutar. Sonraki iş böylece yükleme süresi olmadan başlar."
+    "resolve_close_after": "Simge durumunda Workbench modellerini yüklü tutar. Sonraki iş böylece yükleme süresi olmadan başlar.",
+    "resolve_close_plugin": "Hatasız bir içe aktarmadan sonra DaVinci Resolve'daki eklenti penceresi bu süre sonunda kapanır. Durum satırı geri sayar. “Tamam” hemen kapatır, “Yazıya dök” veya “SRT içe aktar …” geri sayımı durdurur. İşaret yoksa pencere açık kalır.",
+    "resolve_close_plugin_warning": "Bir uyarı, Resolve'daki altyazıların sayısının veya konumunun doğru olmadığını bildirir. İşaret yoksa pencere bu durumda açık kalır."
   }
 }

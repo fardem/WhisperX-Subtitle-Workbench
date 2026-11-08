@@ -230,6 +230,8 @@ class Config:
         self.resolve_gaps      = g("Resolve", "track_gaps", extra, _bool)
         self.resolve_fast      = g("Resolve", "track_fast", extra, _bool)
         self.resolve_close     = g("Resolve", "close_after", False, _bool)
+        self.resolve_close_plugin = max(g("Resolve", "close_plugin", 10, int), 0)
+        self.resolve_close_warning = g("Resolve", "close_plugin_warning", False, _bool)
         self.resolve_skip      = g("Resolve", "skip_plugin_update", "")
 
         if self.score_threshold != 0 and not SCORE_MIN <= self.score_threshold <= SCORE_MAX:
@@ -1464,10 +1466,9 @@ def check_environment(cfg: Config) -> list[tuple[str, str]]:
         res.append(("error", T("check.ffmpeg_missing", path=cfg.ffmpeg)))
 
     for lang, name in [("", cfg.model)] + sorted(cfg.models.items()):
-        label = T("set.model") + (f" {lang}" if lang else "")
         if lang in cfg.models_off:
-            res.append(("info", f"{label}: {name} · {T('check.model_off')}"))
             continue
+        label = T("set.model") + (f" {lang}" if lang else "")
         _, compute, takes_prompt = cfg.model_for(lang)
         extra = (f" · {compute}" if lang and compute != cfg.compute_type else "") + \
                 ("" if takes_prompt else f" · {T('check.no_prompt')}")

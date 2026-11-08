@@ -2,6 +2,14 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.8] – 2026-11-08
+
+**Updating from 0.7.7:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. Your `whisper_tool.ini` needs no change: without the new keys the plugin window closes after 10 seconds. The Python packages need no change either; to get the newly tested versions: `venv\Scripts\python.exe -m pip install --no-deps ctranslate2==4.8.5 certifi==2026.10.23 urllib3==2.8.0 requests==2.34.2 idna==3.20 charset-normalizer==3.5.2`.
+
+- **Plugin window closes after the import.** After an import without errors the plugin window in DaVinci Resolve closes after 10 seconds; the status line counts down. *OK* closes it at once, *Transcribe* or *Import SRT …* stops the countdown. After a warning about the number or position of the subtitles it stays open. *Settings → DaVinci Resolve → 3 · Jobs from DaVinci Resolve* has two new rows: **Close the plugin window after the hand-over, after … seconds** (`[Resolve] close_plugin`, 0 = stays open) and **Close it after a warning too** (`close_plugin_warning`). The Workbench sends both with the hand-over (`done.txt`)
+- The system check no longer lists an own model that is switched off; it lists the own models that are on
+- **Tested versions:** ctranslate2 4.8.5 (security fixes for loading model files, FP16 and BF16 attention on CUDA), certifi 2026.10.23, urllib3 2.8.0, requests 2.34.2, idna 3.20 and charset-normalizer 3.5.2 (downloads from Hugging Face). No other package changes
+
 ## [0.7.7] – 2026-11-07
 
 **Updating from 0.7.6:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. Your `whisper_tool.ini` needs no change. The Python packages need no change either; to get the newly tested versions: `venv\Scripts\python.exe -m pip install --no-deps whisperx==3.8.6 pyannote-audio==4.0.7 tkinterdnd2==0.7.0`. An existing venv with Python 3.10 keeps working.

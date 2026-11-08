@@ -16,7 +16,7 @@ left-over own jobs removed. Own code.
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.7.7",
+  version   = "0.7.8",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -1401,12 +1401,24 @@ local function import_now(project, tl)
     activate_only(tl, main)                           -- the transcript stays the visible track
   end
   end_job(nil, done.files)
-  if ok then
-    status(msg .. (warning and ("\n" .. warning) or ""))
-  else
-    status(msg .. "\n" .. T("srt_kept", { path = done.srt }))
+  local text = ok and (msg .. (warning and ("\n" .. warning) or "")) or (msg .. "\n" .. T("srt_kept", { path = done.srt }))
+  local secs = tonumber(done.close_window) or 0
+  if ok and secs > 0 and (not warning or done.close_on_warning == "1") then
+    S.close_text, S.close_at = text, os.time() + secs
+    text = text .. "\n" .. T("closing", { n = secs })
   end
+  status(text)
   to_front(true)
+end
+
+-- os.time, not a count of ticks: tick() can run twice per second (see the timer in M.main).
+local function close_countdown()
+  local left = S.close_at - os.time()
+  if left <= 0 then
+    S.close_at = nil
+    return M.close()
+  end
+  status(S.close_text .. "\n" .. T("closing", { n = left }), true)
 end
 
 local function check_done()
@@ -1482,6 +1494,9 @@ local function tick()
   local ok, err = pcall(function()
     if S.state == "idle" then
       refresh_info()
+      if S.close_at then
+        close_countdown()
+      end
     elseif S.state == "rendering" then
       check_render()
     elseif S.state == "waiting" then
@@ -1506,6 +1521,7 @@ function M.transcribe()
   if S.state ~= "idle" then
     return
   end
+  S.close_at = nil
   local _, project, tl = current()
   if not project then
     return status(T("no_project"))
@@ -1619,6 +1635,7 @@ function M.import_click()
   if S.state ~= "idle" then
     return
   end
+  S.close_at = nil
   set_text("Close", T("btn_close"))
   choose_srt(function(path)
     if not file_exists(path) then

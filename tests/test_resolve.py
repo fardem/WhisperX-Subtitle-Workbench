@@ -491,13 +491,13 @@ def test_resolve_job_options_come_from_the_plugin_and_the_ini(tmp_path):
     ini = tmp_path / "whisper_tool.ini"
     ini.write_text((ROOT / "whisper_tool.example.ini").read_text(encoding="utf-8")
                    .replace("prompt_mode   = ini", "prompt_mode   = none")
-                   .replace("default_chars = 42", "default_chars = 37")
+                   .replace("default_cue_chars = 84", "default_cue_chars = 74")
                    .replace("language = auto", "language = de"), encoding="utf-8")
     cfg = core.Config(ini)
     app = type("App", (), {"cfg": cfg})()
     chosen = wt.App._resolve_options(app, make_job(tmp_path / "a", language="tr", mode="word", use_filter=True))
     assert (chosen.language, chosen.mode, chosen.use_filter) == ("tr", "word", True)
-    assert (chosen.prompt_mode, chosen.max_chars, chosen.max_lines) == ("none", 37, 2)
+    assert (chosen.prompt_mode, chosen.cue_chars, chosen.max_lines) == ("none", 74, 2)
     default = wt.App._resolve_options(app, make_job(tmp_path / "b"))                  # "Workbench default"
     assert (default.language, default.mode, default.use_filter) == ("de", "sentence", False)
 
@@ -515,17 +515,25 @@ def test_characters_and_lines_come_from_the_plugin(tmp_path):
     wt = pytest.importorskip("whisper_tool")
     ini = tmp_path / "whisper_tool.ini"
     ini.write_text((ROOT / "whisper_tool.example.ini").read_text(encoding="utf-8")
-                   .replace("default_chars = 42", "default_chars = 37"), encoding="utf-8")
+                   .replace("default_cue_chars = 84", "default_cue_chars = 74"), encoding="utf-8")
     app = type("App", (), {"cfg": core.Config(ini)})()
-    job = make_job(tmp_path / "a", chars=30, lines=1)
+    job = make_job(tmp_path / "a", cue_chars=30, lines=1)
     back = wr.find_job(tmp_path / "a" / "audio.wav")
-    assert (back.chars, back.lines) == (30, 1)
+    assert (back.cue_chars, back.lines) == (30, 1)
     chosen = wt.App._resolve_options(app, job)
-    assert (chosen.max_chars, chosen.max_lines) == (30, 1)
-    # outside the limits of the main window, or written by an older plugin: the INI counts
-    for kw in ({"chars": 500, "lines": 9}, {"chars": 0, "lines": 0}):
-        o = wt.App._resolve_options(app, make_job(tmp_path / str(kw["chars"]), **kw))
-        assert (o.max_chars, o.max_lines) == (37, 2)
+    assert (chosen.cue_chars, chosen.max_lines) == (30, 1)
+    # outside the limits of the main window, or no choice in the plugin: the INI counts
+    for kw in ({"cue_chars": 500, "lines": 9}, {"cue_chars": 0, "lines": 0}):
+        o = wt.App._resolve_options(app, make_job(tmp_path / str(kw["cue_chars"]), **kw))
+        assert (o.cue_chars, o.max_lines) == (74, 2)
+
+
+def test_job_of_a_plugin_with_characters_per_line_counts_them_for_the_subtitle(tmp_path):
+    (tmp_path / "audio.wav").write_bytes(b"x")
+    (tmp_path / "job.txt").write_text("format=whisperx-resolve-job/1\naudio=audio.wav\nfps=25\nstart_frame=0\n"
+                                      "chars=42\nlines=2\n", encoding="utf-8")
+    job = wr.find_job(tmp_path / "audio.wav")
+    assert (job.cue_chars, job.lines) == (84, 2)
 
 
 def test_broken_numbers_for_characters_and_lines_are_ignored(tmp_path):
@@ -533,7 +541,7 @@ def test_broken_numbers_for_characters_and_lines_are_ignored(tmp_path):
     (tmp_path / "job.txt").write_text("format=whisperx-resolve-job/1\naudio=audio.wav\nfps=25\nstart_frame=0\n"
                                       "chars=abc\nlines=-2\n", encoding="utf-8")
     job = wr.find_job(tmp_path / "audio.wav")
-    assert (job.chars, job.lines) == (0, 0)
+    assert (job.cue_chars, job.lines) == (0, 0)
 
 
 def test_plugin_has_the_same_limits_for_characters_and_lines():

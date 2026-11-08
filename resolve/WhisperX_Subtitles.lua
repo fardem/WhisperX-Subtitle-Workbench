@@ -16,7 +16,7 @@ left-over own jobs removed. Own code.
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.7.8",
+  version   = "0.7.9",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -723,7 +723,7 @@ local function write_job_file(project, wav_name)
     { "start_tc", info.start_tc }, { "range", job.whole and "all" or "inout" }, { "in_frame", job.a },
     { "out_frame", job.b }, { "end_frame", info.last }, { "resolve", api(resolve, "GetVersionString") or "" },
     { "language", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
-    { "filter", S.choice_filter and "1" or "0" }, { "chars", S.choice_chars }, { "lines", S.choice_lines },
+    { "filter", S.choice_filter and "1" or "0" }, { "cue_chars", S.choice_chars }, { "lines", S.choice_lines },
     { "smooth", S.choice_smooth or "" }, { "created", os.date("%Y-%m-%d %H:%M:%S") },
   }
   local ok, err = write_kv(join(job.dir, "job.txt"), "WhisperX Subtitle Workbench - DaVinci Resolve job", rows)
@@ -1215,10 +1215,10 @@ local function index_of(list, code)
 end
 
 -- Window: start size, smallest size; LAYOUT changes when they do (an older saved size is dropped).
-local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 392 }, { 520, 352 }, "4"
+local WIN_SIZE, WIN_MIN, LAYOUT = { 600, 320 }, { 520, 300 }, "5"
 
 -- The same limits as CHARS_RANGE and LINES_RANGE in wt_core.py.
-local CHARS_RANGE, LINES_RANGE = { 10, 200 }, { 1, 5 }
+local CHARS_RANGE, LINES_RANGE = { 10, 400 }, { 1, 5 }
 -- Without plugin.txt and whisper_tool.ini: the defaults of wt_core.Config.
 local CHARS_START, LINES_START = 45, 1
 
@@ -1291,7 +1291,7 @@ local function save_settings()
     read_numbers()
   end
   local rows = { { "lang", S.choice_lang or "" }, { "mode", S.choice_mode or "" },
-                 { "filter", S.choice_filter and "1" or "0" }, { "chars", S.choice_chars },
+                 { "filter", S.choice_filter and "1" or "0" }, { "cue_chars", S.choice_chars },
                  { "lines", S.choice_lines }, { "smooth", S.choice_smooth or "" }, { "layout", LAYOUT } }
   local g = window_geometry()
   if g then
@@ -1728,8 +1728,13 @@ function M.main()
   S.choice_filter = saved.filter == "1"
   S.choice_smooth = list.smooth[index_of(list.smooth, saved.smooth)][1]
   local ini = WX.workbench and read_kv(join(WX.workbench, "whisper_tool.ini")) or {}
-  S.choice_chars = number_in(saved.chars, CHARS_RANGE) or number_in(ini.default_chars, CHARS_RANGE) or CHARS_START
   S.choice_lines = number_in(saved.lines, LINES_RANGE) or number_in(ini.default_lines, LINES_RANGE) or LINES_START
+  -- chars = characters per line in an older plugin.txt and INI: times the lines gives one subtitle
+  S.choice_chars = number_in(saved.cue_chars, CHARS_RANGE)
+      or number_in((tonumber(saved.chars) or 0) * (number_in(saved.lines, LINES_RANGE) or 0), CHARS_RANGE)
+      or number_in(ini.default_cue_chars, CHARS_RANGE)
+      or number_in((tonumber(ini.default_chars) or 0) * (number_in(ini.default_lines, LINES_RANGE) or 1), CHARS_RANGE)
+      or CHARS_START
   S.spin = pcall(function() return assert(ui:SpinBox{}) end)
   log("Number fields:", S.spin and "SpinBox" or "LineEdit", "| characters / lines:", S.choice_chars, S.choice_lines)
   win = disp:AddWindow({
@@ -1741,6 +1746,7 @@ function M.main()
       ID = "Root",
       Spacing = 6,
       ui:Label{ ID = "Info", Text = "", WordWrap = true, Weight = 0, MinimumSize = { 400, 32 } },
+      ui:VGap(8, 0),
       ui:HGroup{                                        -- chosen here, they win over the Workbench window
         Weight = 0,
         ui:Label{ ID = "LangLabel", Text = T("label_lang"), Weight = 0 },
@@ -1756,18 +1762,16 @@ function M.main()
         ui:Label{ ID = "LinesLabel", Text = T("label_lines"), Weight = 0 },
         number_field("Lines", S.choice_lines, LINES_RANGE),
         ui:HGap(0, 1),
-      },
-      ui:HGroup{
-        Weight = 0,
         ui:Label{ ID = "SmoothLabel", Text = T("label_smooth"), Weight = 0 },
-        ui:ComboBox{ ID = "Smooth", Weight = 0 },
-        ui:HGap(0, 1),
+        ui:ComboBox{ ID = "Smooth", Weight = 0, MinimumSize = { 150, 0 } },
       },
+      ui:VGap(8, 0),
       ui:HGroup{
         Weight = 0,
         ui:Button{ ID = "Transcribe", Text = T("btn_transcribe") },
         ui:Button{ ID = "ImportSrt", Text = T("btn_import") },
       },
+      ui:VGap(8, 0),
       -- one label for status, hints and questions: labels shown later lay out badly
       ui:Label{ ID = "Status", Text = "", WordWrap = true, Weight = 1, MinimumSize = { 400, 80 },
                 Alignment = { AlignLeft = true, AlignTop = true } },

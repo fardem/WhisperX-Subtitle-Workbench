@@ -806,15 +806,15 @@ def test_unusable_saved_geometry_is_ignored(tmp_path):
     g.WX_TEST = True
     m = h.lua.execute(h.code)
     for bad in ("", "1,2,3", "0,0,100,100", "-5000,0,700,500", "0,0,99999,500"):
-        assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "4"})) is None
-    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,392", "layout": "4"})).values()) == \
-        [10, 20, 600, 392]
+        assert m.saved_geometry(h.lua.table_from({"geometry": bad, "layout": "5"})) is None
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,320", "layout": "5"})).values()) == \
+        [10, 20, 600, 320]
     # Resolve 21.2 reported 505 wide although the minimum is 520 - restore it anyway
-    assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,392", "layout": "4"})).values()) == \
-        [260, 180, 505, 392]
-    # saved before the rows with characters and lines (2) and with "Smooth display" (3): too low
-    for layout in ("2", "3"):
-        assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,360", "layout": layout})) is None
+    assert list(m.saved_geometry(h.lua.table_from({"geometry": "260,180,505,320", "layout": "5"})).values()) == \
+        [260, 180, 505, 320]
+    # saved for another arrangement of the rows: too low or too high for this one
+    for layout in ("2", "3", "4"):
+        assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,600,392", "layout": layout})) is None
     # saved by an older plugin (no layout key): its start size was too big - start with the new one
     assert m.saved_geometry(h.lua.table_from({"geometry": "10,20,640,460"})) is None
 
@@ -845,8 +845,8 @@ def test_characters_and_lines_go_into_the_job_and_stay(tmp_path):
         h.click("Cancel")
 
     h.run(steps, timelines=[timeline()])
-    assert (seen["saved"]["chars"], seen["saved"]["lines"]) == ("30", "1")
-    assert (seen["job"].chars, seen["job"].lines) == (30, 1)
+    assert (seen["saved"]["cue_chars"], seen["saved"]["lines"]) == ("30", "1")
+    assert (seen["job"].cue_chars, seen["job"].lines) == (30, 1)
 
     def second(h):
         seen["again"] = (h.mock["items"].Chars.Value, h.mock["items"].Lines.Value)
@@ -855,16 +855,30 @@ def test_characters_and_lines_go_into_the_job_and_stay(tmp_path):
     assert seen["again"] == (30, 1)
 
 
-def test_characters_and_lines_start_with_the_values_of_the_ini(tmp_path):
+@pytest.mark.parametrize("layout", ["default_cue_chars = 74\ndefault_lines = 2",
+                                    "default_chars = 37\ndefault_lines = 2"])     # INI with characters per line
+def test_characters_and_lines_start_with_the_values_of_the_ini(tmp_path, layout):
     h = Harness(tmp_path)
-    (h.wb / "whisper_tool.ini").write_text("[Layout]\ndefault_chars = 37\ndefault_lines = 2\n", encoding="utf-8")
+    (h.wb / "whisper_tool.ini").write_text(f"[Layout]\n{layout}\n", encoding="utf-8")
     seen = {}
 
     def steps(h):
         seen["values"] = (h.mock["items"].Chars.Value, h.mock["items"].Lines.Value)
 
     h.run(steps, timelines=[timeline()])
-    assert seen["values"] == (37, 2)
+    assert seen["values"] == (74, 2)
+
+
+def test_saved_characters_per_line_count_for_the_whole_subtitle(tmp_path):
+    h = Harness(tmp_path)
+    (h.last / "plugin.txt").write_text("chars=42\nlines=2\n", encoding="utf-8")
+    seen = {}
+
+    def steps(h):
+        seen["values"] = (h.mock["items"].Chars.Value, h.mock["items"].Lines.Value)
+
+    h.run(steps, timelines=[timeline()])
+    assert seen["values"] == (84, 2)
 
 
 def test_characters_and_lines_are_greyed_out_for_word_by_word_and_raw(tmp_path):
@@ -898,8 +912,8 @@ def test_without_a_spinbox_a_text_field_is_checked_before_rendering(tmp_path):
         h.click("Cancel")
 
     h.run(steps, timelines=[timeline()])
-    assert seen["status"] == h.T("err_numbers", chars_lo=10, chars_hi=200, lines_lo=1, lines_hi=5)
-    assert seen["dirs"] == [] and seen["job"].chars == 38
+    assert seen["status"] == h.T("err_numbers", chars_lo=10, chars_hi=400, lines_lo=1, lines_hi=5)
+    assert seen["dirs"] == [] and seen["job"].cue_chars == 38
 
 
 # ─── Plugin window closes after the import ────────────────────────────────────

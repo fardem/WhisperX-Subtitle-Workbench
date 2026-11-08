@@ -2,6 +2,15 @@
 
 All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [0.7.9] – 2026-11-08
+
+**Updating from 0.7.8:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. The plugin window starts once with its new size. Your `whisper_tool.ini` needs no change: without the new key `default_cue_chars` the Workbench takes `default_chars × default_lines`, so your subtitles stay the same. *Save as default* in the main window writes `default_cue_chars`; afterwards you can delete `default_chars`. The Python packages need no change.
+
+- **Characters per subtitle.** *Chars* in the main window and in the plugin window is the number of characters of one subtitle, spread over its *Lines*: 84 in 2 lines gives up to 42 per line. Before, it was the number per line. The fields are called *Chars* and *Lines* (German *Zeichen* and *Zeilen*), the range is 10–400. INI: `[Layout] default_cue_chars`; without it `default_chars × default_lines`. A job or a saved choice of an older plugin, which has characters per line, is converted the same way
+- **Flickerfree** is the name of the option *Smooth display* everywhere: in the plugin window, under *Settings → Subtitles → 2 · Pauses*, in the log of a DaVinci job and in the READMEs, in all three languages
+- **Plugin window** smaller (600 × 320, before 600 × 392) with a gap between the blocks; *Flickerfree* stands right of *Chars* and *Lines*
+- New screenshots of the main window, of a DaVinci job and of the tabs *Subtitles*, *DaVinci Resolve* and *General*
+
 ## [0.7.8] – 2026-11-08
 
 **Updating from 0.7.7:** install the plugin again – the Workbench asks at the first start, or use *Settings → DaVinci Resolve*. The plugin window starts once with its new size. Your `whisper_tool.ini` needs no change: without the new keys the plugin window closes after 10 seconds. The Python packages need no change either; to get the newly tested versions: `venv\Scripts\python.exe -m pip install --no-deps ctranslate2==4.8.5 certifi==2026.10.23 urllib3==2.8.0 requests==2.34.2 idna==3.20 charset-normalizer==3.5.2`.

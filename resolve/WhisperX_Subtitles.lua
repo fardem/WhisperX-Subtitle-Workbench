@@ -16,7 +16,7 @@ left-over own jobs removed. Own code.
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.7.9",
+  version   = "0.8.0",
   workbench = nil,
   python    = nil,
   lang      = "en",

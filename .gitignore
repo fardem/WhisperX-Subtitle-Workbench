@@ -32,3 +32,14 @@ temp/
 
 # Tests
 .pytest_cache/
+
+# Installer: log, state, lock, update download and backups, report of the removal
+install.log
+install.lock
+wt_install.json.tmp
+update/
+update-backup/
+venv-alt-*/
+*.deleting/
+uninstall_report.txt
+whisper_tool_shutdown.log

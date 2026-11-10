@@ -11,6 +11,7 @@ README.tr.md
 Whisper_Tool.bat
 constraints.txt
 docs/images/compare-dialog.png
+docs/images/installer.png
 docs/images/main-window.png
 docs/images/report-dark.png
 docs/images/report-differences.png

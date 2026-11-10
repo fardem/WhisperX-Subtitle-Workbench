@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.7.9** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.8.0** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -20,6 +20,7 @@ Video veya ses dosyalarını pencereye sürüklersiniz, Workbench `.srt` altyaz�
 - [Gereksinimler ve bağımlılıklar](#gereksinimler-ve-bağımlılıklar) – kurulumdan önce okuyun
 - [Kurulum (Windows)](#kurulum-windows)
 - [Güvenli güncelleme](#güvenli-güncelleme)
+- [Kaldırma](#kaldırma)
 - [Kullanım](#kullanım)
 - [Transkriptleri karşılaştırma](#transkriptleri-karşılaştırma)
 - [DaVinci Resolve](#davinci-resolve)
@@ -55,11 +56,13 @@ Video veya ses dosyalarını pencereye sürüklersiniz, Workbench `.srt` altyaz�
   - Zaman sapmalarını gösterir.
   - Rapordaki her zaman tıklanabilir ve sesi o noktadan çalar.
 - **DaVinci Resolve:** bir eklenti zaman çizelgesini doğrudan Resolve içinden yazıya döker; altyazılar yerel bir altyazı izine geri gelir (bkz. [DaVinci Resolve](#davinci-resolve)).
+- **Çift tıkla kurulum:** `install.bat` Python'u, ekran kartını, sürücüyü ve ffmpeg'i kontrol eder, eksik olanı ve test edilmiş paket sürümlerini kurar ve hangi paketleri güncellediğini veya geri aldığını önce ve sonra söyler. Güncellemeler GitHub'dan gelir. `uninstall.bat` Workbench'i kaldırır ve ayarlarınızı korur (bkz. [Kurulum](#kurulum-windows)).
 - **Sistem kontrolü** her başlatmada: Python'u, tüm paketleri sürümleriyle, ffmpeg'i, modelleri ve ekran kartını listeler ve hangi işlevin çalışmayacağını söyler.
 - **Kolaylıklar:**
   - BAT dosyasına veya pencereye sürükle-bırak. İkinci bir başlatma, dosyalarını zaten açık olan pencereye aktarır.
   - Bir geri sayım işlemi otomatik olarak başlatır; DaVinci Resolve'dan gelen işlerin kendi geri sayımı vardır.
   - Tanınan satırlar günlükte canlı görünür.
+  - *Bitince bilgisayarı kapat* son dosyadan sonra bilgisayarı kapatır.
   - İpuçları her seçeneği açıklar.
   - Ayarlar penceresi yalnızca değişen değerleri yazar ve INI'deki açıklamaları korur.
 - **Çok dilli:** Türkçe, İngilizce ve Almanca. Tek bir JSON dosyasını kopyalayarak başka diller ekleyebilirsiniz (bkz. [Arayüz dili ve çeviriler](#arayüz-dili-ve-çeviriler)).
@@ -130,6 +133,30 @@ whisperx 3.8.x ── ister: torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.23.
 ---
 
 ## Kurulum (Windows)
+
+### install.bat ile (önerilen)
+
+1. **İndirin:** [WhisperX-Subtitle-Workbench.zip](https://github.com/fardem/WhisperX-Subtitle-Workbench/releases/latest/download/WhisperX-Subtitle-Workbench.zip) (en yeni sürüm).
+2. **Ayıklayın:** ZIP dosyasına sağ tıklayın → *Tümünü ayıkla*. Çift tıklama ZIP dosyasını yalnızca açar; `install.bat` oradan çalışmaz.
+3. Ayıklanan klasörde **`install.bat` dosyasına çift tıklayın**. Dosya internetten geldiği için Windows uyarabilir: *Daha fazla bilgi* → *Yine de çalıştır*.
+4. Python eksikse, siyah pencere Python 3.13'ün winget ile kurulup kurulmayacağını sorar: `E` ile yanıtlayın. Yönetici hakları gerekmez.
+5. Yükleyici penceresi neyi bulduğunu ve ne yapacağını listeler. Mavi düğmeye basmadan önce hiçbir şeyi değiştirmez.
+
+![Yükleyici](docs/images/installer.png)
+
+Yükleyici:
+- `C:\WhisperX-Subtitle-Workbench` klasörüne kurar (*Değiştir …* başka bir klasör seçer). İçinde `venv` ile bir Workbench bulunan bir klasörü olduğu yerde onarır.
+- ffmpeg'i ve gerekirse Microsoft Visual C++ Runtime'ı winget ile kurar; her biri listedeki bir işaretten sonra.
+- Ekran kartı için PyTorch sürümünü seçer: RTX 20xx–50xx ve GTX 16xx için `cu128`, GTX 9xx/10xx ve Titan V için `cu126`, NVIDIA kartı yoksa CPU sürümü. `cu126` için *Hassasiyet*'i `int8`'e, CPU sürümü için *Cihaz*'ı `cpu`'ya ayarlar – yalnızca orada hâlâ varsayılan değer duruyorsa.
+- `constraints.txt` sürümlerini aşağıdaki el ile kurulumun sırasıyla kurar.
+- Masaüstünde ve Başlat menüsünde bir kısayol ve *Ayarlar → Uygulamalar* altında bir kayıt oluşturur, Whisper modelini indirir ve DaVinci Resolve eklentisini kurar – her biri bir işaretten sonra.
+- Kurulum sırasında bekleme modunu engeller ve her şeyi `install.log` dosyasına yazar.
+
+Başka bir klasöre kurulumdan sonra ayıklanmış klasöre artık gerek yoktur.
+
+Kurulum durursa, örneğin internet bağlantısı kesildiği için, `install.bat`'ı yeniden başlatın: Kaldığı yerden devam eder ve bitmiş dosyaları yeniden indirmez. Başlat menüsündeki *WhisperX Subtitle Workbench – güncelle veya onar* kaydı da onu başlatır.
+
+### El ile kurulum
 
 Tüm komutlar `cmd.exe` içindir. Örnek klasör `C:\WhisperX-Subtitle-Workbench`. Başka bir klasör de olur, yeter ki `venv` onun **içinde** olsun; çünkü `Whisper_Tool.bat` onu orada arar.
 
@@ -225,6 +252,12 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.7.0
 
 ## Güvenli güncelleme
 
+**install.bat ile:** *Ayarlar → Genel → Güncellemeleri ara …* GitHub'a yeni bir sürüm sorar; Workbench kapanır ve `install.bat` devralır. Ya da yeni ZIP dosyasını indirin, ayıklayın ve içindeki `install.bat`'ı başlatın: Kurulu Workbench'i bulur ve günceller. Yükleyici bir şeyi değiştirmeden önce hangi paketleri güncellediğini (daha yeni sürüm) ve hangilerini geri aldığını (daha eski sürüm) listeler; sonrasında neyi değiştirdiğini gösterir. Eski sürümün program dosyaları `update-backup\` içinde kalır; güncelleme başarısız olursa *Eski sürümü geri yükle* onları geri getirir. `whisper_tool.ini` asla değiştirilmez.
+
+Başlangıçta Workbench, GitHub'a günde en fazla bir kez yeni bir sürüm sorar ve günlükte belirtir; *Ayarlar → Genel* bunu kapatır (`[System] update_check = 0`).
+
+**El ile:**
+
 - **Önce Workbench'i kapatın.** Çalışan sürüm başlık çubuğunda *WhisperX Subtitle Workbench* adının arkasında, günlüğün ilk satırında ve *Ayarlar → Genel* altında görünür. Yeni sürümü başlattığınızda daha eski bir pencere hâlâ açıksa, yeni sürüm dosyalarınızı sessizce eski pencereye aktarmak yerine sizi uyarır.
 - **Workbench'in kendisi:** `git pull`, ya da yeni dosyaları eskilerin üzerine kopyalayın. Ayarlarınız `whisper_tool.ini` dosyasındadır. Bu dosya depoya ait değildir, bu yüzden bir güncelleme onun üzerine asla yazmaz. Yeni seçenekler otomatik olarak varsayılan değer alır.
 - **Python paketleri:** yalnızca yeni bir şeye ihtiyacınız olduğunda güncelleyin. Güvenli yol şöyledir:
@@ -253,6 +286,21 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.7.0
 
 ---
 
+## Kaldırma
+
+Workbench klasöründeki `uninstall.bat`'ı başlatın veya *Ayarlar → Uygulamalar → WhisperX Subtitle Workbench → Kaldır*. Bir pencere neyin kaldırılacağını listeler, her grup işareti ve boyutuyla:
+
+- Python ortamı (`venv`)
+- program dosyaları, kısayollar ve *Uygulamalar* altındaki kayıt
+- kendi modelleriniz (`models`)
+- `resolve_temp` içindeki son aktarımların SRT'leri – timeline'larınızdaki altyazılar kalır, *WhisperX* bin'indeki öğeler sonrasında çevrimdışı olur
+- bu klasöre aitse DaVinci Resolve eklentisi
+- kullanıcı klasörünüzdeki indirilmiş modeller – varsayılan olarak kapalı, başka programlar kullanabilir
+
+Geçici dosyalar ve günlükler sormadan kaldırılır. `whisper_tool.ini` ve `whisper_tool.ini.bak` her zaman kalır; Workbench'e ait olmayan tüm dosyalar da, örneğin klasördeki videolar ve SRT'ler. Sondaki rapor onları yollarıyla birlikte belirtir ve bilgisayarda neyin kaldığını listeler: Python, ffmpeg, Visual C++ Runtime ve önbellekler, her biri için `install.bat`'ın kurup kurmadığı bilgisiyle. Rapor `uninstall_report.txt` olarak kaydedilir. `uninstall.bat` Python'u, ffmpeg'i ve sürücüleri asla kaldırmaz.
+
+---
+
 ## Kullanım
 
 | Sürüklediğiniz … | Workbench'in yaptığı … | Sonuç |
@@ -264,6 +312,7 @@ venv\Scripts\python.exe -m pip install --no-deps tkinterdnd2==0.7.0
 | bir DaVinci Resolve işinin WAV dosyası – eklenti Workbench'i bununla başlatır | yazıya dökme, ardından **→ DaVinci'ye aktar** | altyazılar Resolve'da bir altyazı izinde |
 
 - **Başlat** seçili dosyaları işler. Seçim yoksa henüz bitmemiş tüm dosyaları işler. Hepsi bittiyse hepsini yeniden işler, örn. farklı bir düzenle.
+- **Bitince bilgisayarı kapat:** *Başlat*'ın yanındaki işaretle bilgisayar son dosyadan sonra kapanır. Önce bir pencere 60 saniye geri sayar; oradaki *İptal* bilgisayarı açık bırakır. O zamana kadar bilgisayar bekleme moduna geçmez ve günlük `whisper_tool_shutdown.log` olarak kaydedilir. Ana penceredeki *İptal*'den sonra kapatılmaz; eklenti Workbench'i başlattıysa işaret görünmez, listede DaVinci Resolve'dan bir iş varken kilitlidir. Kaydedilmemiş verisi olan programlar, örneğin DaVinci Resolve, kapatmayı durdurabilir.
 - **Dil:**
   - *Otomatik*, dili her dosya için ilk 30 saniyeye göre algılar.
   - Sabit bir dil daha güvenilirdir. Kayıt müzikle veya bir girişle başlıyorsa onu seçin.
@@ -415,10 +464,13 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 
 | Sorun | Çözüm |
 |---|---|
+| `install.bat`: “Windows bilgisayarınızı korudu” | *Daha fazla bilgi* → *Yine de çalıştır*. Yükleyici, Workbench dosyalarından internet işaretini kaldırır; sonrasında uyarı tekrar gelmez |
+| Kurulum durdu | `install.bat`'ı yeniden başlatın; devam eder. Ayrıntılar Workbench klasöründeki `install.log` içindedir |
+| Yükleyici, test edilenden daha yeni paketler bildiriyor | *Uyarla (önerilen)* onları test edilmiş sürümlere geri alır. Aynı `venv` içine kurduğunuz programlar daha yenilerine ihtiyaç duyabilir |
 | Güncellemeden sonra hâlâ eski arayüz görünüyor (başlık “Whisper Tool”) | Eski bir pencere hâlâ açık ve başlatmayı devraldı. Kapatın – görünmüyorsa Görev Yöneticisi'nde `pythonw.exe`'yi sonlandırın – ve yeniden başlatın |
 | Workbench başlamıyor | Bir mesaj kutusu nedeni gösterir. Aynı metin `whisper_tool_error.log` dosyasında da bulunur |
 | Sistem kontrolünde bir satır kırmızı | Eksik parçayı ve hangi işlevin etkilendiğini söyler. Bkz. [Sık görülen kurulum hataları](#sık-görülen-kurulum-hataları) |
-| “torch, CUDA'sız bir sürüm” | torch PyPI'dan kurulmuş. Kurulumun 4. adımını tekrarlayın |
+| “torch, CUDA'sız bir sürüm” | torch PyPI'dan kurulmuş. `install.bat`'ı başlatın: torch'u ekran kartınız için olan sürümle değiştirir. El ile: el ile kurulumun 4. adımı |
 | Kısık sesli yerlerde metin eksik | Boşluk kontrolüne bakın. Sonra *Onset*'i düşürün veya *silero*'yu deneyin (*Ayarlar → Konuşma algılama*) |
 | Altyazılarda yanlış kelimeler | Skor kontrolünü açın (*Ayarlar → Konuşma algılama*) ve listelediği yerleri dinleyin. Tekrarlayan hataları bir değiştirme veya prompt ile düzeltin (*Ayarlar → Diller*) |
 | Skor kontrolü doğru olan birçok adı işaretliyor | Adlar ve yabancı kelimeler çoğu zaman düşük skor alır. Eşiği düşürün, örn. 0,30'a |
@@ -446,12 +498,19 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | `lang/*.json` | Arayüzün, günlüğün ve raporun tüm metinleri (en, de, tr) |
 | `whisper_tool.example.ini` | Ayar şablonu; ilk başlatmada `whisper_tool.ini` olarak kopyalanır |
 | `Whisper_Tool.bat` | Başlatıcı: çift tıklayın veya dosyaları üzerine sürükleyin |
+| `install.bat` | Kurulum, onarım ve güncelleme: bir Python bulur ve yükleyici penceresini açar |
+| `uninstall.bat` | Kaldırma; `whisper_tool.ini` kalır |
+| `wt_setup.py` | Yükleyici ve kaldırıcının mantığı: kontroller, paket karşılaştırması, kopyalama, kaldırma (yalnızca standart kütüphane) |
+| `wt_setup_ui.py` | Yükleyici ve kaldırıcının penceresi |
+| `wt_files.txt` | Bu sürümün program dosyaları; `python tools/manifest.py --write` listeyi yazar |
+| `.github/workflows/release.yml` | Her sürüme `WhisperX-Subtitle-Workbench.zip` ekler |
 | `requirements.txt` | Test edilmiş paket sürümleri (önce torch'u kurun, 4. adım) |
 | `constraints.txt` | Test edilmiş kurulumdaki tüm paketlerin tam sürümleri (`pip freeze`), 5. adımda `-c` ile kullanılır |
 | `tests/` | Otomatik testler (pytest). Ekran kartı veya WhisperX gerektirmez, GitHub'da her push'ta çalışır. Resolve eklentisinin testleri taklit bir Resolve'a karşı çalışır ve `lupa` paketini gerektirir; o yoksa atlanır |
 | `tools/comments.py` | Dosya başına yorum satırlarını sayar; `--write` sınırları `tests/comment_limits.json` içine yazar |
 | `CLAUDE.md` | Bu projedeki metinler ve yorumlar için kurallar (Claude Code okur) |
 | `resolve_temp/` | Eklentinin iş klasörleri ve son 10 aktarımın SRT'leri (depoda değil) |
+| `install.log`, `wt_install.json`, `update-backup/` | Yükleyicinin günlüğü ve durumu, bir güncellemeden önceki sürümün program dosyaları (depoda değil) |
 
 ---
 

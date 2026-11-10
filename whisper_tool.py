@@ -16,6 +16,7 @@ for _cat in (UserWarning, FutureWarning, DeprecationWarning):
     warnings.filterwarnings("ignore", category=_cat)
 
 import argparse
+import json
 import queue
 import re
 import shutil
@@ -109,6 +110,10 @@ try:
     import wt_resolve
 except Exception:
     wt_resolve = None      # without wt_resolve.py there is no DaVinci Resolve connection
+try:
+    import wt_setup
+except Exception:
+    wt_setup = None        # without wt_setup.py there is no update from GitHub
 
 
 def lang_choices() -> list:
@@ -378,6 +383,8 @@ class App(BaseTk):
         self.after(self.POLL_MS, self._poll)
         self._start_ipc()
         self.after(300, self.run_check)          # system check on every start
+        if wt_setup and self.cfg.update_check:
+            threading.Thread(target=self._update_hint, daemon=True).start()
         if wt_resolve:                           # left-over job folders of the DaVinci Resolve plugin
             threading.Thread(target=self._cleanup_resolve_jobs, daemon=True).start()
 
@@ -985,6 +992,8 @@ class App(BaseTk):
                     info, it = msg[2], self.items[msg[1]]
                     it.update(out=info["output"], lang=info.get("language"), mode=info.get("mode"),
                               gap_list=info.get("gap_list") or [], score_list=info.get("score_list") or [])
+            elif kind == "update":
+                self._update_answer(*msg[1:])
             elif kind == "dnd":
                 ok, text, parent = msg[1:]
                 (messagebox.showinfo if ok else messagebox.showerror)(
@@ -1229,6 +1238,49 @@ class App(BaseTk):
                 self.cfg.resolve_skip = VERSION
             except OSError as e:
                 self._append_log(i18n.tag("warn") + T("main.save_failed", err=e) + "\n")
+
+    # ── Update from GitHub ─────────────────────────────────────────────────────
+
+    def _update_hint(self):
+        """Background: a line in the log if GitHub has a newer release (asked at most once a day)."""
+        release = wt_setup.cached_latest(HERE)
+        if release and wt_setup.newer(release["version"], VERSION):
+            self.q.put(("log", i18n.line("info", "main.update_available", version=release["version"]) + "\n"))
+
+    def check_update(self, parent):
+        """Settings → General: ask GitHub now; a newer version is installed by install.bat after closing."""
+        def work():
+            release = wt_setup.latest_release()
+            try:
+                (HERE / wt_setup.UPDATE_CHECK).write_text(json.dumps({"checked": time.time(), "release": release}),
+                                                          encoding="utf-8")
+            except OSError:
+                pass
+            self.q.put(("update", release, parent))
+        threading.Thread(target=work, daemon=True).start()
+
+    def _update_answer(self, release, parent):
+        parent = parent if parent and parent.winfo_exists() else self
+        title = T("set.update_title")
+        if release is None:
+            messagebox.showerror(title, T("set.update_failed"), parent=parent)
+        elif not wt_setup.newer(release["version"], VERSION):
+            messagebox.showinfo(title, T("set.update_current", version=VERSION), parent=parent)
+        elif (HERE / ".git").exists():
+            messagebox.showinfo(title, T("set.update_git", new=release["version"]), parent=parent)
+        elif sys.platform != "win32" or not (HERE / "install.bat").exists():
+            messagebox.showinfo(title, T("set.update_windows", new=release["version"]), parent=parent)
+        elif self._running():
+            messagebox.showinfo(title, T("set.update_running", new=release["version"]), parent=parent)
+        elif messagebox.askyesno(title, T("set.update_ask", new=release["version"], old=VERSION), parent=parent):
+            try:
+                subprocess.Popen(["cmd", "/c", "start", "", str(HERE / "install.bat")], cwd=str(HERE),
+                                 creationflags=core.NO_WINDOW)
+            except OSError as e:
+                messagebox.showerror(title, str(e), parent=parent)
+                return
+            self.destroy()
+            os._exit(0)
 
     def _update_resolve_ui(self):
         """The hand-over button exists only in Resolve mode and works once a job is transcribed."""
@@ -1988,7 +2040,15 @@ class SettingsDialog(tk.Toplevel if tk else object):
             dnd = ttk.Button(f, text=T("set.dnd_enable"), command=lambda: self.app.install_dnd(self))
         self._row(f, 7, "dnd", dnd, "" if DND_FILES else None)
         self._row(f, 8, "version", ttk.Label(f, text=f"{APP_NAME} {VERSION}"), str(HERE))
-        self._note(f, 9, T("set.note_start"))
+        upd = ttk.Checkbutton(f, text=T("set.update_check"), variable=self._var("System", "update_check",
+                                                                                c.update_check, True))
+        upd.grid(row=9, column=0, columnspan=3, sticky="w", pady=4)
+        tip(upd, "update_check", self.app.scale)
+        b_upd = ttk.Button(f, text=T("set.update_now"), command=lambda: self.app.check_update(self))
+        self._row(f, 10, "update", b_upd)
+        if wt_setup is None:
+            b_upd.state(["disabled"])
+        self._note(f, 11, T("set.note_start"))
 
     # ── Languages tab ──────────────────────────────────────────────────────────
 

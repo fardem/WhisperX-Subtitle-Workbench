@@ -197,3 +197,12 @@ def test_ini_with_characters_per_line_keeps_its_subtitles(tmp_path):
     assert (cfg.layout(54, 1).max_chars, cfg.layout(54, 2).max_chars, cfg.layout(55, 2).max_chars) == (54, 27, 27)
     ini.write_text("[Layout]\ndefault_chars = 42\ndefault_cue_chars = 60\ndefault_lines = 2\n", encoding="utf-8")
     assert core.Config(ini).default_cue_chars == 60
+
+
+def test_update_check_is_on_without_its_key(tmp_path):
+    ini = tmp_path / "old.ini"
+    ini.write_text("[System]\ndevice = cuda\n", encoding="utf-8")
+    assert core.Config(ini).update_check is True
+    ini.write_text("[System]\nupdate_check = 0\n", encoding="utf-8")
+    assert core.Config(ini).update_check is False
+    assert core.Config(EXAMPLE).update_check is True

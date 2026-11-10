@@ -522,3 +522,68 @@ def test_starter_offers_the_installation():
     text = "\n".join(bat_lines("Whisper_Tool.bat"))
     assert 'call "%~dp0install.bat" not-installed' in text
     assert "not-installed" in "\n".join(bat_lines("install.bat"))
+
+
+# ─── Steps of the installer window ───────────────────────────────────────────
+
+class Plan:
+    def __init__(self, **a):
+        base = dict(release=None, mode="inplace", older_source=False, python=object(), plugin=None,
+                    scenario=s.Scenario("new"))
+        base.update(a)
+        self.a = base
+
+
+def plan(c=None, **a):
+    ui = pytest.importorskip("wt_setup_ui")
+    return ui.InstallWindow.plan(Plan(**a), c or {})
+
+
+def test_plan_of_a_new_installation():
+    assert plan({"ffmpeg": True, "model": True}, python=None) == [
+        "python", "ffmpeg", "venv", "pip", "torch", "packages", "dnd", "verify", "ini", "extras", "model"]
+
+
+def test_plan_copies_first_and_continues_in_the_target_folder():
+    assert plan(mode="copy") == ["copy"]
+    assert plan({"online": True}, release={"version": "9.9.9"}) == ["download", "copy"]
+    assert plan({"online": False}, release={"version": "9.9.9"}, scenario=s.Scenario("ok"))[0] == "pip"
+
+
+def test_plan_of_a_repair_keeps_the_venv():
+    steps = plan({"repair": True}, scenario=s.Scenario("ok"))
+    assert "venv" not in steps and steps[0] == "pip"
+    assert "venv" in plan({"recreate": True}, scenario=s.Scenario("changes"))
+
+
+def test_target_folder(tmp_path, monkeypatch):
+    ui = pytest.importorskip("wt_setup_ui")
+    monkeypatch.setattr(s, "registered_location", lambda: None)
+    monkeypatch.setattr(s, "default_target", lambda env=None: tmp_path / "C" / "WhisperX-Subtitle-Workbench")
+    src = tmp_path / "Downloads" / "WhisperX-Subtitle-Workbench"
+    src.mkdir(parents=True)
+    assert ui.choose_target(src) == (tmp_path / "C" / "WhisperX-Subtitle-Workbench", "copy")
+    (src / "venv").mkdir()
+    assert ui.choose_target(src) == (src, "inplace")
+
+
+def test_install_report_names_updates_and_downgrades(tmp_path):
+    ui = pytest.importorskip("wt_setup_ui")
+    r = {"before": {"numpy": "2.3.4", "certifi": "2026.9.1", "x": "1"},
+         "after": {"numpy": "2.2.6", "certifi": "2026.10.23", "x": "1"}, "system": ["ffmpeg 8.0"]}
+    lines = [text for _, text in ui.install_report(r, {"model": "large-v3"}, tmp_path, tmp_path)]
+    joined = "\n".join(lines)
+    assert "numpy 2.3.4 → 2.2.6" in joined and "certifi 2026.9.1 → 2026.10.23" in joined
+    assert "Unchanged: 1 packages" in joined and "ffmpeg 8.0" in joined
+
+
+def test_uninstall_report_lists_what_stays(tmp_path, monkeypatch):
+    ui = pytest.importorskip("wt_setup_ui")
+    monkeypatch.setattr(s, "plugin_of", lambda folder: None)
+    folder = make_installation(tmp_path / "wb")
+    plan_ = s.uninstall_plan(folder, env={})
+    r = {"removed": ["temp", "venv"], "failed": [("C:/x/venv/a.dll", "in use")], "freed": 2_500_000_000,
+         "state": {"python": "C:/Python313/python.exe", "installed_by_setup": {"python": True}}}
+    text = ui.uninstall_report(r, plan_, folder)
+    assert "2.5 GB" in text and "C:/Python313/python.exe – installed by install.bat" in text
+    assert "interview.mp4" in text and "whisper_tool.ini" in text and "C:/x/venv/a.dll – in use" in text

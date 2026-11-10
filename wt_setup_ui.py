@@ -19,9 +19,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-import wt_i18n as i18n  # noqa: E402
-import wt_setup as s  # noqa: E402
-from wt_i18n import T, Tn  # noqa: E402
+import wt_i18n as i18n
+import wt_setup as s
+from wt_i18n import T, Tn
 
 try:
     import tkinter as tk
@@ -569,12 +569,11 @@ class InstallWindow(Wizard):
 
     def plan(self, c: dict) -> list[str]:
         a, sc = self.a, self.a["scenario"]
-        steps = []
         if c.get("online") and a["release"]:
-            steps.append("download")
+            return ["download", "copy"]     # the rest runs from the target folder, with the new files
         if a["mode"] == "copy" and (not a["older_source"] or c.get("older")):
-            steps.append("copy")
-            return steps                    # the rest runs from the new folder, with its own files
+            return ["copy"]
+        steps = []
         if a["python"] is None:
             steps.append("python")
         if c.get("ffmpeg"):
@@ -722,15 +721,19 @@ class InstallWindow(Wizard):
         self.button(T("setup.btn_close"), self.destroy)
         self.button(T("setup.btn_retry"), self.start_analysis, accent=True)
         self.button(T("setup.btn_log"), lambda: open_path(self.target / s.LOG_FILE))
-        backup = self.target / s.BACKUP_DIR / (self.a.get("target_version") or "")
-        if self.a.get("target_version") and backup.is_dir():
+        previous = self.previous_version()
+        if previous and (self.target / s.BACKUP_DIR / previous).is_dir():
             self.button(T("setup.btn_restore"), self.restore)
 
+    def previous_version(self) -> str:
+        """The version before an update of this folder: its program files are in update-backup/<version>/."""
+        return s.read_state(self.target).get("previous_version") or self.a.get("target_version") or ""
+
     def restore(self):
-        version = self.a["target_version"]
+        version = self.previous_version()
         if s.restore_program(self.target, version, log=self.log):
-            self.source = self.target
-            self.mode = "inplace"
+            s.write_state(self.target, previous_version=None, pending=None)
+            self.source, self.mode = self.target, "inplace"
             self.a["target_version"] = ""
             self.start_analysis()
 
@@ -759,10 +762,10 @@ class Steps:
             self.w.in_ui(self.w.step_state, st, "⚠" if warn else "✓")
             if st == "copy":
                 return {"restart": True}
-        s.write_state(self.target, phase="complete", completed=time.strftime("%Y-%m-%d %H:%M"), pending=None)
-        lock = self.target / s.LOCK_FILE
-        if lock.exists():
-            lock.unlink()
+        s.write_state(self.target, phase="complete", completed=time.strftime("%Y-%m-%d %H:%M"), pending=None,
+                      previous_version=None)
+        for p in (self.target / s.LOCK_FILE, self.target / s.UPDATE_DIR):
+            s.remove_tree(p)
         return self.result
 
     def sh(self, cmd, key: str, timeout=None, fatal=True) -> int:
@@ -805,12 +808,13 @@ class Steps:
             raise s.SetupError("running")
         self.target.mkdir(parents=True, exist_ok=True)
         self.w.in_ui(self.w.set_log_file, self.target / s.LOG_FILE)
+        previous = s.read_version(self.target) if s.read_manifest(self.target) else ""
         try:
             info = s.copy_program(src, self.target, log=self.w.log)
         except OSError as e:
             raise s.SetupError("copy", f"{e.filename}: {e.strerror}")
         s.unblock(self.target, info["copied"])
-        s.write_state(self.target, downloaded_from=str(src))
+        s.write_state(self.target, downloaded_from=str(src), previous_version=previous or None)
 
     # ── Software on the PC ──
 

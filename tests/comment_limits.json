@@ -80,7 +80,7 @@
     "long_blocks": 0
   },
   "tests/test_setup.py": {
-    "lines": 16,
+    "lines": 17,
     "long_blocks": 0
   },
   "tests/test_shutdown.py": {
@@ -132,7 +132,7 @@
     "long_blocks": 0
   },
   "wt_setup_ui.py": {
-    "lines": 25,
+    "lines": 23,
     "long_blocks": 0
   },
   "wt_version.py": {

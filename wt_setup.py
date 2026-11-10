@@ -426,7 +426,10 @@ def standard_pythons(env=os.environ) -> list[Path]:
 
 def find_pythons() -> list[PythonInfo]:
     seen, out = set(), []
-    paths = registry_pythons() + standard_pythons() + ([Path(sys.executable)] if sys.executable else [])
+    running = Path(sys.executable) if sys.executable else None
+    if running and running.name.lower() == "pythonw.exe":
+        running = running.with_name("python.exe")
+    paths = registry_pythons() + standard_pythons() + ([running] if running else [])
     for p in paths:
         key = os.path.normcase(str(p))
         if key in seen or "\\windowsapps\\python" in key and "pythonsoftwarefoundation" not in key:

@@ -192,6 +192,10 @@ Version: `# INI without [Score]`, nicht `# INI of 0.6.3`.
 - Vor jedem Push läuft `python -m pytest -q` vollständig. Das Ergebnis wird genannt. Die
   Tests des Plugins brauchen `lupa`; ohne das Paket werden sie übersprungen, das wird
   dann ebenfalls genannt.
+- Kommt eine Datei ins Repository oder fällt eine weg, schreibt `python tools/manifest.py
+  --write` danach `wt_files.txt` neu. Die Liste sagt `install.bat`, welche Dateien es
+  kopiert, und `uninstall.bat`, welche es löscht; `tests/test_setup.py` vergleicht sie mit
+  `git ls-files`. Neue Dateien müssen vorher mit `git add` erfasst sein.
 - Commit: erste Zeile sagt, was geändert wurde, höchstens 72 Zeichen, englisch. Nach
   einer Leerzeile der Grund, wenn er nicht offensichtlich ist.
 - Pull Request nur, wenn er verlangt wurde.

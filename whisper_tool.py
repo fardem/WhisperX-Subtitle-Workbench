@@ -16,6 +16,7 @@ for _cat in (UserWarning, FutureWarning, DeprecationWarning):
     warnings.filterwarnings("ignore", category=_cat)
 
 import argparse
+import json
 import queue
 import re
 import shutil
@@ -32,6 +33,7 @@ HERE        = Path(__file__).resolve().parent
 DEFAULT_INI = HERE / "whisper_tool.ini"
 EXAMPLE_INI = HERE / "whisper_tool.example.ini"
 ERROR_LOG   = HERE / "whisper_tool_error.log"
+SHUTDOWN_LOG = HERE / "whisper_tool_shutdown.log"
 sys.path.insert(0, str(HERE))      # wt_core/wt_i18n/wt_compare/wt_version live next to this script
 try:
     from wt_version import APP_NAME, VERSION
@@ -108,6 +110,10 @@ try:
     import wt_resolve
 except Exception:
     wt_resolve = None      # without wt_resolve.py there is no DaVinci Resolve connection
+try:
+    import wt_setup
+except Exception:
+    wt_setup = None        # without wt_setup.py there is no update from GitHub
 
 
 def lang_choices() -> list:
@@ -259,6 +265,32 @@ def plugin_start_action(status: str, skip: str, can_ask: bool) -> str:
     return "ask" if status == "outdated" and can_ask and skip != VERSION else "log"
 
 
+SHUTDOWN_SECONDS = 60
+
+
+def shutdown_after_run(checked: bool, cancelled: bool, resolve_job: bool) -> bool:
+    return checked and not cancelled and not resolve_job
+
+
+def shutdown_command(platform: str = sys.platform) -> list[str]:
+    """shutdown /t above 0 implies /f, which closes programs with unsaved data: the countdown runs in the window."""
+    if platform == "win32":
+        return ["shutdown", "/s", "/t", "0"]
+    return ["systemctl", "poweroff"]
+
+
+def keep_awake(on: bool):
+    """No Windows standby while a run with "Shut down when done" is going on (SetThreadExecutionState)."""
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        es_continuous, es_system_required = 0x80000000, 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(es_continuous | (es_system_required if on else 0))
+    except Exception:
+        pass
+
+
 class QueueWriter:
     """Redirects print()/logging of the libraries into the log window."""
     encoding = "utf-8"
@@ -331,6 +363,8 @@ class App(BaseTk):
         self.countdown = None
         self.countdown_resolve = False      # the running countdown is the one for DaVinci Resolve jobs
         self.current   = None
+        self.started_by_plugin = False
+        self._shutdown_win = None
 
         self.title(f"{APP_NAME} {VERSION}")
         self.scale = max(1.0, self.winfo_fpixels("1i") / 96)
@@ -343,10 +377,14 @@ class App(BaseTk):
             self._append_log(f"{i18n.tag('warn')}{w}\n")
         self._append_log(i18n.line("info", "main.settings_file", path=self.ini_path) + "\n")
         new = self.add_files(files)
+        self.started_by_plugin = any(self.items[i].get("job") for i in new)
+        self._update_shutdown_ui()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(self.POLL_MS, self._poll)
         self._start_ipc()
         self.after(300, self.run_check)          # system check on every start
+        if wt_setup and self.cfg.update_check:
+            threading.Thread(target=self._update_hint, daemon=True).start()
         if wt_resolve:                           # left-over job folders of the DaVinci Resolve plugin
             threading.Thread(target=self._cleanup_resolve_jobs, daemon=True).start()
 
@@ -526,10 +564,14 @@ class App(BaseTk):
         self.b_resolve.grid_remove()
         self.l_status = ttk.Label(bf, text=T("main.ready"))
         self.l_status.grid(row=0, column=3, sticky="w", padx=8)
+        self.v_shutdown = tk.BooleanVar(value=False)
+        self.c_shutdown = ttk.Checkbutton(bf, text=T("main.shutdown"), variable=self.v_shutdown,
+                                          command=self._shutdown_toggled)
+        self.c_shutdown.grid(row=0, column=4, padx=(0, 12))
         b_set = ttk.Button(bf, text=T("main.settings"), command=lambda: SettingsDialog(self))
-        b_set.grid(row=0, column=4)
+        b_set.grid(row=0, column=5)
         for w, key in ((self.b_start, "start"), (self.b_cancel, "cancel"), (self.b_resolve, "resolve_hand_over"),
-                       (b_set, "settings")):
+                       (self.c_shutdown, "shutdown"), (b_set, "settings")):
             tip(w, key, S)
 
         self.pb = ttk.Progressbar(root, mode="determinate", maximum=100)
@@ -809,6 +851,7 @@ class App(BaseTk):
         self._stop_countdown(silent=True)
         if self._running():
             return
+        self._cancel_shutdown()
         if not self.items:
             messagebox.showinfo(APP_NAME, T("main.no_files"), parent=self)
             return
@@ -840,6 +883,7 @@ class App(BaseTk):
         self.b_clear.state(["disabled"])
         self.worker = threading.Thread(target=self._work, args=(todo, opts), daemon=True)
         self.worker.start()
+        keep_awake(self.v_shutdown.get())
 
     def cancel(self):
         self.engine.cancel.set()
@@ -948,6 +992,8 @@ class App(BaseTk):
                     info, it = msg[2], self.items[msg[1]]
                     it.update(out=info["output"], lang=info.get("language"), mode=info.get("mode"),
                               gap_list=info.get("gap_list") or [], score_list=info.get("score_list") or [])
+            elif kind == "update":
+                self._update_answer(*msg[1:])
             elif kind == "dnd":
                 ok, text, parent = msg[1:]
                 (messagebox.showinfo if ok else messagebox.showerror)(
@@ -980,6 +1026,95 @@ class App(BaseTk):
             self.after(200, self.start)
             return
         self._notify()
+        self._after_run(ok, err)
+
+    # ── Shut down when done ────────────────────────────────────────────────────
+
+    def _update_shutdown_ui(self):
+        """Hidden in a window the plugin started; off and greyed out while a DaVinci job is in the list."""
+        if not hasattr(self, "c_shutdown"):
+            return
+        if self.started_by_plugin:
+            self.v_shutdown.set(False)
+            self.c_shutdown.grid_remove()
+        elif any(it.get("job") for it in self.items.values()):
+            if self.v_shutdown.get():
+                self.v_shutdown.set(False)
+                self._append_log(i18n.line("info", "main.shutdown_resolve") + "\n")
+            self._cancel_shutdown(quiet=True)
+            self.c_shutdown.state(["disabled"])
+        else:
+            self.c_shutdown.state(["!disabled"])
+        self._shutdown_toggled()
+
+    def _shutdown_toggled(self):
+        keep_awake(self.v_shutdown.get() and self._running())
+
+    def _after_run(self, ok, err):
+        resolve_job = any(it.get("job") for it in self.items.values())
+        if not shutdown_after_run(self.v_shutdown.get(), self.engine.cancel.is_set(), resolve_job):
+            if self.v_shutdown.get() and self.engine.cancel.is_set():
+                self._append_log(i18n.line("info", "main.shutdown_not_after_cancel") + "\n")
+            keep_awake(False)
+            return
+        self._shutdown_countdown(T("main.finished", ok=ok) + (Tn("main.finished_err", err) if err else ""))
+
+    def _shutdown_countdown(self, summary: str):
+        win = tk.Toplevel(self)
+        win.title(T("main.shutdown_title"))
+        win.transient(self)
+        win.resizable(False, False)
+        win.attributes("-topmost", True)
+        frm = ttk.Frame(win, padding=16)
+        frm.pack(fill="both", expand=True)
+        ttk.Label(frm, text=summary).pack(anchor="w")
+        label = ttk.Label(frm)
+        label.pack(anchor="w", pady=(6, 0))
+        bb = ttk.Frame(frm)
+        bb.pack(fill="x", pady=(16, 0))
+        ttk.Button(bb, text=T("main.shutdown_now"), command=self._shut_down).pack(side="left")
+        ttk.Button(bb, text=T("main.cancel"), command=lambda: self._cancel_shutdown(untick=True)).pack(
+            side="right", padx=(12, 0))
+        win.protocol("WM_DELETE_WINDOW", lambda: self._cancel_shutdown(untick=True))
+        self._shutdown_win = win
+
+        def tick(n):
+            if self._shutdown_win is not win:
+                return
+            if n <= 0:
+                self._shut_down()
+                return
+            label.config(text=T("main.shutdown_text", n=n))
+            self.after(1000, lambda: tick(n - 1))
+        tick(SHUTDOWN_SECONDS)
+
+    def _cancel_shutdown(self, untick=False, quiet=False):
+        """untick: the countdown window was cancelled; otherwise new work arrived and the tick stays."""
+        win, self._shutdown_win = self._shutdown_win, None
+        if win is None:
+            return False
+        win.destroy()
+        if untick:
+            self.v_shutdown.set(False)
+            self._append_log(i18n.line("info", "main.shutdown_aborted") + "\n")
+        elif not quiet:
+            self._append_log(i18n.line("info", "main.shutdown_postponed") + "\n")
+        self._shutdown_toggled()
+        return True
+
+    def _shut_down(self):
+        win, self._shutdown_win = self._shutdown_win, None
+        if win is not None:
+            win.destroy()
+        self._append_log(i18n.line("info", "main.shutdown_log", path=SHUTDOWN_LOG) + "\n")
+        try:
+            SHUTDOWN_LOG.write_text(self.log_text.get("1.0", "end-1c") + "\n", encoding="utf-8")
+        except OSError:
+            pass
+        try:
+            subprocess.Popen(shutdown_command(), creationflags=core.NO_WINDOW)
+        except OSError as e:
+            messagebox.showerror(APP_NAME, T("main.shutdown_failed", err=e), parent=self)
 
     # ── One window for everything ──────────────────────────────────────────────
 
@@ -1032,12 +1167,15 @@ class App(BaseTk):
 
     def _remote_files(self, paths):
         """Files were dropped onto the BAT while the window is open."""
+        postponed = self._cancel_shutdown(quiet=True)
         self.deiconify()
         self.lift()
         self.focus_force()
         self.attributes("-topmost", True)
         self.after(600, lambda: self.attributes("-topmost", False))
         new = self.add_files(paths)
+        if postponed and self.v_shutdown.get():
+            self._append_log(i18n.line("info", "main.shutdown_postponed") + "\n")
         if new and not self._running():
             # like a normal start: select new files, countdown or immediate start
             self.tree.selection_set(new)
@@ -1101,8 +1239,52 @@ class App(BaseTk):
             except OSError as e:
                 self._append_log(i18n.tag("warn") + T("main.save_failed", err=e) + "\n")
 
+    # ── Update from GitHub ─────────────────────────────────────────────────────
+
+    def _update_hint(self):
+        """Background: a line in the log if GitHub has a newer release (asked at most once a day)."""
+        release = wt_setup.cached_latest(HERE)
+        if release and wt_setup.newer(release["version"], VERSION):
+            self.q.put(("log", i18n.line("info", "main.update_available", version=release["version"]) + "\n"))
+
+    def check_update(self, parent):
+        """Settings → General: ask GitHub now; a newer version is installed by install.bat after closing."""
+        def work():
+            release = wt_setup.latest_release()
+            try:
+                (HERE / wt_setup.UPDATE_CHECK).write_text(json.dumps({"checked": time.time(), "release": release}),
+                                                          encoding="utf-8")
+            except OSError:
+                pass
+            self.q.put(("update", release, parent))
+        threading.Thread(target=work, daemon=True).start()
+
+    def _update_answer(self, release, parent):
+        parent = parent if parent and parent.winfo_exists() else self
+        title = T("set.update_title")
+        if release is None:
+            messagebox.showerror(title, T("set.update_failed"), parent=parent)
+        elif not wt_setup.newer(release["version"], VERSION):
+            messagebox.showinfo(title, T("set.update_current", version=VERSION), parent=parent)
+        elif (HERE / ".git").exists():
+            messagebox.showinfo(title, T("set.update_git", new=release["version"]), parent=parent)
+        elif sys.platform != "win32" or not (HERE / "install.bat").exists():
+            messagebox.showinfo(title, T("set.update_windows", new=release["version"]), parent=parent)
+        elif self._running():
+            messagebox.showinfo(title, T("set.update_running", new=release["version"]), parent=parent)
+        elif messagebox.askyesno(title, T("set.update_ask", new=release["version"], old=VERSION), parent=parent):
+            try:
+                subprocess.Popen(["cmd", "/c", "start", "", str(HERE / "install.bat")], cwd=str(HERE),
+                                 creationflags=core.NO_WINDOW)
+            except OSError as e:
+                messagebox.showerror(title, str(e), parent=parent)
+                return
+            self.destroy()
+            os._exit(0)
+
     def _update_resolve_ui(self):
         """The hand-over button exists only in Resolve mode and works once a job is transcribed."""
+        self._update_shutdown_ui()
         jobs = [it for it in self.items.values() if it.get("job")]
         if jobs:
             self.b_resolve.grid()
@@ -1858,7 +2040,15 @@ class SettingsDialog(tk.Toplevel if tk else object):
             dnd = ttk.Button(f, text=T("set.dnd_enable"), command=lambda: self.app.install_dnd(self))
         self._row(f, 7, "dnd", dnd, "" if DND_FILES else None)
         self._row(f, 8, "version", ttk.Label(f, text=f"{APP_NAME} {VERSION}"), str(HERE))
-        self._note(f, 9, T("set.note_start"))
+        upd = ttk.Checkbutton(f, text=T("set.update_check"), variable=self._var("System", "update_check",
+                                                                                c.update_check, True))
+        upd.grid(row=9, column=0, columnspan=3, sticky="w", pady=4)
+        tip(upd, "update_check", self.app.scale)
+        b_upd = ttk.Button(f, text=T("set.update_now"), command=lambda: self.app.check_update(self))
+        self._row(f, 10, "update", b_upd)
+        if wt_setup is None:
+            b_upd.state(["disabled"])
+        self._note(f, 11, T("set.note_start"))
 
     # ── Languages tab ──────────────────────────────────────────────────────────
 

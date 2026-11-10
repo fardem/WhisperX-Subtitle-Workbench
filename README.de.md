@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.7.9** · [Änderungen](CHANGELOG.md)
+**Version 0.8.0** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -20,6 +20,7 @@ Du ziehst Video- oder Audiodateien ins Fenster, und die Workbench erstellt `.srt
 - [Voraussetzungen und Abhängigkeiten](#voraussetzungen-und-abhängigkeiten) – vor der Installation lesen
 - [Installation (Windows)](#installation-windows)
 - [Sicher aktualisieren](#sicher-aktualisieren)
+- [Deinstallation](#deinstallation)
 - [Bedienung](#bedienung)
 - [Transkripte vergleichen](#transkripte-vergleichen)
 - [DaVinci Resolve](#davinci-resolve)
@@ -55,11 +56,13 @@ Du ziehst Video- oder Audiodateien ins Fenster, und die Workbench erstellt `.srt
   - Zeigt Zeitabweichungen.
   - Jede Zeit im Bericht ist anklickbar und spielt das Audio ab dieser Stelle.
 - **DaVinci Resolve:** Ein Plugin transkribiert die Timeline direkt aus Resolve heraus; die Untertitel kommen auf eine native Untertitelspur zurück (siehe [DaVinci Resolve](#davinci-resolve)).
+- **Installation per Doppelklick:** `install.bat` prüft Python, Grafikkarte, Treiber und ffmpeg, installiert, was fehlt, und die getesteten Paketversionen und sagt vorher und nachher, welche Pakete es aktualisiert oder zurücksetzt. Updates kommen von GitHub. `uninstall.bat` entfernt die Workbench und lässt deine Einstellungen stehen (siehe [Installation](#installation-windows)).
 - **Systemprüfung** bei jedem Start: Sie listet Python, alle Pakete samt Versionen, ffmpeg, die Modelle und die Grafikkarte auf und sagt dir, welche Funktion ausfallen würde.
 - **Komfort:**
   - Drag & Drop auf die BAT-Datei oder ins Fenster. Ein zweiter Start reicht seine Dateien an das schon offene Fenster weiter.
   - Ein Countdown startet die Verarbeitung automatisch; Jobs aus DaVinci Resolve haben einen eigenen.
   - Erkannte Zeilen erscheinen live im Protokoll.
+  - *Danach herunterfahren* schaltet den Rechner nach der letzten Datei aus.
   - Tooltips erklären jede Option.
   - Der Einstellungsdialog schreibt nur geänderte Werte und lässt die Kommentare in der INI stehen.
 - **Mehrsprachig:** Deutsch, Englisch und Türkisch. Weitere Sprachen fügst du hinzu, indem du eine einzige JSON-Datei kopierst (siehe [Sprache der Oberfläche und Übersetzungen](#sprache-der-oberfläche-und-übersetzungen)).
@@ -130,6 +133,30 @@ whisperx 3.8.x ── verlangt torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 ---
 
 ## Installation (Windows)
+
+### Mit install.bat (empfohlen)
+
+1. **Herunterladen:** [WhisperX-Subtitle-Workbench.zip](https://github.com/fardem/WhisperX-Subtitle-Workbench/releases/latest/download/WhisperX-Subtitle-Workbench.zip) (das neueste Release).
+2. **Entpacken:** Rechtsklick auf die ZIP-Datei → *Alle extrahieren*. Ein Doppelklick öffnet die ZIP-Datei nur; von dort startet `install.bat` nicht.
+3. **Doppelklick auf `install.bat`** im entpackten Ordner. Windows warnt eventuell, weil die Datei aus dem Internet kommt: *Weitere Informationen* → *Trotzdem ausführen*.
+4. Fehlt Python, fragt das schwarze Fenster, ob Python 3.13 mit winget installiert werden soll: mit `J` antworten. Administratorrechte sind nicht nötig.
+5. Das Fenster des Installers listet, was es gefunden hat und was es tun wird. Vor dem Klick auf den blauen Knopf ändert es nichts.
+
+![Installer](docs/images/installer.png)
+
+Der Installer:
+- installiert nach `C:\WhisperX-Subtitle-Workbench` (*Ändern …* wählt einen anderen Ordner). Einen Ordner, in dem schon eine Workbench mit `venv` liegt, repariert er an Ort und Stelle.
+- installiert ffmpeg und bei Bedarf die Microsoft Visual C++ Runtime mit winget, jeweils nach einem Häkchen in der Liste.
+- wählt die PyTorch-Version für die Grafikkarte: `cu128` für RTX 20xx–50xx und GTX 16xx, `cu126` für GTX 9xx/10xx und Titan V, die CPU-Version ohne NVIDIA-Karte. Bei `cu126` stellt er die *Genauigkeit* auf `int8`, bei der CPU-Version das *Gerät* auf `cpu` – nur, wo noch der Vorgabewert steht.
+- installiert die Versionen aus `constraints.txt` in der Reihenfolge der manuellen Installation unten.
+- legt eine Verknüpfung auf dem Desktop und im Startmenü sowie einen Eintrag unter *Einstellungen → Apps* an, lädt das Whisper-Modell und installiert das Plugin für DaVinci Resolve – jeweils nach einem Häkchen.
+- verhindert während der Installation den Standby und schreibt alles in `install.log`.
+
+Nach der Installation in einen anderen Ordner brauchst du den entpackten Ordner nicht mehr.
+
+Bricht die Installation ab, zum Beispiel weil die Internetverbindung weg war, starte `install.bat` erneut: Es macht weiter und lädt fertige Dateien nicht noch einmal. Der Eintrag *WhisperX Subtitle Workbench – aktualisieren oder reparieren* im Startmenü startet es ebenfalls.
+
+### Manuelle Installation
 
 Alle Befehle sind für `cmd.exe`. Der Beispielordner ist `C:\WhisperX-Subtitle-Workbench`. Jeder andere Ordner geht auch, solange `venv` **darin** liegt, denn `Whisper_Tool.bat` sucht es dort.
 
@@ -225,6 +252,12 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 
 ## Sicher aktualisieren
 
+**Mit install.bat:** *Einstellungen → Allgemein → Nach Updates suchen …* fragt GitHub nach einer neuen Version; die Workbench schließt sich, und `install.bat` übernimmt. Oder lade die neue ZIP-Datei, entpacke sie und starte das `install.bat` darin: Es findet die installierte Workbench und aktualisiert sie. Bevor der Installer etwas ändert, listet er, welche Pakete er aktualisiert (neuere Version) und welche er zurücksetzt (ältere Version); danach zeigt er, was er geändert hat. Die Programmdateien der alten Version bleiben in `update-backup\`; scheitert das Update, holt *Alte Version wiederherstellen* sie zurück. `whisper_tool.ini` wird nie ersetzt.
+
+Beim Start fragt die Workbench höchstens einmal am Tag bei GitHub nach einer neuen Version und nennt sie im Protokoll; *Einstellungen → Allgemein* schaltet das ab (`[System] update_check = 0`).
+
+**Von Hand:**
+
 - **Zuerst die Workbench schließen.** Die laufende Version steht in der Titelleiste hinter *WhisperX Subtitle Workbench*, in der ersten Zeile des Protokolls und unter *Einstellungen → Allgemein*. Ist beim Start der neuen Version noch ein älteres Fenster offen, warnt die neue Version, statt deine Dateien still an das alte Fenster weiterzugeben.
 - **Die Workbench selbst:** `git pull`, oder die neuen Dateien über die alten kopieren. Deine Einstellungen stehen in `whisper_tool.ini`. Diese Datei gehört nicht zum Repository, ein Update überschreibt sie also nie. Neue Optionen bekommen automatisch Standardwerte.
 - **Python-Pakete:** Nur aktualisieren, wenn du etwas Neues brauchst. So geht es sicher:
@@ -253,6 +286,21 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 
 ---
 
+## Deinstallation
+
+Starte `uninstall.bat` im Ordner der Workbench oder *Einstellungen → Apps → WhisperX Subtitle Workbench → Deinstallieren*. Ein Fenster listet, was entfernt wird, jede Gruppe mit Häkchen und Größe:
+
+- die Python-Umgebung (`venv`)
+- die Programmdateien, die Verknüpfungen und der Eintrag unter *Apps*
+- eigene Modelle (`models`)
+- die SRTs der letzten Übergaben in `resolve_temp` – die Untertitel auf deinen Timelines bleiben, die Elemente im Bin *WhisperX* sind danach offline
+- das Plugin für DaVinci Resolve, wenn es zu diesem Ordner gehört
+- geladene Modelle in deinem Benutzerordner – Vorgabe aus, andere Programme können sie nutzen
+
+Temporäre Dateien und Protokolle werden ohne Rückfrage entfernt. `whisper_tool.ini` und `whisper_tool.ini.bak` bleiben immer, ebenso alle Dateien, die nicht zur Workbench gehören, zum Beispiel Videos und SRTs im Ordner. Der Bericht am Ende nennt sie mit Pfad und listet, was auf dem PC bleibt: Python, ffmpeg, die Visual C++ Runtime und die Caches, jeweils mit dem Hinweis, ob `install.bat` sie installiert hat. Er wird als `uninstall_report.txt` gespeichert. Python, ffmpeg und Treiber entfernt `uninstall.bat` nie.
+
+---
+
 ## Bedienung
 
 | Du ziehst … | Die Workbench macht … | Ergebnis |
@@ -264,6 +312,7 @@ Wenn du schon ein funktionierendes WhisperX-venv hast, z.B. in `C:\WhisperX\venv
 | die WAV eines DaVinci-Resolve-Jobs – das Plugin startet die Workbench damit | Transkription, dann **→ An DaVinci übergeben** | die Untertitel auf einer Untertitelspur in Resolve |
 
 - **Start** verarbeitet die markierten Dateien. Ist nichts markiert, verarbeitet es alle Dateien, die noch nicht fertig sind. Ist alles fertig, verarbeitet es alle nochmal, z.B. mit anderem Layout.
+- **Danach herunterfahren:** Mit dem Häkchen neben *Start* fährt der Rechner nach der letzten Datei herunter. Vorher zählt ein Fenster 60 Sekunden herunter; *Abbrechen* dort lässt den Rechner an. Bis dahin geht der Rechner nicht in den Standby, und das Protokoll wird als `whisper_tool_shutdown.log` gespeichert. Nicht nach *Abbrechen* im Hauptfenster; das Häkchen fehlt, wenn das Plugin die Workbench gestartet hat, und ist gesperrt, solange ein Job aus DaVinci Resolve in der Liste ist. Programme mit ungespeicherten Daten, zum Beispiel DaVinci Resolve, können das Herunterfahren anhalten.
 - **Sprache:**
   - *Automatisch* erkennt die Sprache pro Datei, anhand der ersten 30 Sekunden.
   - Eine fest eingestellte Sprache ist zuverlässiger. Wähle sie, wenn die Aufnahme mit Musik oder einem Intro beginnt.
@@ -415,10 +464,13 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 
 | Problem | Lösung |
 |---|---|
+| `install.bat`: „Der Computer wurde durch Windows geschützt“ | *Weitere Informationen* → *Trotzdem ausführen*. Der Installer entfernt die Internet-Markierung von den Dateien der Workbench; danach kommt die Warnung nicht wieder |
+| Die Installation ist abgebrochen | `install.bat` erneut starten; es macht weiter. Einzelheiten stehen in `install.log` im Ordner der Workbench |
+| Der Installer meldet Pakete, die neuer als getestet sind | *Anpassen (empfohlen)* setzt sie auf die getesteten Versionen zurück. Programme, die du ins selbe `venv` installiert hast, brauchen eventuell die neueren |
 | Nach einem Update ist noch die alte Oberfläche zu sehen (Titel „Whisper Tool“) | Ein altes Fenster ist noch offen und hat den Start übernommen. Schließen – ist es nicht sichtbar, im Task-Manager `pythonw.exe` beenden – und neu starten |
 | Die Workbench startet nicht | Ein Meldungsfenster zeigt die Ursache. Derselbe Text steht in `whisper_tool_error.log` |
 | Eine Zeile der Systemprüfung ist rot | Sie nennt das fehlende Teil und welche Funktion betroffen ist. Siehe [Häufige Installationsfehler](#häufige-installationsfehler) |
-| „torch ist eine Version ohne CUDA“ | torch wurde von PyPI installiert. Schritt 4 der Installation wiederholen |
+| „torch ist eine Version ohne CUDA“ | torch wurde von PyPI installiert. `install.bat` starten: Es ersetzt torch durch die Version für deine Grafikkarte. Von Hand: Schritt 4 der manuellen Installation |
 | Text fehlt an leisen Stellen | Den Lücken-Check ansehen. Dann den *Onset* senken oder *silero* testen (*Einstellungen → Spracherkennung*) |
 | Falsche Wörter in den Untertiteln | Den Score-Check einschalten (*Einstellungen → Spracherkennung*) und die gemeldeten Stellen anhören. Wiederkehrende Fehler mit einer Ersetzung oder dem Prompt beheben (*Einstellungen → Sprachen*) |
 | Der Score-Check markiert viele Namen, die richtig sind | Namen und Fremdwörter haben oft einen niedrigen Score. Die Schwelle senken, z. B. auf 0,30 |
@@ -446,12 +498,19 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | `lang/*.json` | Alle Texte von Oberfläche, Protokoll und Bericht (en, de, tr) |
 | `whisper_tool.example.ini` | Einstellungs-Vorlage; wird beim ersten Start zu `whisper_tool.ini` kopiert |
 | `Whisper_Tool.bat` | Starter: doppelklicken oder Dateien darauf ziehen |
+| `install.bat` | Installation, Reparatur und Update: sucht ein Python und öffnet das Fenster des Installers |
+| `uninstall.bat` | Deinstallation; `whisper_tool.ini` bleibt |
+| `wt_setup.py` | Logik von Installer und Uninstaller: Prüfungen, Paketvergleich, Kopieren, Entfernen (nur Standardbibliothek) |
+| `wt_setup_ui.py` | Fenster von Installer und Uninstaller |
+| `wt_files.txt` | Die Programmdateien dieser Version; `python tools/manifest.py --write` schreibt die Liste |
+| `.github/workflows/release.yml` | Hängt `WhisperX-Subtitle-Workbench.zip` an jedes Release |
 | `requirements.txt` | Die getesteten Paketversionen (torch zuerst installieren, Schritt 4) |
 | `constraints.txt` | Exakte Versionen aller Pakete der getesteten Installation (`pip freeze`), wird in Schritt 5 mit `-c` benutzt |
 | `tests/` | Automatische Tests (pytest). Sie brauchen weder Grafikkarte noch WhisperX und laufen bei jedem Push auf GitHub. Die Tests des Resolve-Plugins laufen gegen ein nachgebautes Resolve und brauchen das Paket `lupa`; ohne es werden sie übersprungen |
 | `tools/comments.py` | Zählt Kommentarzeilen je Datei; `--write` setzt die Grenzen in `tests/comment_limits.json` |
 | `CLAUDE.md` | Regeln für Texte und Kommentare in diesem Projekt (liest Claude Code) |
 | `resolve_temp/` | Job-Ordner des Plugins und die SRTs der letzten 10 Übergaben (nicht im Repository) |
+| `install.log`, `wt_install.json`, `update-backup/` | Protokoll und Zustand des Installers, Programmdateien der Version vor einem Update (nicht im Repository) |
 
 ---
 

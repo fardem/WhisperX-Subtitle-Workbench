@@ -79,6 +79,14 @@
     "lines": 13,
     "long_blocks": 0
   },
+  "tests/test_setup.py": {
+    "lines": 17,
+    "long_blocks": 0
+  },
+  "tests/test_shutdown.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
   "tests/test_subtitles.py": {
     "lines": 9,
     "long_blocks": 0
@@ -91,12 +99,16 @@
     "lines": 7,
     "long_blocks": 0
   },
+  "tools/manifest.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
   "whisper_tool.example.ini": {
-    "lines": 98,
+    "lines": 99,
     "long_blocks": 2
   },
   "whisper_tool.py": {
-    "lines": 131,
+    "lines": 140,
     "long_blocks": 0
   },
   "wt_compare.py": {
@@ -113,6 +125,14 @@
   },
   "wt_resolve.py": {
     "lines": 92,
+    "long_blocks": 0
+  },
+  "wt_setup.py": {
+    "lines": 77,
+    "long_blocks": 0
+  },
+  "wt_setup_ui.py": {
+    "lines": 23,
     "long_blocks": 0
   },
   "wt_version.py": {

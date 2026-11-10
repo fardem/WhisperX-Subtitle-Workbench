@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.7.9** · [Changelog](CHANGELOG.md)
+**Version 0.8.0** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word** – with a **plugin for DaVinci Resolve** and a user interface in English, German and Turkish.
 
@@ -18,6 +18,7 @@ You drop video or audio files into the window, and the Workbench creates `.srt` 
 - [Requirements and dependencies](#requirements-and-dependencies) – read this before installing
 - [Installation (Windows)](#installation-windows)
 - [Updating safely](#updating-safely)
+- [Uninstalling](#uninstalling)
 - [Usage](#usage)
 - [Comparing transcripts](#comparing-transcripts)
 - [DaVinci Resolve](#davinci-resolve)
@@ -53,11 +54,13 @@ You drop video or audio files into the window, and the Workbench creates `.srt` 
   - Shows timing deviations.
   - Every time in the report is clickable and plays the audio from that point.
 - **DaVinci Resolve:** a plugin transcribes the timeline from inside Resolve; the subtitles come back onto a native subtitle track (see [DaVinci Resolve](#davinci-resolve)).
+- **Installation with a double-click:** `install.bat` checks Python, graphics card, driver and ffmpeg, installs what is missing and the tested package versions, and says before and after which packages it updates or sets back. Updates come from GitHub. `uninstall.bat` removes the Workbench and keeps your settings (see [Installation](#installation-windows)).
 - **System check** on every start: it lists Python, all packages with versions, ffmpeg, the models and the graphics card, and tells you which feature would fail.
 - **Comfort:**
   - Drag & drop onto the BAT file or into the window. A second start hands its files to the open window.
   - A countdown starts processing automatically; jobs from DaVinci Resolve have their own.
   - Recognized lines appear live in the log.
+  - *Shut down when done* switches the PC off after the last file.
   - Tooltips explain every option.
   - A settings dialog writes only the changed values and keeps the comments in the INI.
 - **Multilingual:** English, German and Turkish. You can add more languages by copying a single JSON file (see [Interface language and translations](#interface-language-and-translations)).
@@ -128,6 +131,30 @@ whisperx 3.8.x ── requires torch~=2.8.0, torchaudio~=2.8.0, torchvision~=0.2
 ---
 
 ## Installation (Windows)
+
+### With install.bat (recommended)
+
+1. **Download** [WhisperX-Subtitle-Workbench.zip](https://github.com/fardem/WhisperX-Subtitle-Workbench/releases/latest/download/WhisperX-Subtitle-Workbench.zip) (the newest release).
+2. **Extract it:** right-click the ZIP file → *Extract All*. A double-click only opens the ZIP file; `install.bat` does not run from there.
+3. **Double-click `install.bat`** in the extracted folder. Windows may warn because the file comes from the internet: *More info* → *Run anyway*.
+4. If Python is missing, the black window asks whether to install Python 3.13 with winget: answer `Y`. No administrator rights are needed.
+5. The installer window lists what it found and what it will do. It changes nothing before you press the blue button.
+
+![Installer](docs/images/installer.png)
+
+The installer:
+- installs into `C:\WhisperX-Subtitle-Workbench` (*Change …* chooses another folder). A folder that already holds a Workbench with `venv` is repaired where it is.
+- installs ffmpeg and, if needed, the Microsoft Visual C++ Runtime with winget, each after a tick in the list.
+- chooses the PyTorch version for the graphics card: `cu128` for RTX 20xx–50xx and GTX 16xx, `cu126` for GTX 9xx/10xx and Titan V, the CPU version without an NVIDIA card. For `cu126` it sets *Precision* to `int8`, for the CPU version *Device* to `cpu` – only where the default value still stands.
+- installs the versions of `constraints.txt` in the order of the manual installation below.
+- creates a shortcut on the desktop and in the start menu and an entry under *Settings → Apps*, downloads the Whisper model and installs the plugin for DaVinci Resolve – each after a tick.
+- keeps the PC from going to standby during the installation and writes everything to `install.log`.
+
+After an installation into another folder, the extracted folder is not needed any more.
+
+If the installation stops, for example because the internet connection broke, start `install.bat` again: it continues and does not download finished files again. The start menu entry *WhisperX Subtitle Workbench – update or repair* starts it, too.
+
+### Manual installation
 
 All commands are for `cmd.exe`. The example folder is `C:\WhisperX-Subtitle-Workbench`. You can use any other folder, as long as `venv` sits **inside** it, because `Whisper_Tool.bat` looks for it there.
 
@@ -223,6 +250,12 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
 
 ## Updating safely
 
+**With install.bat:** *Settings → General → Check for updates …* asks GitHub for a new version; the Workbench closes and `install.bat` takes over. Or download the new ZIP file, extract it and start its `install.bat`: it finds the installed Workbench and updates it. Before the installer changes anything, it lists which packages it updates (newer version) and which it sets back (older version); afterwards it shows what it changed. The program files of the old version stay in `update-backup\`; if the update fails, *Restore the old version* brings them back. `whisper_tool.ini` is never replaced.
+
+At the start the Workbench asks GitHub at most once a day for a new version and names it in the log; *Settings → General* switches this off (`[System] update_check = 0`).
+
+**By hand:**
+
 - **Close the Workbench first.** The running version is shown in the title bar after *WhisperX Subtitle Workbench*, in the first log line and under *Settings → General*. If an older window is still open when you start the new version, the new one warns you instead of silently handing your files to the old window.
 - **The workbench itself:** `git pull`, or copy the new files over the old ones. Your settings are in `whisper_tool.ini`. That file is not part of the repository, so an update never overwrites it. New options get default values automatically.
 - **Python packages:** only update when you need something new. This is the safe way:
@@ -251,6 +284,21 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
 
 ---
 
+## Uninstalling
+
+Start `uninstall.bat` in the folder of the Workbench, or *Settings → Apps → WhisperX Subtitle Workbench → Uninstall*. A window lists what it removes, each group with a tick and its size:
+
+- the Python environment (`venv`)
+- the program files, the shortcuts and the entry under *Apps*
+- own models (`models`)
+- the SRTs of the last hand-overs in `resolve_temp` – the subtitles on your timelines stay, the items in the bin *WhisperX* are offline afterwards
+- the plugin for DaVinci Resolve, if it belongs to this folder
+- downloaded models in your user folder – off by default, other programs can use them
+
+Temporary files and logs are removed without asking. `whisper_tool.ini` and `whisper_tool.ini.bak` always stay, as do all files that do not belong to the Workbench, for example videos and SRTs in the folder. The report at the end names them with their paths and lists what stays on the PC: Python, ffmpeg, the Visual C++ Runtime and the caches, each with the note whether `install.bat` installed it. It is saved as `uninstall_report.txt`. `uninstall.bat` never removes Python, ffmpeg or drivers.
+
+---
+
 ## Usage
 
 | You drop … | The Workbench does … | Result |
@@ -262,6 +310,7 @@ If you already have a working WhisperX venv, e.g. in `C:\WhisperX\venv`, copy th
 | the WAV of a DaVinci Resolve job – the plugin starts the Workbench with it | transcription, then **→ Hand over to DaVinci** | the subtitles on a subtitle track in Resolve |
 
 - **Start** processes the selected files. If nothing is selected, it processes all files that are not done yet. If everything is done, it processes all files again, e.g. with another layout.
+- **Shut down when done:** with the tick next to *Start* the PC shuts down after the last file. A window counts down 60 seconds first; *Cancel* there keeps the PC on. Until then the PC does not go to standby, and the log is saved as `whisper_tool_shutdown.log`. Not after *Cancel* in the main window; the tick is missing when the plugin started the Workbench and locked while a job from DaVinci Resolve is in the list. Programs with unsaved data, for example DaVinci Resolve, can stop the shutdown.
 - **Language:**
   - *Automatic* detects the language per file, from the first 30 seconds.
   - A fixed language is more reliable. Choose it when the recording starts with music or an intro.
@@ -413,10 +462,13 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 
 | Problem | Solution |
 |---|---|
+| `install.bat`: “Windows protected your PC” | *More info* → *Run anyway*. The installer removes the internet mark from the files of the Workbench; afterwards the warning does not come back |
+| The installation stopped | Start `install.bat` again; it continues. Details are in `install.log` in the folder of the Workbench |
+| The installer reports packages that are newer than tested | *Adjust (recommended)* sets them back to the tested versions. Programs that you installed into the same `venv` may need the newer ones |
 | After an update you still see the old interface (title “Whisper Tool”) | An old window is still open and took over the start. Close it – if it is not visible, end `pythonw.exe` in Task Manager – and start again |
 | The Workbench does not start | A message box shows the reason. The same text is in `whisper_tool_error.log` |
 | A line of the system check is red | It names the missing part and which feature is affected. See [Common installation errors](#common-installation-errors) |
-| “torch is a build without CUDA” | torch was installed from PyPI. Repeat step 4 of the installation |
+| “torch is a build without CUDA” | torch was installed from PyPI. Start `install.bat`: it replaces torch with the version for your graphics card. By hand: step 4 of the manual installation |
 | Text is missing in quiet passages | Look at the gap check. Then lower the *Onset* or try *silero* (*Settings → Speech detection*) |
 | Wrong words in the subtitles | Switch on the score check (*Settings → Speech detection*) and listen to the places it lists. Fix recurring ones with a replacement or the prompt (*Settings → Languages*) |
 | The score check marks many names that are right | Names and foreign words often have a low score. Lower the threshold, e.g. to 0.30 |
@@ -444,12 +496,19 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | `lang/*.json` | All texts of the interface, log and report (en, de, tr) |
 | `whisper_tool.example.ini` | Settings template; copied to `whisper_tool.ini` on the first start |
 | `Whisper_Tool.bat` | Starter: double-click it or drop files onto it |
+| `install.bat` | Installation, repair and update: finds a Python and opens the installer window |
+| `uninstall.bat` | Removal; `whisper_tool.ini` stays |
+| `wt_setup.py` | Logic of installer and uninstaller: checks, package comparison, copying, removing (standard library only) |
+| `wt_setup_ui.py` | Window of installer and uninstaller |
+| `wt_files.txt` | The program files of this version; `python tools/manifest.py --write` writes the list |
+| `.github/workflows/release.yml` | Attaches `WhisperX-Subtitle-Workbench.zip` to every release |
 | `requirements.txt` | The tested package versions (install torch first, step 4) |
 | `constraints.txt` | Exact versions of all packages of the tested installation (`pip freeze`), used with `-c` in step 5 |
 | `tests/` | Automatic tests (pytest). They need no GPU and no WhisperX and run on GitHub with every push. The tests of the Resolve plugin run against a fake Resolve and need the package `lupa`; without it they are skipped |
 | `tools/comments.py` | Counts comment lines per file; `--write` sets the limits in `tests/comment_limits.json` |
 | `CLAUDE.md` | Rules for texts and comments in this project (read by Claude Code) |
 | `resolve_temp/` | Job folders of the plugin and the SRTs of the last 10 hand-overs (not part of the repository) |
+| `install.log`, `wt_install.json`, `update-backup/` | Log and state of the installer, program files of the version before an update (not part of the repository) |
 
 ---
 

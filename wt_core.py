@@ -166,6 +166,7 @@ class Config:
         # System
         self.ffmpeg            = self._find_ffmpeg(g("System", "ffmpeg_path", "ffmpeg"))
         self.device            = g("System", "device", "cuda").lower()
+        self.update_check      = g("System", "update_check", True, _bool)
         # Menu / defaults
         self.menu_timeout      = g("Menu", "timeout", 15, int)
         self.menu_skip         = g("Menu", "skip", False, _bool)

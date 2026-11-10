@@ -79,6 +79,10 @@
     "lines": 13,
     "long_blocks": 0
   },
+  "tests/test_shutdown.py": {
+    "lines": 2,
+    "long_blocks": 0
+  },
   "tests/test_subtitles.py": {
     "lines": 9,
     "long_blocks": 0
@@ -96,7 +100,7 @@
     "long_blocks": 2
   },
   "whisper_tool.py": {
-    "lines": 131,
+    "lines": 136,
     "long_blocks": 0
   },
   "wt_compare.py": {

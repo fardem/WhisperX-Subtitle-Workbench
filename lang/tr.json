@@ -60,6 +60,16 @@
     "pmode_none": "yok",
     "start": "▶  Başlat",
     "cancel": "İptal",
+    "shutdown": "Bitince bilgisayarı kapat",
+    "shutdown_title": "Bilgisayarı kapat",
+    "shutdown_text": "Bilgisayar {n} sn içinde kapanacak.",
+    "shutdown_now": "Şimdi kapat",
+    "shutdown_aborted": "Kapatma iptal edildi – bilgisayar açık kalıyor.",
+    "shutdown_postponed": "Kapatma ertelendi – bilgisayar bir sonraki çalışmadan sonra kapanacak.",
+    "shutdown_not_after_cancel": "İptal edildi – bilgisayar kapatılmıyor.",
+    "shutdown_resolve": "Listede DaVinci Resolve'dan bir iş var – “Bitince bilgisayarı kapat” kapalı.",
+    "shutdown_log": "Bilgisayar kapatılıyor – günlük kaydedildi: {path}",
+    "shutdown_failed": "Bilgisayar kapatılamadı: {err}",
     "ready": "Hazır",
     "settings": "⚙  Ayarlar …",
     "log": "Günlük",
@@ -910,6 +920,11 @@
       "Pencere açık kaldığı sürece modeller yüklü kalır; ikinci çalıştırma yükleme süresi olmadan başlar."
     ],
     "cancel": "Geçerli adımdan sonra iptal eder. Çalışan bir transkripsiyon ortasında durdurulamaz.",
+    "shutdown": [
+      "Son dosyadan sonra bilgisayar kapanır. Önce bir pencere 60 saniye geri sayar; oradaki İptal bilgisayarı açık bırakır.",
+      "Ana penceredeki İptal'den sonra ve listede DaVinci Resolve'dan bir iş varken kapatılmaz.",
+      "O zamana kadar bilgisayar bekleme moduna geçmez. Günlük whisper_tool_shutdown.log olarak kaydedilir."
+    ],
     "settings": "Daha seyrek değiştirilen ayarlar: model, hassasiyet, konuşma algılama (VAD), altyazı kuralları, ses filtresi, dile göre prompt ve değiştirmeler, arayüz dili, sistem kontrolü, sürükle-bırak.",
     "log": [
       "Günlük",

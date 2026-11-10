@@ -60,6 +60,16 @@
     "pmode_none": "none",
     "start": "▶  Start",
     "cancel": "Cancel",
+    "shutdown": "Shut down when done",
+    "shutdown_title": "Shut down",
+    "shutdown_text": "The PC shuts down in {n} s.",
+    "shutdown_now": "Shut down now",
+    "shutdown_aborted": "Shutdown cancelled – the PC stays on.",
+    "shutdown_postponed": "Shutdown postponed – the PC shuts down after the next run.",
+    "shutdown_not_after_cancel": "Cancelled – the PC is not shut down.",
+    "shutdown_resolve": "A job from DaVinci Resolve is in the list – “Shut down when done” is off.",
+    "shutdown_log": "Shutting down – log saved: {path}",
+    "shutdown_failed": "Could not shut down: {err}",
     "ready": "Ready",
     "settings": "⚙  Settings …",
     "log": "Log",
@@ -910,6 +920,11 @@
       "The models stay loaded as long as the window is open; the second run starts without loading time."
     ],
     "cancel": "Cancels after the current step. A running transcription cannot be stopped in the middle.",
+    "shutdown": [
+      "After the last file the PC shuts down. Before that a window counts down 60 seconds; Cancel there keeps the PC on.",
+      "Not after Cancel in the main window, and not while a job from DaVinci Resolve is in the list.",
+      "Until then the PC does not go to standby. The log is saved as whisper_tool_shutdown.log."
+    ],
     "settings": "Less frequently changed settings: model, precision, speech detection (VAD), subtitle rules, audio filter, prompts and replacements per language, interface language, system check, drag & drop.",
     "log": [
       "Log",

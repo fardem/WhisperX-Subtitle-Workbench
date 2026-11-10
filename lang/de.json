@@ -60,6 +60,16 @@
     "pmode_none": "keiner",
     "start": "▶  Start",
     "cancel": "Abbrechen",
+    "shutdown": "Danach herunterfahren",
+    "shutdown_title": "Herunterfahren",
+    "shutdown_text": "Der Rechner fährt in {n} s herunter.",
+    "shutdown_now": "Jetzt herunterfahren",
+    "shutdown_aborted": "Herunterfahren abgebrochen – der Rechner bleibt an.",
+    "shutdown_postponed": "Herunterfahren verschoben – der Rechner fährt nach dem nächsten Lauf herunter.",
+    "shutdown_not_after_cancel": "Abgebrochen – der Rechner wird nicht heruntergefahren.",
+    "shutdown_resolve": "Ein Job aus DaVinci Resolve ist in der Liste – „Danach herunterfahren“ ist aus.",
+    "shutdown_log": "Herunterfahren – Protokoll gespeichert: {path}",
+    "shutdown_failed": "Herunterfahren fehlgeschlagen: {err}",
     "ready": "Bereit",
     "settings": "⚙  Einstellungen …",
     "log": "Protokoll",
@@ -910,6 +920,11 @@
       "Die Modelle bleiben geladen, solange das Fenster offen ist; der zweite Durchlauf startet ohne Ladezeit."
     ],
     "cancel": "Bricht nach dem aktuellen Schritt ab. Eine laufende Transkription kann nicht mittendrin gestoppt werden.",
+    "shutdown": [
+      "Nach der letzten Datei fährt der Rechner herunter. Vorher zählt ein Fenster 60 Sekunden herunter; Abbrechen dort lässt den Rechner an.",
+      "Nicht nach Abbrechen im Hauptfenster und nicht, solange ein Job aus DaVinci Resolve in der Liste ist.",
+      "Bis dahin geht der Rechner nicht in den Standby. Das Protokoll wird als whisper_tool_shutdown.log gespeichert."
+    ],
     "settings": "Seltener geänderte Einstellungen: Modell, Genauigkeit, Spracherkennung (VAD), Untertitel-Regeln, Audiofilter, Prompts und Ersetzungen je Sprache, Sprache der Oberfläche, Systemprüfung, Drag & Drop.",
     "log": [
       "Protokoll",

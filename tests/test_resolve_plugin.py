@@ -228,6 +228,22 @@ def test_out_mark_on_the_end_frame_renders_up_to_the_last_frame(tmp_path):
     assert (h.mock.timeline.marks.audio["in"], h.mock.timeline.marks.audio.out) == (250, 25 * 600 - 1)
 
 
+def test_in_mark_alone_renders_up_to_the_last_frame_and_stays(tmp_path):
+    h = Harness(tmp_path)
+    result = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        result["job"], _ = h.workbench_hands_over()
+
+    mark = {"in": 250}
+    h.run(steps, timelines=[timeline(marks={"video": mark, "audio": mark})])
+    assert (result["job"].in_frame, result["job"].out_frame, result["job"].whole) == (90250, 104999, False)
+    assert h.calls("SetMarkInOut") == [] and h.calls("ClearMarkInOut") == []
+    assert (h.mock.timeline.marks.audio["in"], h.mock.timeline.marks.audio.out) == (250, None)
+
+
 def test_render_job_with_another_range_stops_before_rendering(tmp_path):
     h = Harness(tmp_path)
     seen = {}

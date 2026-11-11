@@ -27,6 +27,7 @@ lang/tr.json
 pytest.ini
 requirements.txt
 resolve/WhisperX_Subtitles.lua
+resolve/tools/probe_render.lua
 resolve/tools/probe_subtitles.lua
 tests/comment_limits.json
 tests/conftest.py

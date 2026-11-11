@@ -753,6 +753,7 @@
     "render_incomplete": "the render job stopped at {pct} %",
     "render_no_wav": "Resolve reports success, but the audio file is missing or empty: {path}",
     "err_setting": "Resolve did not accept the render setting “{key}”.",
+    "err_job_range": "Resolve did not take In to Out: the render job has the frames {got}, In to Out is {want}.",
     "err_wav": "Resolve did not accept WAV as render format.",
     "err_folder": "The job folder could not be created: {path}",
     "err_add_job": "Resolve did not create the render job.",

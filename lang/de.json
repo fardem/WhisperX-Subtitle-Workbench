@@ -753,6 +753,7 @@
     "render_incomplete": "der Render-Job ist bei {pct} % stehen geblieben",
     "render_no_wav": "Resolve meldet Erfolg, aber die Audiodatei fehlt oder ist leer: {path}",
     "err_setting": "Resolve hat die Render-Einstellung „{key}“ nicht angenommen.",
+    "err_job_range": "Resolve hat In bis Out nicht übernommen: Der Render-Job hat die Frames {got}, In bis Out ist {want}.",
     "err_wav": "Resolve hat WAV als Render-Format nicht angenommen.",
     "err_folder": "Der Job-Ordner konnte nicht angelegt werden: {path}",
     "err_add_job": "Resolve hat den Render-Job nicht angelegt.",

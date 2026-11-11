@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.8.0** · [Änderungen](CHANGELOG.md)
+**Version 0.8.1** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -403,6 +403,7 @@ Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timelin
 - Vor *Transkribieren* und während des Imports die Wiedergabe anhalten – Resolve kann hängen, wenn die Seite während der Wiedergabe wechselt.
 - Das Element im Media Pool zeigt auf die SRT in `resolve_temp\`; sobald die Datei als älteste der letzten 10 gelöscht ist, ist es offline. Die Untertitel auf der Timeline gehören zum Projekt.
 - `resolve/tools/probe_subtitles.lua` prüft, wie eine neue Resolve-Version eine SRT platziert – nach einem Resolve-Update laufen lassen.
+- `resolve/tools/probe_render.lua` prüft, welche Render-Einstellungen eine neue Resolve-Version für In bis Out annimmt – nach einem Resolve-Update laufen lassen.
 
 ---
 
@@ -494,6 +495,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | `wt_resolve.py` | Anbindung an DaVinci Resolve: Job- und Fertig-Datei, SRT-Verschiebung, Plugin-Installation |
 | `resolve/WhisperX_Subtitles.lua` | Das Plugin für DaVinci Resolve (Vorlage; *Einstellungen → DaVinci Resolve* installiert es) |
 | `resolve/tools/probe_subtitles.lua` | Testscript: wie Resolve eine SRT auf eine Untertitelspur legt |
+| `resolve/tools/probe_render.lua` | Testscript: welche Render-Einstellungen Resolve für In bis Out annimmt |
 | `wt_version.py` | Name und Versionsnummer (in Titelleiste, Protokoll und Bericht) |
 | `lang/*.json` | Alle Texte von Oberfläche, Protokoll und Bericht (en, de, tr) |
 | `whisper_tool.example.ini` | Einstellungs-Vorlage; wird beim ersten Start zu `whisper_tool.ini` kopiert |

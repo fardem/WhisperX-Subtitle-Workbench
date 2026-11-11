@@ -1,6 +1,10 @@
 {
   "resolve/WhisperX_Subtitles.lua": {
-    "lines": 99,
+    "lines": 103,
+    "long_blocks": 1
+  },
+  "resolve/tools/probe_render.lua": {
+    "lines": 25,
     "long_blocks": 1
   },
   "resolve/tools/probe_subtitles.lua": {
@@ -16,7 +20,7 @@
     "long_blocks": 0
   },
   "tests/resolve_mock.lua": {
-    "lines": 24,
+    "lines": 26,
     "long_blocks": 1
   },
   "tests/test_abbreviations.py": {
@@ -68,7 +72,7 @@
     "long_blocks": 0
   },
   "tests/test_resolve_plugin.py": {
-    "lines": 57,
+    "lines": 58,
     "long_blocks": 0
   },
   "tests/test_score.py": {

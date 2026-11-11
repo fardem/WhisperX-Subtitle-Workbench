@@ -224,8 +224,8 @@ def test_out_mark_on_the_end_frame_renders_up_to_the_last_frame(tmp_path):
     h.run(steps, timelines=[timeline(marks={"video": mark, "audio": mark})])
     assert (result["job"].in_frame, result["job"].out_frame) == (90250, 90000 + 25 * 600 - 1)
     assert ("MarkOut", 90000 + 25 * 600 - 1) in h.calls("SetRenderSettings")
-    assert h.calls("SetMarkInOut") == [] and h.calls("ClearMarkInOut") == []
-    assert (h.mock.timeline.marks.audio["in"], h.mock.timeline.marks.audio.out) == (250, 25 * 600)
+    assert (250, 25 * 600 - 1, "audio") in h.calls("SetMarkInOut")
+    assert (h.mock.timeline.marks.audio["in"], h.mock.timeline.marks.audio.out) == (250, 25 * 600 - 1)
 
 
 def test_render_job_with_another_range_stops_before_rendering(tmp_path):

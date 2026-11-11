@@ -397,7 +397,7 @@ Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timelin
 
 ### Bekannte Grenzen
 
-- Getestet mit DaVinci Resolve **Studio** 21.1.2 und 21.2.0.5 unter Windows. Die kostenlose Version von Resolve 21.1 sperrt den Dateizugriff für Scripts; dort geht nur *SRT importieren …*.
+- Getestet mit DaVinci Resolve **Studio** 21.1.2, 21.2.0.5 und 21.2.0.6 unter Windows. Die kostenlose Version von Resolve 21.1 sperrt den Dateizugriff für Scripts; dort geht nur *SRT importieren …*.
 - Resolve legt eine SRT nur auf die **aktive** Untertitelspur, und aktiv kann nur eine sein. Das Plugin deaktiviert deshalb die anderen Untertitelspuren; danach ist die neue Spur die aktive. Eine leere, aber gesperrte Spur wird übersprungen.
 - Die Untertitel werden relativ zum Anfang der Timeline gesetzt, also um den In-Punkt verschoben. Ob der Start-Timecode (z.B. 01:00:00:00) zusätzlich zählt, wird noch getestet; das Plugin vergleicht die Lage des ersten Untertitels mit dem erwarteten Frame und meldet eine Abweichung.
 - Vor *Transkribieren* und während des Imports die Wiedergabe anhalten – Resolve kann hängen, wenn die Seite während der Wiedergabe wechselt.

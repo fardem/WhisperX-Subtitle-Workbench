@@ -8,9 +8,10 @@ All notable changes to WhisperX Subtitle Workbench. Versioning follows [Semantic
 
 - **Fixed:** with In and Out set in the timeline, *Transcribe* stopped with the message that Resolve did not accept the render setting `SelectAllFrames`. Resolve 21.2.0.6 answers false to `SelectAllFrames = false` on its own and true when `MarkIn` and `MarkOut` are in the same call; the plugin now sends the three together
 - Before rendering, the plugin compares the range of the render job with In to Out and stops with a message if they differ. The position of the subtitles depends on that range
-- An Out mark on the end of the timeline (one frame after the last frame) counts as the last frame and stays where it is. The log under *Workspace → Console* lists the In/Out marks before and after the render
+- An Out mark after the last frame of the timeline counts as the last frame. After the render it sits on the last frame: Resolve loses such a mark when the Deliver settings are restored and does not take it from a script. The log under *Workspace → Console* lists the In/Out marks before and after the render
 - **Fixed:** after `install.bat`, *Start the Workbench* left an empty, minimized command window open. The installer now runs `Whisper_Tool.bat` without a window
 - `resolve/tools/probe_render.lua`: the test script that checks which render settings Resolve takes for In to Out – run it again after a Resolve update. Its header lists the values measured with DaVinci Resolve Studio 21.2.0.6
+- Tested with DaVinci Resolve Studio 21.2.0.6
 
 ## [0.8.0] – 2026-11-10
 

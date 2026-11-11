@@ -318,7 +318,7 @@ function P:SaveAsNewRenderPreset(name)
                               marks = marks }
   return true
 end
--- Resolve 21.2.0.6 had the Out mark on GetEndFrame() back after loading the backup preset.
+-- Resolve 21.2.0.6: the backup preset brings In/Out back, but an Out mark on GetEndFrame() is lost.
 function P:LoadRenderPreset(name)
   record("LoadRenderPreset", name)
   local p = (MOCK.preset_store or {})[name]
@@ -326,8 +326,11 @@ function P:LoadRenderPreset(name)
   MOCK.settings = {}
   for k, v in pairs(p.settings) do MOCK.settings[k] = v end
   MOCK.format = { format = p.format, codec = p.codec }
-  MOCK.timeline.marks = {}
-  for k, m in pairs(p.marks) do MOCK.timeline.marks[k] = { ["in"] = m["in"], out = m.out } end
+  local tl = MOCK.timeline
+  tl.marks = {}
+  for k, m in pairs(p.marks) do
+    tl.marks[k] = { ["in"] = m["in"], out = (m.out or 0) < tl.last - tl.start and m.out or nil }
+  end
   return true
 end
 function P:DeleteRenderPreset(name)

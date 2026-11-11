@@ -57,6 +57,7 @@ local function new_timeline(opts)
   end
   function T:SetMarkInOut(a, b, kind)
     record("SetMarkInOut", a, b, kind)
+    if b > tl.last - 1 - tl.start then return false end    -- Resolve 21.2.0.6: not on GetEndFrame()
     kind = kind or "all"
     for _, k in ipairs(kind == "all" and { "video", "audio" } or { kind }) do
       tl.marks[k] = { ["in"] = a, out = b }

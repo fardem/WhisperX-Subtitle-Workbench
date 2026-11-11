@@ -349,15 +349,20 @@ local function copy_marks(marks)
   return out
 end
 
--- Range to render: In/Out if set (values of GetMarkInOut are relative to the timeline start),
--- otherwise the whole timeline. -> first frame, last frame (absolute), whole?, marks
--- An Out mark can sit on GetEndFrame(), one frame after the last frame Resolve renders.
+-- Range: In/Out if set (GetMarkInOut is relative to the timeline start), else the whole timeline -> first and
+-- last frame (absolute), whole?, marks. An Out mark on GetEndFrame() lies after the last rendered frame and
+-- SetMarkInOut answers false to it, so the marks keep the last frame.
 local function render_range(tl, info)
   local marks = copy_marks(api(tl, "GetMarkInOut"))
+  for _, k in pairs(marks) do
+    if k["out"] ~= nil then
+      k["out"] = math.min(k["out"], info.last - 1 - info.start)
+    end
+  end
   local m = marks.audio or marks.video
   if m and (m["in"] ~= nil or m["out"] ~= nil) then
     local a = info.start + (m["in"] or 0)
-    local b = math.min(m["out"] ~= nil and (info.start + m["out"]) or info.last, info.last - 1)
+    local b = m["out"] ~= nil and (info.start + m["out"]) or (info.last - 1)
     if b >= a then
       return a, b, false, marks
     end

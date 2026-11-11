@@ -20,7 +20,7 @@
     "long_blocks": 0
   },
   "tests/resolve_mock.lua": {
-    "lines": 26,
+    "lines": 27,
     "long_blocks": 1
   },
   "tests/test_abbreviations.py": {

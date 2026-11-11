@@ -567,6 +567,21 @@ def test_target_folder(tmp_path, monkeypatch):
     assert ui.choose_target(src) == (src, "inplace")
 
 
+def test_workbench_starts_without_a_window_that_stays_open(tmp_path, monkeypatch):
+    ui = pytest.importorskip("wt_setup_ui")
+    target = tmp_path / "Work (1) & co"
+    target.mkdir()
+    (target / "Whisper_Tool.bat").write_text("", encoding="utf-8")
+    started = []
+    monkeypatch.setenv("PATH", os.environ.get("PATH", ""))
+    monkeypatch.setattr(s, "registry_path", lambda: os.environ["PATH"])
+    monkeypatch.setattr(ui.subprocess, "Popen", lambda cmd, **kw: started.append(cmd))
+    monkeypatch.setattr(sys, "platform", "win32")
+    window = type("W", (), {"target": target, "after": lambda self, ms, f: None, "destroy": None})()
+    ui.InstallWindow.start_workbench(window)
+    assert started == [f'cmd /s /c ""{target / "Whisper_Tool.bat"}""']
+
+
 def test_install_report_names_updates_and_downgrades(tmp_path):
     ui = pytest.importorskip("wt_setup_ui")
     r = {"before": {"numpy": "2.3.4", "certifi": "2026.9.1", "x": "1"},

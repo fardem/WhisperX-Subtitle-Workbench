@@ -349,17 +349,23 @@ local function copy_marks(marks)
   return out
 end
 
--- Range: In/Out if set (GetMarkInOut is relative to the timeline start), else the whole timeline -> first and
--- last frame (absolute), whole?, marks. An Out mark on GetEndFrame() lies after the last rendered frame and
--- SetMarkInOut answers false to it, so the marks keep the last frame.
-local function render_range(tl, info)
-  local marks = copy_marks(api(tl, "GetMarkInOut"))
-  for _, k in pairs(marks) do
+-- An Out mark on GetEndFrame() lies after the last rendered frame, and SetMarkInOut answers false to it:
+-- ranges and comparisons take the last frame instead.
+local function clamp_marks(marks, info)
+  for _, k in pairs(info and marks or {}) do
     if k["out"] ~= nil then
       k["out"] = math.min(k["out"], info.last - 1 - info.start)
     end
   end
-  local m = marks.audio or marks.video
+  return marks
+end
+
+-- Range to render: In/Out if set (values of GetMarkInOut are relative to the timeline start),
+-- otherwise the whole timeline. -> first frame, last frame (absolute), whole?, marks
+local function render_range(tl, info)
+  local marks = copy_marks(api(tl, "GetMarkInOut"))
+  local m = clamp_marks(copy_marks(marks), info)
+  m = m.audio or m.video
   if m and (m["in"] ~= nil or m["out"] ~= nil) then
     local a = info.start + (m["in"] or 0)
     local b = m["out"] ~= nil and (info.start + m["out"]) or (info.last - 1)
@@ -540,9 +546,20 @@ local function same_marks(a, b)
   return true
 end
 
-local function restore_marks(tl, saved)
+local function marks_text(marks)
+  local parts = {}
+  for _, kind in ipairs({ "video", "audio" }) do
+    local m = marks[kind]
+    parts[#parts + 1] = kind .. " " .. (m and (tostring(m["in"]) .. "-" .. tostring(m["out"])) or "none")
+  end
+  return table.concat(parts, ", ")
+end
+
+local function restore_marks(tl, saved, info)
   local now = copy_marks(api(tl, "GetMarkInOut"))
-  if same_marks(now, saved) then
+  log("In/Out marks after the render:", marks_text(now), "| before:", marks_text(saved))
+  saved = clamp_marks(copy_marks(saved), info)
+  if same_marks(clamp_marks(now, info), saved) then
     log("In/Out marks unchanged")
     return
   end
@@ -580,7 +597,7 @@ local function restore_render()
   end
   S.preset, S.fallback = nil, nil
   if S.marks and tl then
-    restore_marks(tl, S.marks)
+    restore_marks(tl, S.marks, job.info)
   end
   S.marks = nil
   if S.page then

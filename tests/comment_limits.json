@@ -1,6 +1,6 @@
 {
   "resolve/WhisperX_Subtitles.lua": {
-    "lines": 103,
+    "lines": 104,
     "long_blocks": 1
   },
   "resolve/tools/probe_render.lua": {
@@ -20,7 +20,7 @@
     "long_blocks": 0
   },
   "tests/resolve_mock.lua": {
-    "lines": 27,
+    "lines": 28,
     "long_blocks": 1
   },
   "tests/test_abbreviations.py": {
@@ -136,7 +136,7 @@
     "long_blocks": 0
   },
   "wt_setup_ui.py": {
-    "lines": 23,
+    "lines": 24,
     "long_blocks": 0
   },
   "wt_version.py": {

@@ -2,7 +2,7 @@
 
 [English](README.md) · **Deutsch** · [Türkçe](README.tr.md)
 
-**Version 0.8.0** · [Änderungen](CHANGELOG.md)
+**Version 0.8.1** · [Änderungen](CHANGELOG.md)
 
 Ein Windows-Programm für **Untertitel aus Reden** (WhisperX), **Liedtexte passend zum Song** (MMS_FA) und den **Wort-für-Wort-Vergleich von Transkripten**. Dazu kommt ein **Plugin für DaVinci Resolve**. Die Oberfläche gibt es auf Deutsch, Englisch und Türkisch.
 
@@ -397,12 +397,13 @@ Während das Plugin wartet, bleibt Resolve bedienbar. Änderungen an der Timelin
 
 ### Bekannte Grenzen
 
-- Getestet mit DaVinci Resolve **Studio** 21.1.2 und 21.2.0.5 unter Windows. Die kostenlose Version von Resolve 21.1 sperrt den Dateizugriff für Scripts; dort geht nur *SRT importieren …*.
+- Getestet mit DaVinci Resolve **Studio** 21.1.2, 21.2.0.5 und 21.2.0.6 unter Windows. Die kostenlose Version von Resolve 21.1 sperrt den Dateizugriff für Scripts; dort geht nur *SRT importieren …*.
 - Resolve legt eine SRT nur auf die **aktive** Untertitelspur, und aktiv kann nur eine sein. Das Plugin deaktiviert deshalb die anderen Untertitelspuren; danach ist die neue Spur die aktive. Eine leere, aber gesperrte Spur wird übersprungen.
 - Die Untertitel werden relativ zum Anfang der Timeline gesetzt, also um den In-Punkt verschoben. Ob der Start-Timecode (z.B. 01:00:00:00) zusätzlich zählt, wird noch getestet; das Plugin vergleicht die Lage des ersten Untertitels mit dem erwarteten Frame und meldet eine Abweichung.
 - Vor *Transkribieren* und während des Imports die Wiedergabe anhalten – Resolve kann hängen, wenn die Seite während der Wiedergabe wechselt.
 - Das Element im Media Pool zeigt auf die SRT in `resolve_temp\`; sobald die Datei als älteste der letzten 10 gelöscht ist, ist es offline. Die Untertitel auf der Timeline gehören zum Projekt.
 - `resolve/tools/probe_subtitles.lua` prüft, wie eine neue Resolve-Version eine SRT platziert – nach einem Resolve-Update laufen lassen.
+- `resolve/tools/probe_render.lua` prüft, welche Render-Einstellungen eine neue Resolve-Version für In bis Out annimmt – nach einem Resolve-Update laufen lassen.
 
 ---
 
@@ -494,6 +495,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referenz.srt --lang de
 | `wt_resolve.py` | Anbindung an DaVinci Resolve: Job- und Fertig-Datei, SRT-Verschiebung, Plugin-Installation |
 | `resolve/WhisperX_Subtitles.lua` | Das Plugin für DaVinci Resolve (Vorlage; *Einstellungen → DaVinci Resolve* installiert es) |
 | `resolve/tools/probe_subtitles.lua` | Testscript: wie Resolve eine SRT auf eine Untertitelspur legt |
+| `resolve/tools/probe_render.lua` | Testscript: welche Render-Einstellungen Resolve für In bis Out annimmt |
 | `wt_version.py` | Name und Versionsnummer (in Titelleiste, Protokoll und Bericht) |
 | `lang/*.json` | Alle Texte von Oberfläche, Protokoll und Bericht (en, de, tr) |
 | `whisper_tool.example.ini` | Einstellungs-Vorlage; wird beim ersten Start zu `whisper_tool.ini` kopiert |

@@ -2,7 +2,7 @@
 
 [English](README.md) · [Deutsch](README.de.md) · **Türkçe**
 
-**Sürüm 0.8.0** · [Değişiklikler](CHANGELOG.md)
+**Sürüm 0.8.1** · [Değişiklikler](CHANGELOG.md)
 
 **Konuşmalardan altyazı** (WhisperX), **şarkıya göre hizalanmış şarkı sözleri** (MMS_FA) ve **transkriptlerin kelime kelime karşılaştırılması** için bir Windows programı. Buna bir **DaVinci Resolve eklentisi** de dahildir. Arayüz Türkçe, İngilizce ve Almanca olarak kullanılabilir.
 
@@ -397,12 +397,13 @@ Eklenti beklerken Resolve kullanılabilir kalır. Yazıya dökülen aralıkta za
 
 ### Bilinen sınırlar
 
-- DaVinci Resolve **Studio** 21.1.2 ve 21.2.0.5 ile Windows'ta test edildi. Resolve 21.1'in ücretsiz sürümü betiklerin dosya erişimini engeller; orada yalnızca *SRT içe aktar …* çalışır.
+- DaVinci Resolve **Studio** 21.1.2, 21.2.0.5 ve 21.2.0.6 ile Windows'ta test edildi. Resolve 21.1'in ücretsiz sürümü betiklerin dosya erişimini engeller; orada yalnızca *SRT içe aktar …* çalışır.
 - Resolve bir SRT'yi yalnızca **etkin** altyazı izine yerleştirir ve aynı anda yalnızca biri etkin olabilir. Bu yüzden eklenti diğer altyazı izlerini devre dışı bırakır; sonrasında yeni iz etkin olandır. Boş ama kilitli bir iz atlanır.
 - Altyazılar zaman çizelgesinin başına göre, yani In noktası kadar kaydırılarak yerleştirilir. Başlangıç zaman kodunun (örn. 01:00:00:00) da eklenmesi gerekip gerekmediği hâlâ test ediliyor; eklenti ilk altyazının konumunu beklenen kareyle karşılaştırır ve farkı bildirir.
 - *Yazıya dök*'ten önce ve içe aktarma sırasında oynatmayı durdurun – oynatma sırasında sayfa değişirse Resolve takılabilir.
 - Medya havuzundaki öğe `resolve_temp\` içindeki SRT'yi gösterir; dosya son 10 aktarımın en eskisi olarak silindiğinde öğe çevrimdışıdır. Zaman çizelgesindeki altyazılar projenin bir parçasıdır.
 - `resolve/tools/probe_subtitles.lua`, yeni bir Resolve sürümünün SRT'yi nasıl yerleştirdiğini kontrol eder – bir Resolve güncellemesinden sonra çalıştırın.
+- `resolve/tools/probe_render.lua`, yeni bir Resolve sürümünün In – Out için hangi render ayarlarını kabul ettiğini kontrol eder – bir Resolve güncellemesinden sonra çalıştırın.
 
 ---
 
@@ -494,6 +495,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref referans.srt --lang tr
 | `wt_resolve.py` | DaVinci Resolve bağlantısı: iş ve sonuç dosyaları, SRT kaydırma, eklenti kurulumu |
 | `resolve/WhisperX_Subtitles.lua` | DaVinci Resolve eklentisi (şablon; *Ayarlar → DaVinci Resolve* kurar) |
 | `resolve/tools/probe_subtitles.lua` | Test betiği: Resolve bir SRT'yi altyazı izine nasıl yerleştirir |
+| `resolve/tools/probe_render.lua` | Test betiği: Resolve In – Out için hangi render ayarlarını kabul eder |
 | `wt_version.py` | Ad ve sürüm numarası (başlık çubuğunda, günlükte ve raporda görünür) |
 | `lang/*.json` | Arayüzün, günlüğün ve raporun tüm metinleri (en, de, tr) |
 | `whisper_tool.example.ini` | Ayar şablonu; ilk başlatmada `whisper_tool.ini` olarak kopyalanır |

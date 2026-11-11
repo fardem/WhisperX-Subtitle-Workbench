@@ -753,6 +753,7 @@
     "render_incomplete": "render işi %{pct} noktasında durdu",
     "render_no_wav": "Resolve başarılı olduğunu bildiriyor, ancak ses dosyası yok ya da boş: {path}",
     "err_setting": "Resolve “{key}” render ayarını kabul etmedi.",
+    "err_job_range": "Resolve In – Out aralığını almadı: render işi {got} karelerini içeriyor, In – Out ise {want}.",
     "err_wav": "Resolve WAV render biçimini kabul etmedi.",
     "err_folder": "İş klasörü oluşturulamadı: {path}",
     "err_add_job": "Resolve render işini oluşturmadı.",

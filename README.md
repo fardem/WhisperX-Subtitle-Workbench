@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Türkçe](README.tr.md)
 
-**Version 0.8.0** · [Changelog](CHANGELOG.md)
+**Version 0.8.1** · [Changelog](CHANGELOG.md)
 
 A Windows desktop tool for **subtitles from speeches** (WhisperX), **lyrics aligned to songs** (MMS_FA) and **comparing transcripts word by word** – with a **plugin for DaVinci Resolve** and a user interface in English, German and Turkish.
 
@@ -395,12 +395,13 @@ While the plugin waits, Resolve stays usable. Changes to the timeline in the tra
 
 ### Known limits
 
-- Tested with DaVinci Resolve **Studio** 21.1.2 and 21.2.0.5 on Windows. The free edition of Resolve 21.1 blocks file access for scripts; there only *Import SRT …* works.
+- Tested with DaVinci Resolve **Studio** 21.1.2, 21.2.0.5 and 21.2.0.6 on Windows. The free edition of Resolve 21.1 blocks file access for scripts; there only *Import SRT …* works.
 - Resolve puts an SRT only onto the **active** subtitle track, and only one can be active. The plugin therefore deactivates the other subtitle tracks; afterwards the new track is the active one. An empty but locked track is skipped.
 - The subtitles are placed relative to the start of the timeline, i.e. shifted by the In point. Whether the start timecode (e.g. 01:00:00:00) has to be added as well is still being tested; the plugin compares the position of the first subtitle with the expected frame and reports a difference.
 - Stop the playback before *Transcribe* and while the result is imported – Resolve can hang when the page changes during playback.
 - The media pool item points to the SRT in `resolve_temp\`; once that file has been deleted as the oldest of the last 10, the item is offline. The subtitles on the timeline belong to the project.
 - `resolve/tools/probe_subtitles.lua` checks how a new Resolve version places an SRT – run it after a Resolve update.
+- `resolve/tools/probe_render.lua` checks which render settings a new Resolve version takes for In to Out – run it after a Resolve update.
 
 ---
 
@@ -492,6 +493,7 @@ venv\Scripts\python.exe wt_compare.py A.srt --ref reference.srt --lang de
 | `wt_resolve.py` | DaVinci Resolve connection: job and result files, SRT shift, plugin installation |
 | `resolve/WhisperX_Subtitles.lua` | The plugin for DaVinci Resolve (template; *Settings → DaVinci Resolve* installs it) |
 | `resolve/tools/probe_subtitles.lua` | Test script: how Resolve places an SRT on a subtitle track |
+| `resolve/tools/probe_render.lua` | Test script: which render settings Resolve takes for In to Out |
 | `wt_version.py` | Name and version number (shown in the title bar, log and report) |
 | `lang/*.json` | All texts of the interface, log and report (en, de, tr) |
 | `whisper_tool.example.ini` | Settings template; copied to `whisper_tool.ini` on the first start |

@@ -705,8 +705,8 @@ class InstallWindow(Wizard):
         os.environ["PATH"] = s.registry_path()
         bat = self.target / "Whisper_Tool.bat"
         if sys.platform == "win32" and bat.exists():
-            subprocess.Popen(["cmd", "/c", "start", "", "/min", str(bat)], cwd=str(self.target),
-                             creationflags=s.NO_WINDOW)
+            # "start x.bat" opens a cmd /K window that stays open; /s with the outer quotes keeps ( ) & in the path.
+            subprocess.Popen(f'cmd /s /c ""{bat}""', cwd=str(self.target), creationflags=s.NO_WINDOW)
         else:
             subprocess.Popen([str(s.venv_python(self.target)), str(self.target / "whisper_tool.py")],
                              cwd=str(self.target))

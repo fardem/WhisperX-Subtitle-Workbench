@@ -16,7 +16,7 @@ left-over own jobs removed. Own code.
 
 -- >>> WX-CONFIG (template - the Workbench writes the real values here when it installs the plugin) >>>
 local WX = {
-  version   = "0.8.0",
+  version   = "0.8.1",
   workbench = nil,
   python    = nil,
   lang      = "en",
@@ -349,11 +349,23 @@ local function copy_marks(marks)
   return out
 end
 
+-- An Out mark on GetEndFrame() lies after the last rendered frame, and SetMarkInOut answers false to it:
+-- ranges and comparisons take the last frame instead.
+local function clamp_marks(marks, info)
+  for _, k in pairs(info and marks or {}) do
+    if k["out"] ~= nil then
+      k["out"] = math.min(k["out"], info.last - 1 - info.start)
+    end
+  end
+  return marks
+end
+
 -- Range to render: In/Out if set (values of GetMarkInOut are relative to the timeline start),
 -- otherwise the whole timeline. -> first frame, last frame (absolute), whole?, marks
 local function render_range(tl, info)
   local marks = copy_marks(api(tl, "GetMarkInOut"))
-  local m = marks.audio or marks.video
+  local m = clamp_marks(copy_marks(marks), info)
+  m = m.audio or m.video
   if m and (m["in"] ~= nil or m["out"] ~= nil) then
     local a = info.start + (m["in"] or 0)
     local b = m["out"] ~= nil and (info.start + m["out"]) or (info.last - 1)
@@ -447,6 +459,32 @@ local function setting(project, key, value, critical)
   return ok
 end
 
+-- Resolve 21.2 answers false to SelectAllFrames = false alone and true with MarkIn and MarkOut in the
+-- same call (resolve/tools/probe_render.lua).
+local function set_range(project, a, b)
+  local ok = api(project, "SetRenderSettings", { SelectAllFrames = false, MarkIn = a, MarkOut = b })
+  log("SetRenderSettings SelectAllFrames = false, MarkIn =", a, ", MarkOut =", b, "->", tostring(ok))
+  if ok ~= true then
+    error(T("err_setting", { key = "SelectAllFrames, MarkIn, MarkOut" }), 0)
+  end
+end
+
+-- The subtitles are placed by the range of the render job; SetRenderSettings can answer false and set it anyway.
+local function check_job_range(project, rid, a, b)
+  local jobs = api(project, "GetRenderJobList")
+  for _, j in ipairs(type(jobs) == "table" and jobs or {}) do
+    if type(j) == "table" and (j["JobId"] == rid or j["Id"] == rid) then
+      local ja, jb = tonumber(j["MarkIn"]), tonumber(j["MarkOut"])
+      log("Render job range:", tostring(ja), "-", tostring(jb), "| expected:", a, "-", b)
+      if ja ~= nil and jb ~= nil and (ja ~= a or jb ~= b) then
+        error(T("err_job_range", { got = ja .. "-" .. jb, want = a .. "-" .. b }), 0)
+      end
+      return
+    end
+  end
+  log("Render job not in GetRenderJobList - range not checked")
+end
+
 local function add_unique(list, value)
   value = tostring(value or "")
   if value == "" then
@@ -508,9 +546,20 @@ local function same_marks(a, b)
   return true
 end
 
-local function restore_marks(tl, saved)
+local function marks_text(marks)
+  local parts = {}
+  for _, kind in ipairs({ "video", "audio" }) do
+    local m = marks[kind]
+    parts[#parts + 1] = kind .. " " .. (m and (tostring(m["in"]) .. "-" .. tostring(m["out"])) or "none")
+  end
+  return table.concat(parts, ", ")
+end
+
+local function restore_marks(tl, saved, info)
   local now = copy_marks(api(tl, "GetMarkInOut"))
-  if same_marks(now, saved) then
+  log("In/Out marks after the render:", marks_text(now), "| before:", marks_text(saved))
+  saved = clamp_marks(copy_marks(saved), info)
+  if same_marks(clamp_marks(now, info), saved) then
     log("In/Out marks unchanged")
     return
   end
@@ -548,7 +597,7 @@ local function restore_render()
   end
   S.preset, S.fallback = nil, nil
   if S.marks and tl then
-    restore_marks(tl, S.marks)
+    restore_marks(tl, S.marks, job.info)
   end
   S.marks = nil
   if S.page then
@@ -610,10 +659,10 @@ local function start_render(project, tl)
     error(T("err_wav"), 0)
   end
   log("SetCurrentRenderMode single clip ->", tostring(api(project, "SetCurrentRenderMode", 1)))
-  setting(project, "SelectAllFrames", whole, true)
-  if not whole then
-    setting(project, "MarkIn", a, true)
-    setting(project, "MarkOut", b, true)
+  if whole then
+    setting(project, "SelectAllFrames", true, true)
+  else
+    set_range(project, a, b)
   end
   setting(project, "TargetDir", dir, true)
   setting(project, "CustomName", AUDIO_NAME, true)
@@ -630,6 +679,9 @@ local function start_render(project, tl)
     error(T("err_add_job"), 0)
   end
   S.render_id = rid
+  if not whole then
+    check_job_range(project, rid, a, b)
+  end
   local started = api(project, "StartRendering", rid)
   log("StartRendering ->", tostring(started))
   if not started then                                -- right after a preset change it sometimes says no

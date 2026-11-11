@@ -57,6 +57,7 @@ local function new_timeline(opts)
   end
   function T:SetMarkInOut(a, b, kind)
     record("SetMarkInOut", a, b, kind)
+    if b > tl.last - 1 - tl.start then return false end    -- Resolve 21.2.0.6: not on GetEndFrame()
     kind = kind or "all"
     for _, k in ipairs(kind == "all" and { "video", "audio" } or { kind }) do
       tl.marks[k] = { ["in"] = a, out = b }
@@ -240,7 +241,7 @@ function P:GetRenderJobList()
   local out = {}
   for _, r in ipairs(MOCK.renders) do
     out[#out + 1] = { JobId = r.id, TargetDir = r.settings.TargetDir, OutputFilename = r.name,
-                      MarkIn = r.settings.MarkIn, MarkOut = r.settings.MarkOut }
+                      MarkIn = r.mark_in, MarkOut = r.mark_out }
   end
   return out
 end
@@ -265,8 +266,18 @@ function P:AddRenderJob()
   for k, v in pairs(MOCK.settings) do s[k] = v end
   local id = "job-" .. MOCK.next_job
   MOCK.next_job = MOCK.next_job + 1
+  local tl, m = MOCK.timeline, MOCK.timeline.marks.audio or MOCK.timeline.marks.video
+  local a, b = tl.start, tl.last - 1
+  if s.SelectAllFrames == false then
+    a, b = s.MarkIn, s.MarkOut
+  elseif s.SelectAllFrames == nil and m and m["in"] and m.out then    -- Deliver page on In/Out of the timeline
+    a, b = tl.start + m["in"], tl.start + m.out
+  end
+  if MOCK.job_range then
+    a, b = MOCK.job_range[1], MOCK.job_range[2]
+  end
   local r = { id = id, settings = s, name = (s.CustomName or "x") .. ".wav", pct = 0, status = "Ready",
-              error = "", ticks_left = 0 }
+              error = "", ticks_left = 0, mark_in = a, mark_out = b }
   table.insert(MOCK.renders, r)
   record("AddRenderJob", id)
   return id
@@ -301,9 +312,13 @@ function P:SaveAsNewRenderPreset(name)
   MOCK.preset_store = MOCK.preset_store or {}
   local copy = {}
   for k, v in pairs(MOCK.settings) do copy[k] = v end
-  MOCK.preset_store[name] = { settings = copy, format = MOCK.format.format, codec = MOCK.format.codec }
+  local marks = {}
+  for k, m in pairs(MOCK.timeline.marks) do marks[k] = { ["in"] = m["in"], out = m.out } end
+  MOCK.preset_store[name] = { settings = copy, format = MOCK.format.format, codec = MOCK.format.codec,
+                              marks = marks }
   return true
 end
+-- Resolve 21.2.0.6: the backup preset brings In/Out back, but an Out mark on GetEndFrame() is lost.
 function P:LoadRenderPreset(name)
   record("LoadRenderPreset", name)
   local p = (MOCK.preset_store or {})[name]
@@ -311,6 +326,11 @@ function P:LoadRenderPreset(name)
   MOCK.settings = {}
   for k, v in pairs(p.settings) do MOCK.settings[k] = v end
   MOCK.format = { format = p.format, codec = p.codec }
+  local tl = MOCK.timeline
+  tl.marks = {}
+  for k, m in pairs(p.marks) do
+    tl.marks[k] = { ["in"] = m["in"], out = (m.out or 0) < tl.last - tl.start and m.out or nil }
+  end
   return true
 end
 function P:DeleteRenderPreset(name)
@@ -342,9 +362,20 @@ function P:GetCurrentRenderMode()
   return MOCK.render_mode
 end
 function P:SetCurrentRenderMode(m) MOCK.render_mode = m return true end
+-- Return values and In/Out as measured in Resolve Studio 21.2.0.6 (resolve/tools/probe_render.lua).
 function P:SetRenderSettings(s)
   local known = { SelectAllFrames = 1, MarkIn = 1, MarkOut = 1, TargetDir = 1, CustomName = 1, ExportVideo = 1,
                   ExportAudio = 1, AudioSampleRate = 1, AudioBitDepth = 1 }
+  local keys = {}
+  for k in pairs(s) do keys[#keys + 1] = k end
+  table.sort(keys)
+  record("SetRenderSettingsCall", table.concat(keys, ","))
+  if s.SelectAllFrames ~= nil and s.SelectAllFrames ~= true and (s.MarkIn == nil or s.MarkOut == nil) then
+    return false
+  end
+  if s.SelectAllFrames == true then
+    MOCK.timeline.marks = {}
+  end
   for k, v in pairs(s) do
     record("SetRenderSettings", k, v)
     if MOCK.reject_setting == k then return false end

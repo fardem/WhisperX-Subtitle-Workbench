@@ -1,5 +1,6 @@
 """
-The Lua plugin against a fake DaVinci Resolve (tests/resolve_mock.lua) that behaves like Resolve Studio 21.1.2.
+The Lua plugin against a fake DaVinci Resolve (tests/resolve_mock.lua) that behaves like Resolve Studio 21.1.2,
+render settings like 21.2.0.6.
 Needs the package "lupa" (pip install lupa), otherwise the tests are skipped. It does not replace a test in Resolve.
 """
 
@@ -174,6 +175,8 @@ def test_full_round_trip_with_in_out(tmp_path):
     h.run(steps, timelines=[timeline(marks=marks)])
     job, res = result["job"], result["res"]
     assert (job.start_frame, job.in_frame, job.out_frame, job.whole) == (90000, 90250, 91500, False)
+    assert ("MarkIn,MarkOut,SelectAllFrames",) in h.calls("SetRenderSettingsCall")
+    assert ("SelectAllFrames",) not in h.calls("SetRenderSettingsCall")
     assert res.offset == pytest.approx(10.0)       # 250 frames at 25 fps
     tracks = h.tracks()
     assert len(tracks) == 1                         # no subtitle track before → one new track
@@ -206,6 +209,56 @@ def test_whole_timeline_and_marks_restored(tmp_path):
     assert ("SelectAllFrames", True) in h.calls("SetRenderSettings")
     assert not any(c[0] == "MarkIn" for c in h.calls("SetRenderSettings"))
     assert h.tracks()[0]["starts"] == [10]          # 0.4 s × 25 fps
+
+
+def test_out_mark_on_the_end_frame_renders_up_to_the_last_frame(tmp_path):
+    h = Harness(tmp_path)
+    result = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        result["job"], _ = h.workbench_hands_over()
+
+    mark = {"in": 250, "out": 25 * 600}
+    h.run(steps, timelines=[timeline(marks={"video": mark, "audio": mark})])
+    assert (result["job"].in_frame, result["job"].out_frame) == (90250, 90000 + 25 * 600 - 1)
+    assert ("MarkOut", 90000 + 25 * 600 - 1) in h.calls("SetRenderSettings")
+    assert (250, 25 * 600 - 1, "audio") in h.calls("SetMarkInOut")
+    assert (h.mock.timeline.marks.audio["in"], h.mock.timeline.marks.audio.out) == (250, 25 * 600 - 1)
+
+
+def test_in_mark_alone_renders_up_to_the_last_frame_and_stays(tmp_path):
+    h = Harness(tmp_path)
+    result = {}
+
+    def steps(h):
+        h.click("Transcribe")
+        h.tick(2)
+        result["job"], _ = h.workbench_hands_over()
+
+    mark = {"in": 250}
+    h.run(steps, timelines=[timeline(marks={"video": mark, "audio": mark})])
+    assert (result["job"].in_frame, result["job"].out_frame, result["job"].whole) == (90250, 104999, False)
+    assert h.calls("SetMarkInOut") == [] and h.calls("ClearMarkInOut") == []
+    assert (h.mock.timeline.marks.audio["in"], h.mock.timeline.marks.audio.out) == (250, None)
+
+
+def test_render_job_with_another_range_stops_before_rendering(tmp_path):
+    h = Harness(tmp_path)
+    seen = {}
+
+    def steps(h):
+        h.mock.job_range = h.lua.table_from([90000, 104999])
+        h.click("Transcribe")
+        seen["status"] = h.text("Status")
+
+    h.run(steps, timelines=[timeline(marks={"audio": {"in": 250, "out": 1500}})])
+    why = h.T("err_job_range", got="90000-104999", want="90250-91500")
+    assert seen["status"] == h.T("render_failed", why=why)
+    assert h.calls("StartRendering") == [] and list(h.mock.renders.values()) == []
+    assert h.mock.page == "edit" and h.job_dirs() == [] and h.commands == []
+    assert (h.mock.format.format, h.mock.format.codec) == ("mov", "H264")
 
 
 def test_29_97_drop_frame_one_hour_start(tmp_path):
